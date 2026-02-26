@@ -1,0 +1,32 @@
+# Streamlit
+.streamlit/secrets.toml
+.streamlit/config.toml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+.venv
+env/
+venv.bak/
+ENV/
+
+# Data & Clinical Info (Sensitive)
+*.xlsx
+*.xls
+protocolo_text.txt
+Gu_a_Taller_Instrumentos_de_Familia.pdf
+PROTOCOLO INTERVENCION Y  VDI SJ.pdf
+procedimiento-de-construccion-de-genograma.pdf
+
+# Images & Screenshots
+*.png
+*.jpg
+*.jpeg
+*.svg
+
+# OS files
+.DS_Store
+Thumbs.db
