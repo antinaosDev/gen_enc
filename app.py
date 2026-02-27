@@ -494,6 +494,7 @@ def export_rem_p7_excel(n_inscritas_sol=0, n_inscritas_luna=0):
     """
     Genera un archivo Excel con el formato oficial REM-P7.
     Retorna un objeto BytesIO listo para st.download_button.
+    Si el usuario es Encargado de Postas, genera hojas por cada posta.
     """
     try:
         from openpyxl import Workbook
@@ -514,7 +515,7 @@ def export_rem_p7_excel(n_inscritas_sol=0, n_inscritas_luna=0):
         if len(ev_data) > 1:
             df_eval = pd.DataFrame(ev_data[1:], columns=ev_data[0])
         else:
-            df_eval = pd.DataFrame(columns=["ID Evaluación", "Sector", "Nivel",
+            df_eval = pd.DataFrame(columns=["ID Evaluación", "Sector", "Nivel", "Establecimiento",
                                             "egreso_alta","egreso_traslado",
                                             "egreso_derivacion","egreso_abandono"])
     except:
@@ -527,222 +528,171 @@ def export_rem_p7_excel(n_inscritas_sol=0, n_inscritas_luna=0):
     except:
         df_plan = pd.DataFrame()
 
-    def cnt(df, sector, nivel=None):
-        if df.empty or "Sector" not in df.columns: return 0
-        m = df["Sector"].str.strip().str.lower() == sector.lower()
-        if nivel: m &= df["Nivel"].str.strip().str.upper() == nivel.upper()
-        return int(m.sum())
+    # --- Helper para generar el contenido de una hoja ---
+    def write_rem_sheet(ws, df_eval_in, df_plan_in, title_suffix="CONSOLIDADO", n_ins_sol=0, n_ins_luna=0):
+        # Filtros locales para esta hoja
+        def cnt(df, sector, nivel=None):
+            if df.empty or "Sector" not in df.columns: return 0
+            m = df["Sector"].str.strip().str.lower() == sector.lower()
+            if nivel: m &= df["Nivel"].str.strip().str.upper() == nivel.upper()
+            return int(m.sum())
 
-    def cnt_bool(df, sector, col):
-        if df.empty or col not in df.columns: return 0
-        m = (df["Sector"].str.strip().str.lower() == sector.lower()) & \
-            (df[col].astype(str).str.strip().str.upper().isin(["TRUE","1","VERDADERO"]))
-        return int(m.sum())
+        def cnt_bool(df, sector, col):
+            if df.empty or col not in df.columns: return 0
+            m = (df["Sector"].str.strip().str.lower() == sector.lower()) & \
+                (df[col].astype(str).str.strip().str.upper().isin(["TRUE","1","VERDADERO"]))
+            return int(m.sum())
 
-    ids_sol = ids_luna = set()
-    if not df_plan.empty and "ID Evaluación" in df_plan.columns:
-        ids_sol  = {i for i in df_plan["ID Evaluación"].unique()
-                    if not df_eval[df_eval["ID Evaluación"]==i].empty
-                    and df_eval[df_eval["ID Evaluación"]==i].iloc[0].get("Sector","").strip().lower()=="sol"}
-        ids_luna = {i for i in df_plan["ID Evaluación"].unique()
-                    if not df_eval[df_eval["ID Evaluación"]==i].empty
-                    and df_eval[df_eval["ID Evaluación"]==i].iloc[0].get("Sector","").strip().lower()=="luna"}
+        ids_sol = set(); ids_luna = set()
+        if not df_plan_in.empty and "ID Evaluación" in df_plan_in.columns:
+            ids_sol  = {i for i in df_plan_in["ID Evaluación"].unique()
+                        if not df_eval_in[df_eval_in["ID Evaluación"]==i].empty
+                        and df_eval_in[df_eval_in["ID Evaluación"]==i].iloc[0].get("Sector","").strip().lower()=="sol"}
+            ids_luna = {i for i in df_plan_in["ID Evaluación"].unique()
+                        if not df_eval_in[df_eval_in["ID Evaluación"]==i].empty
+                        and df_eval_in[df_eval_in["ID Evaluación"]==i].iloc[0].get("Sector","").strip().lower()=="luna"}
 
-    sol_ev = cnt(df_eval,"Sol"); luna_ev = cnt(df_eval,"Luna")
-    sol_b  = cnt(df_eval,"Sol","RIESGO BAJO");   luna_b  = cnt(df_eval,"Luna","RIESGO BAJO")
-    sol_m  = cnt(df_eval,"Sol","RIESGO MEDIO");  luna_m  = cnt(df_eval,"Luna","RIESGO MEDIO")
-    sol_a  = cnt(df_eval,"Sol","RIESGO ALTO");   luna_a  = cnt(df_eval,"Luna","RIESGO ALTO")
-    sol_cp = len(ids_sol); luna_cp = len(ids_luna)
+        sol_ev = cnt(df_eval_in,"Sol"); luna_ev = cnt(df_eval_in,"Luna")
+        sol_b  = cnt(df_eval_in,"Sol","RIESGO BAJO");   luna_b  = cnt(df_eval_in,"Luna","RIESGO BAJO")
+        sol_m  = cnt(df_eval_in,"Sol","RIESGO MEDIO");  luna_m  = cnt(df_eval_in,"Luna","RIESGO MEDIO")
+        sol_a  = cnt(df_eval_in,"Sol","RIESGO ALTO");   luna_a  = cnt(df_eval_in,"Luna","RIESGO ALTO")
+        sol_cp = len(ids_sol); luna_cp = len(ids_luna)
 
-    def sin_plan(nivel_str, ids_con, sector):
-        ids_nivel = set(df_eval[df_eval["Nivel"].str.strip().str.upper()==nivel_str.upper()]["ID Evaluación"]) \
-                    if not df_eval.empty else set()
-        ids_sector = set(df_eval[df_eval["Sector"].str.strip().str.lower()==sector.lower()]["ID Evaluación"]) \
-                     if not df_eval.empty else set()
-        return max(len(ids_nivel & ids_sector) - len(ids_con & ids_nivel & ids_sector), 0)
+        def sin_plan_local(nivel_str, ids_con, sector):
+            ids_nivel = set(df_eval_in[df_eval_in["Nivel"].str.strip().str.upper()==nivel_str.upper()]["ID Evaluación"]) \
+                        if not df_eval_in.empty else set()
+            ids_sector = set(df_eval_in[df_eval_in["Sector"].str.strip().str.lower()==sector.lower()]["ID Evaluación"]) \
+                         if not df_eval_in.empty else set()
+            return max(len(ids_nivel & ids_sector) - len(ids_con & ids_nivel & ids_sector), 0)
 
-    sol_sb   = sin_plan("RIESGO BAJO",ids_sol,"sol")
-    sol_sm   = sin_plan("RIESGO MEDIO",ids_sol,"sol")
-    sol_sa   = sin_plan("RIESGO ALTO",ids_sol,"sol")
-    luna_sb  = sin_plan("RIESGO BAJO",ids_luna,"luna")
-    luna_sm  = sin_plan("RIESGO MEDIO",ids_luna,"luna")
-    luna_sa  = sin_plan("RIESGO ALTO",ids_luna,"luna")
+        sol_sb   = sin_plan_local("RIESGO BAJO",ids_sol,"sol")
+        sol_sm   = sin_plan_local("RIESGO MEDIO",ids_sol,"sol")
+        sol_sa   = sin_plan_local("RIESGO ALTO",ids_sol,"sol")
+        luna_sb  = sin_plan_local("RIESGO BAJO",ids_luna,"luna")
+        luna_sm  = sin_plan_local("RIESGO MEDIO",ids_luna,"luna")
+        luna_sa  = sin_plan_local("RIESGO ALTO",ids_luna,"luna")
 
-    eg_types = ["egreso_alta","egreso_traslado","egreso_derivacion","egreso_abandono"]
-    def eg(sector, col): return cnt_bool(df_eval, sector, col)
-    sol_egs   = {c: eg("sol",c) for c in eg_types}
-    luna_egs  = {c: eg("luna",c) for c in eg_types}
-    sol_eg_t  = sum(sol_egs.values()); luna_eg_t = sum(luna_egs.values())
+        eg_types = ["egreso_alta","egreso_traslado","egreso_derivacion","egreso_abandono"]
+        sol_egs   = {c: cnt_bool(df_eval_in, "sol", c) for c in eg_types}
+        luna_egs  = {c: cnt_bool(df_eval_in, "luna", c) for c in eg_types}
+        sol_eg_t  = sum(sol_egs.values()); luna_eg_t = sum(luna_egs.values())
 
-    T = lambda s, l: s + l  # total
+        # Estilos
+        DARK_BLUE   = PatternFill("solid", fgColor="1F3864"); YELLOW = PatternFill("solid", fgColor="FFD966")
+        CELESTE     = PatternFill("solid", fgColor="BDD7EE"); CELESTE_LT = PatternFill("solid", fgColor="DEEAF1")
+        CELESTE_MID = PatternFill("solid", fgColor="9DC3E6"); BOLD_WHITE = Font(bold=True, color="FFFFFF", size=11)
+        BOLD_DARK   = Font(bold=True, color="1F3864", size=10); NORMAL = Font(size=9, color="000000")
+        THIN = Side(style="thin", color="B8CCE4"); THIN_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
+        CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True); LEFT = Alignment(horizontal="left", vertical="center", wrap_text=True)
+        WHITE_FILL  = PatternFill("solid", fgColor="FFFFFF")
 
-    # === Construir Excel ===
+        def set_cell(row, col, value, fill=None, font=None, align=None, border=True):
+            cell = ws.cell(row=row, column=col, value=value)
+            if fill: cell.fill = fill
+            if font: cell.font = font
+            if align: cell.alignment = align
+            if border: cell.border = THIN_BORDER
+            return cell
+
+        def merge_row(row, c1, c2, value, fill=None, font=None, align=None):
+            ws.merge_cells(start_row=row, start_column=c1, end_row=row, end_column=c2)
+            cell = ws.cell(row=row, column=c1, value=value)
+            if fill: cell.fill = fill
+            if font: cell.font = font
+            if align: cell.alignment = align
+            cell.border = THIN_BORDER
+
+        r = 1
+        merge_row(r, 1, 11, f"REM-P7. FAMILIAS EN CONTROL SALUD FAMILIAR - {title_suffix}", DARK_BLUE, BOLD_WHITE, CENTER)
+        r += 1
+        merge_row(r, 1, 11, f"CESFAM Cholchol | Generado: {datetime.now().strftime('%d/%m/%Y %H:%M')}", CELESTE, BOLD_DARK, CENTER)
+        
+        # SECCIÓN A
+        r += 1
+        merge_row(r, 1, 11, "SECCIÓN A. CLASIFICACIÓN FAMILIas URBANO (Sector Sol)", YELLOW, BOLD_DARK, LEFT)
+        r += 1
+        cols_A = ["Clasificación", "TOTAL", "Sector Sol", "", "", "", "", "", "", ""]
+        for ci, h in enumerate(cols_A, 1): set_cell(r, ci, h, CELESTE, BOLD_DARK, CENTER)
+        
+        secA_data = [
+            ("N° Familias inscritas", n_ins_sol, n_ins_sol),
+            ("N° Familias evaluadas", sol_ev, sol_ev),
+            ("N° Riesgo bajo", sol_b, sol_b),
+            ("N° Riesgo medio", sol_m, sol_m),
+            ("N° Riesgo alto", sol_a, sol_a),
+        ]
+        for label, total, s1 in secA_data:
+            r += 1
+            set_cell(r, 1, label, CELESTE_LT, NORMAL, LEFT)
+            set_cell(r, 2, total, CELESTE, BOLD_DARK, CENTER)
+            set_cell(r, 3, s1, WHITE_FILL, NORMAL, CENTER)
+
+        # SECCIÓN A.1
+        r += 1
+        merge_row(r, 1, 11, "SECCIÓN A.1 CLASIFICACIÓN FAMILIas RURAL (Sector Luna)", YELLOW, BOLD_DARK, LEFT)
+        r += 1
+        for ci, h in enumerate(cols_A, 1): set_cell(r, ci, h.replace("Sol", "Luna"), CELESTE, BOLD_DARK, CENTER)
+        secA1_data = [
+            ("N° Familias inscritas", n_ins_luna, n_ins_luna),
+            ("N° Familias evaluadas", luna_ev, luna_ev),
+            ("N° Riesgo bajo", luna_b, luna_b),
+            ("N° Riesgo medio", luna_m, luna_m),
+            ("N° Riesgo alto", luna_a, luna_a),
+        ]
+        for label, total, s1 in secA1_data:
+            r += 1
+            set_cell(r, 1, label, CELESTE_LT, NORMAL, LEFT)
+            set_cell(r, 2, total, CELESTE, BOLD_DARK, CENTER)
+            set_cell(r, 3, s1, WHITE_FILL, NORMAL, CENTER)
+
+        # SECCIÓN B
+        r += 1
+        merge_row(r, 1, 11, "SECCIÓN B. INTERVENCIÓN URBANO Y RURAL", YELLOW, BOLD_DARK, LEFT)
+        r += 1
+        cols_B = ["Intervención", "", "TOTAL", "Sol", "Luna", "", "", "", "", "", ""]
+        for ci, h in enumerate(cols_B, 1): set_cell(r, ci, h, CELESTE, BOLD_DARK, CENTER)
+        
+        secB_data = [
+            ("N° Fam con plan", "", sol_cp+luna_cp, sol_cp, luna_cp),
+            ("N° Fam sin plan", "Riesgo bajo", sol_sb+luna_sb, sol_sb, luna_sb),
+            ("", "Riesgo medio", sol_sm+luna_sm, sol_sm, luna_sm),
+            ("", "Riesgo alto", sol_sa+luna_sa, sol_sa, luna_sa),
+            ("N° Fam egresadas", "Total egresos", sol_eg_t+luna_eg_t, sol_eg_t, luna_eg_t),
+        ]
+        for l1, l2, tot, s1, s2 in secB_data:
+            r += 1
+            set_cell(r, 1, l1, CELESTE_LT, NORMAL, LEFT)
+            set_cell(r, 2, l2, CELESTE_MID, NORMAL, LEFT)
+            set_cell(r, 3, tot, CELESTE, BOLD_DARK, CENTER)
+            set_cell(r, 4, s1, WHITE_FILL, NORMAL, CENTER)
+            set_cell(r, 5, s2, WHITE_FILL, NORMAL, CENTER)
+
+        col_widths = [35, 18, 10, 10, 10, 8, 8, 8, 8, 8, 8]
+        for i, w in enumerate(col_widths, 1): ws.column_dimensions[get_column_letter(i)].width = w
+
+    # --- Lógica Principal ---
+    user_info = st.session_state.get('user_info', {})
+    cargo = str(user_info.get('cargo', '')).lower()
+    is_posta_role = 'encargado' in cargo and 'postas' in cargo
+
     wb = Workbook()
-    ws = wb.active
-    ws.title = "REM-P7"
+    ws_main = wb.active
+    ws_main.title = "CONSOLIDADO"
+    
+    write_rem_sheet(ws_main, df_eval, df_plan, "CONSOLIDADO", n_inscritas_sol, n_inscritas_luna)
 
-    # Estilos institucionales: azul oscuro, celeste, amarillo
-    DARK_BLUE   = PatternFill("solid", fgColor="1F3864")   # Azul oscuro institucional
-    YELLOW      = PatternFill("solid", fgColor="FFD966")   # Amarillo institucional
-    CELESTE     = PatternFill("solid", fgColor="BDD7EE")   # Celeste encabezados
-    CELESTE_LT  = PatternFill("solid", fgColor="DEEAF1")   # Celeste claro datos
-    CELESTE_MID = PatternFill("solid", fgColor="9DC3E6")   # Celeste medio sub-labels
-    WHITE_FILL  = PatternFill("solid", fgColor="FFFFFF")
-    BOLD_WHITE  = Font(bold=True, color="FFFFFF", size=11)
-    BOLD_DARK   = Font(bold=True, color="1F3864", size=10)
-    BOLD_BLACK  = Font(bold=True, color="000000", size=10)
-    NORMAL      = Font(size=9, color="000000")
-    THIN = Side(style="thin", color="B8CCE4")
-    THIN_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
-    CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
-    LEFT   = Alignment(horizontal="left",   vertical="center", wrap_text=True)
-
-    def set_cell(row, col, value, fill=None, font=None, align=None, border=True):
-        c = ws.cell(row=row, column=col, value=value)
-        if fill:   c.fill   = fill
-        if font:   c.font   = font
-        if align:  c.alignment = align
-        if border: c.border = THIN_BORDER
-        return c
-
-    def merge_row(row, c1, c2, value, fill=None, font=None, align=None):
-        ws.merge_cells(start_row=row, start_column=c1, end_row=row, end_column=c2)
-        c = ws.cell(row=row, column=c1, value=value)
-        if fill:  c.fill  = fill
-        if font:  c.font  = font
-        if align: c.alignment = align
-        c.border = THIN_BORDER
-
-    # === TÍTULO PRINCIPAL (fila 1) ===
-    r = 1
-    merge_row(r, 1, 11, "REM-P7. FAMILIAS EN CONTROL DE SALUD FAMILIAR",
-              DARK_BLUE, BOLD_WHITE, CENTER)
-    ws.row_dimensions[r].height = 26
-
-    # Sub-título establecimiento
-    r += 1
-    merge_row(r, 1, 11, f"CESFAM Cholchol | Generado: {datetime.now().strftime('%d/%m/%Y %H:%M')}",
-              CELESTE, BOLD_DARK, CENTER)
-    ws.row_dimensions[r].height = 14
-
-    # === SECCIÓN A — URBANO (Sol) ===
-    r += 1
-    merge_row(r, 1, 11, "SECCIÓN A. CLASIFICACIÓN DE LAS FAMILIAS SECTOR URBANO (Sector Sol)",
-              YELLOW, BOLD_DARK, LEFT)
-    ws.row_dimensions[r].height = 16
-
-    r += 1
-    cols_A = ["Clasificación de las familias por sector", "TOTAL",
-              "Sector Sol\n(Urbano)", "Sector 2", "Sector 3", "Sector 4", "Sector 5", "Sector 6", "Sector 7", "Sector 8"]
-    for ci, h in enumerate(cols_A, 1):
-        set_cell(r, ci, h, CELESTE, BOLD_DARK, CENTER)
-    ws.row_dimensions[r].height = 28
-
-    secA_data = [
-        ("N° Familias inscritas",                              n_inscritas_sol, n_inscritas_sol),
-        ("N° Familias evaluadas con cartola/encuesta familiar", sol_ev,          sol_ev),
-        ("N° De familias en riesgo bajo",                       sol_b,           sol_b),
-        ("N° De familias en riesgo medio",                      sol_m,           sol_m),
-        ("N° De familias en riesgo alto",                       sol_a,           sol_a),
-    ]
-    for label, total, s1 in secA_data:
-        r += 1
-        set_cell(r, 1, label, CELESTE_LT, NORMAL, LEFT)
-        set_cell(r, 2, total, CELESTE,    BOLD_DARK, CENTER)
-        set_cell(r, 3, s1,    WHITE_FILL, NORMAL, CENTER)
-        for ci in range(4, 11):
-            set_cell(r, ci, "", WHITE_FILL, NORMAL, CENTER)
-
-    # === SECCIÓN A.1 — RURAL (Luna) ===
-    r += 1
-    merge_row(r, 1, 10, "SECCIÓN A.1 CLASIFICACIÓN DE LAS FAMILIAS SECTOR RURAL (Sector Luna)",
-              YELLOW, BOLD_DARK, LEFT)
-    ws.row_dimensions[r].height = 16
-
-    r += 1
-    cols_A1 = ["Clasificación de las familias por sector", "TOTAL",
-               "Sector Luna\n(Rural)", "Sector 2",
-               "Sector 3", "Sector 4", "Sector 5", "Sector 6", "Sector 7", "Sector 8"]
-    for ci, h in enumerate(cols_A1, 1):
-        set_cell(r, ci, h, CELESTE, BOLD_DARK, CENTER)
-    ws.row_dimensions[r].height = 28
-
-    for label in ["N° Familias inscritas",
-                  "N° Familias evaluadas con cartola/encuesta familiar",
-                  "N° De familias en riesgo bajo",
-                  "N° De familias en riesgo medio",
-                  "N° De familias en riesgo alto"]:
-        r += 1
-        set_cell(r, 1, label, CELESTE_LT, NORMAL, LEFT)
-        val = (luna_ev if "evaluadas" in label else
-               luna_b if "bajo" in label else
-               luna_m if "medio" in label else
-               luna_a if "alto" in label else n_inscritas_luna)
-        set_cell(r, 2, val, CELESTE, BOLD_DARK, CENTER)
-        set_cell(r, 3, val, WHITE_FILL, NORMAL, CENTER)
-        for ci in range(4, 11):
-            set_cell(r, ci, "", WHITE_FILL, NORMAL, CENTER)
-
-    # === SECCIÓN B — INTERVENCIÓN ===
-    r += 1
-    merge_row(r, 1, 11, "SECCIÓN B. INTERVENCIÓN EN FAMILIAS SECTOR URBANO Y RURAL",
-              YELLOW, BOLD_DARK, LEFT)
-    ws.row_dimensions[r].height = 16
-
-    r += 1
-    cols_B = ["Intervención en familias", "", "TOTAL",
-              "Sol (Urbano)", "Luna (Rural)",
-              "Sector 3", "Sector 4", "Sector 5", "Sector 6", "Sector 7", "Sector 8"]
-    for ci, h in enumerate(cols_B, 1):
-        set_cell(r, ci, h, CELESTE, BOLD_DARK, CENTER)
-    ws.row_dimensions[r].height = 28
-
-    def row_B(label1, label2, total, s1, s2, rownum):
-        set_cell(rownum, 1, label1, CELESTE_LT,  NORMAL,    LEFT)
-        set_cell(rownum, 2, label2, CELESTE_MID, BOLD_DARK if label2 else NORMAL, LEFT)
-        set_cell(rownum, 3, total,  CELESTE,     BOLD_DARK, CENTER)
-        set_cell(rownum, 4, s1,     WHITE_FILL,  NORMAL,    CENTER)
-        set_cell(rownum, 5, s2,     WHITE_FILL,  NORMAL,    CENTER)
-        for ci in range(6, 12):
-            set_cell(rownum, ci, "", WHITE_FILL, NORMAL, CENTER)
-
-    secB_data = [
-        ("N° Familias con plan de intervención", "", T(sol_cp,luna_cp), sol_cp, luna_cp),
-        ("N° Familias sin plan de intervención", "Riesgo bajo",  T(sol_sb,luna_sb),  sol_sb,  luna_sb),
-        ("",                                     "Riesgo medio", T(sol_sm,luna_sm),  sol_sm,  luna_sm),
-        ("",                                     "Riesgo alto",  T(sol_sa,luna_sa),  sol_sa,  luna_sa),
-        ("N° Familias egresadas de planes de intervención", "Total de egresos",
-         T(sol_eg_t,luna_eg_t), sol_eg_t, luna_eg_t),
-        ("", "Alta por cumplir plan",
-         T(sol_egs["egreso_alta"],luna_egs["egreso_alta"]),
-         sol_egs["egreso_alta"], luna_egs["egreso_alta"]),
-        ("", "Traslado de establecimiento",
-         T(sol_egs["egreso_traslado"],luna_egs["egreso_traslado"]),
-         sol_egs["egreso_traslado"], luna_egs["egreso_traslado"]),
-        ("", "Derivación por complejidad",
-         T(sol_egs["egreso_derivacion"],luna_egs["egreso_derivacion"]),
-         sol_egs["egreso_derivacion"], luna_egs["egreso_derivacion"]),
-        ("", "Por abandono",
-         T(sol_egs["egreso_abandono"],luna_egs["egreso_abandono"]),
-         sol_egs["egreso_abandono"], luna_egs["egreso_abandono"]),
-    ]
-    for l1, l2, tot, s1, s2 in secB_data:
-        r += 1
-        row_B(l1, l2, tot, s1, s2, r)
-
-    # Fila de pie de página
-    r += 2
-    ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=11)
-    c = ws.cell(row=r, column=1,
-                value=f"CESFAM Cholchol — {datetime.now().strftime('%d/%m/%Y %H:%M')}")
-    c.font = Font(italic=True, size=8, color="1F3864")
-    c.alignment = LEFT
-    c.fill = CELESTE_LT
-
-    # Anchos de columna
-    col_widths = [42, 10, 12, 12, 10, 10, 10, 10, 10, 10, 10]
-    for i, w in enumerate(col_widths, 1):
-        ws.column_dimensions[get_column_letter(i)].width = w
+    if is_posta_role:
+        # Generar hojas por establecimiento para Sector Luna
+        if not df_eval.empty and 'Establecimiento' in df_eval.columns:
+            est_list = [e for e in df_eval['Establecimiento'].unique() if e and str(e).strip()]
+            for est_name in est_list:
+                clean_name = str(est_name).strip()
+                if clean_name.lower() == "cesfam cholchol": continue
+                
+                # Crear hoja limpia para el establecimiento
+                ws_est = wb.create_sheet(title=clean_name[:31])
+                df_ev_est = df_eval[df_eval['Establecimiento'] == est_name]
+                write_rem_sheet(ws_est, df_ev_est, df_plan, clean_name.upper(), 0, len(df_ev_est))
 
     # Guardar en buffer
     buf = io.BytesIO()
@@ -1771,13 +1721,13 @@ def main():
                 df_display = df_display[df_display['Establecimiento Base'].str.strip().str.lower() == selected_est_filter.lower()]
 
         with st.expander("📋 Mis Encuestas Familiares"):
-            st.caption("Fichas autorizadas para su perfil:")
-            df_history = load_evaluaciones_df() # Cargamos desde analytics o implementamos local
-            if not df_history.empty:
-                # Filtrar DF localmente para el listado
+            st.caption("Fichas autorizadas para su perfil y filtros actuales:")
+            if not df_display.empty:
+                # El df_display ya viene filtrado por búsqueda y establecimiento en el bloque anterior
+                # Ahora solo filtramos por check_access para asegurar RBAC si no se hizo en df_filtered_base
                 allowed_ids = []
-                for _, row in df_history.iterrows():
-                    if check_access(row.to_dict(), user_info):
+                for _, row in df_display.iterrows():
+                    if check_access(row.to_dict(), st.session_state.user_info):
                         allowed_ids.append(row.to_dict())
                 
                 if allowed_ids:
