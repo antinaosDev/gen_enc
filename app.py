@@ -1594,6 +1594,41 @@ def main():
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
+
+    # --- MODO SIMULACIÓN (Solo Programador) ---
+    real_user_role = str(st.session_state.user_info.get('rol', '')).lower()
+    if real_user_role == 'programador':
+        with st.sidebar:
+            st.markdown("---")
+            st.markdown("🛠️ **Zona de Pruebas (Simulación)**")
+            sim_profile = st.selectbox(
+                "Simular Perfil:",
+                ["Original", "Jefe Sector Sol", "Jefe Sector Luna", "Encargado/a Postas", "Equipo Sector"],
+                index=0,
+                key="sim_profile_selector"
+            )
+            
+            if sim_profile != "Original":
+                if sim_profile == "Jefe Sector Sol":
+                    st.session_state.user_info['cargo'] = "Jefe Sector Sol"
+                    st.session_state.user_info['Programa/Unidad'] = "Sector Sol"
+                elif sim_profile == "Jefe Sector Luna":
+                    st.session_state.user_info['cargo'] = "Jefe Sector Luna"
+                    st.session_state.user_info['Programa/Unidad'] = "Sector Luna"
+                elif sim_profile == "Encargado/a Postas":
+                    st.session_state.user_info['cargo'] = "Encargado/a Postas"
+                    st.session_state.user_info['Programa/Unidad'] = "Postas Salud Rural"
+                elif sim_profile == "Equipo Sector":
+                    st.session_state.user_info['cargo'] = "Equipo de Sector"
+                    st.session_state.user_info['Programa/Unidad'] = "Médico Sector Sol"
+                
+                st.warning(f"Simulando: **{sim_profile}**")
+                # Forzar recarga de datos con el nuevo filtro RBAC
+                if 'df_evaluaciones' in st.session_state:
+                    del st.session_state['df_evaluaciones']
+            else:
+                # Restaurar si es necesario (el login original está en st.session_state.user_info)
+                pass 
             
     # El resto del main sigue aquí... (listado, pestañas, etc.)
     
@@ -1682,7 +1717,30 @@ def main():
                     else:
                         st.error("❌ El ID ingresado no coincide con ningún registro.")
 
-        st.markdown("<hr style='border-top: 1px solid #e2e8f0; margin: 24px 0;'>", unsafe_allow_html=True)
+        col_busq, col_est = st.columns([2, 1])
+        with col_busq:
+            search_query = st.text_input("🔍 Buscar por Familia, RUT o Dirección:", placeholder="Ej: Perez, 12.345.678-9...", key="search_main")
+        with col_est:
+            # Opciones de establecimiento para filtro
+            est_options = ["Todos", "Cesfam Cholchol", "Posta Huentelar", "Posta Huamaqui", "Posta Malalche", "EMR Rapahue", "EMR Repocura"]
+            selected_est_filter = st.selectbox("Filtrar por Establecimiento:", options=est_options, key="filter_est_main")
+
+        df_display = df_filtered.copy()
+        
+        # Filtro de búsqueda
+        if search_query:
+            q = search_query.lower()
+            mask = (
+                df_display['Familia'].str.lower().str.contains(q, na=False) | 
+                df_display['Dirección'].str.lower().str.contains(q, na=False) |
+                df_display['Grupo Familiar JSON'].str.lower().str.contains(q, na=False)
+            )
+            df_display = df_display[mask]
+        
+        # Filtro por Establecimiento
+        if selected_est_filter != "Todos":
+            df_display = df_display[df_display['Establecimiento Base'].str.strip().str.lower() == selected_est_filter.lower()]
+
         with st.expander("📋 Mis Encuestas Familiares"):
             st.caption("Fichas autorizadas para su perfil:")
             df_history = load_evaluaciones_df() # Cargamos desde analytics o implementamos local

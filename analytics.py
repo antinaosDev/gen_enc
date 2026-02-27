@@ -143,8 +143,10 @@ def load_evaluaciones_df():
             user_unit_clean = user_unit.strip().lower()
             user_cargo_clean = cargo.strip().lower()
             
-            # Filtro por Sector
-            if 'sector sol' in user_unit_clean or 'sector sol' in user_cargo_clean:
+            # Filtro por Sector (Prioridad: Encargado Postas ve Sector Luna)
+            if 'encargado' in user_cargo_clean and 'postas' in user_cargo_clean:
+                df = df[df['Sector'].str.strip().str.lower() == 'luna']
+            elif 'sector sol' in user_unit_clean or 'sector sol' in user_cargo_clean:
                 df = df[df['Sector'].str.strip().str.lower() == 'sol']
             elif 'sector luna' in user_unit_clean or 'sector luna' in user_cargo_clean:
                 df = df[df['Sector'].str.strip().str.lower() == 'luna']
