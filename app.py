@@ -2033,7 +2033,8 @@ def main():
         col_logo, col_title, col_id = st.columns([1.5, 3.5, 2])
         
         with col_logo:
-            LOGO_PATH = r"D:\PROYECTOS PROGRAMACIÓN\ANTIGRAVITY_PROJECTS\encuesta_riesgo\NUEVO LOGO.png"
+            # Normalizado para compatibilidad con Windows local y Streamlit Cloud (Linux)
+            LOGO_PATH = "NUEVO LOGO.png"
             if os.path.exists(LOGO_PATH):
                 st.image(LOGO_PATH, width=120)
             else:
