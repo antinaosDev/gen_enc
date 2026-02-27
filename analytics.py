@@ -236,6 +236,48 @@ def chart_risk_by_sector(df):
     return fig
 
 
+def chart_risk_by_establishment(df):
+    """
+    BAR AGRUPADO H: Comparativa riesgo por Establecimiento (Postas/EMR).
+    Útil para el Encargado de Postas.
+    """
+    if df.empty or "Establecimiento" not in df.columns:
+        return None
+    
+    niveles = ["RIESGO ALTO", "RIESGO MEDIO", "RIESGO BAJO"]
+    # Obtener establecimientos únicos con datos
+    ests = sorted(df["Establecimiento"].unique())
+    
+    fig = go.Figure()
+    for nivel in niveles:
+        vals = [len(df[(df["Establecimiento"]==e) & (df["Nivel"]==nivel)]) for e in ests]
+        fig.add_trace(go.Bar(
+            name=nivel.replace("RIESGO ", ""),
+            y=ests,
+            x=vals,
+            orientation="h",
+            marker_color=RISK_COLORS[nivel],
+            text=vals,
+            textposition="inside",
+            textfont=dict(color="white", size=11),
+            hovertemplate=f"{nivel} en %{{y}}: %{{x}} familias<extra></extra>",
+        ))
+
+    fig.update_layout(
+        barmode="stack",
+        title=dict(text="<b>Riesgo familiar por Establecimiento</b><br><span style='font-size:11px;color:#666'>Distribución en Postas y EMR</span>",
+                   font=dict(size=14, color=AZUL_OSCURO), x=0, xanchor='left'),
+        plot_bgcolor="white", paper_bgcolor="white",
+        margin=dict(l=10, r=10, t=70, b=10),
+        font=dict(family="Inter, Roboto, Arial"),
+        showlegend=True,
+        legend=dict(orientation="h", y=1.1, x=1, xanchor="right", font_size=10),
+        xaxis=dict(showgrid=True, gridcolor="#F0F0F0"),
+        yaxis=dict(showgrid=False, showline=False, autorange="reversed"),
+    )
+    return fig
+
+
 def chart_top_risk_factors(df, top_n=12):
     """
     BAR HORIZONTAL ordenado: Top N factores de riesgo más frecuentes.
@@ -530,7 +572,12 @@ def render_analytics():
 
     st.markdown("---")
 
-    # Fila 1: Donut + Barras sector
+    # Identificar rol para segmentación
+    user_info = st.session_state.get('user_info', {})
+    cargo = str(user_info.get('cargo', '')).lower()
+    is_posta = 'encargado' in cargo and 'postas' in cargo
+
+    # Fila 1: Donut + Barras sector o Establecimiento
     c1, c2 = st.columns(2)
     with c1:
         with st.container(border=True):
@@ -538,8 +585,18 @@ def render_analytics():
             if fig: st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
     with c2:
         with st.container(border=True):
-            fig = chart_risk_by_sector(df)
+            if is_posta:
+                # Prioridad Postas para este cargo
+                fig = chart_risk_by_establishment(df)
+            else:
+                fig = chart_risk_by_sector(df)
             if fig: st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+            
+    # Si es encargado de postas y no se mostró el de sector arriba, mostrarlo más abajo o mostrar ambos
+    if is_posta:
+         with st.container(border=True):
+             fig_sector = chart_risk_by_sector(df)
+             if fig_sector: st.plotly_chart(fig_sector, use_container_width=True, config={"displayModeBar": False})
 
     # Fila 2: Top factores de riesgo (ancho completo)
     with st.container(border=True):

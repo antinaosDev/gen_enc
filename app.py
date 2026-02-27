@@ -1737,7 +1737,17 @@ def main():
         with col_est:
             # Opciones de establecimiento para filtro
             est_options = ["Todos", "Cesfam Cholchol", "Posta Huentelar", "Posta Huamaqui", "Posta Malalche", "EMR Rapahue", "EMR Repocura"]
-            selected_est_filter = st.selectbox("Filtrar por Establecimiento:", options=est_options, key="filter_est_main")
+            
+            # Pre-selección inteligente por rol
+            default_est_idx = 0
+            u_cargo = str(st.session_state.user_info.get('cargo', '')).lower()
+            if 'encargado' in u_cargo and 'postas' in u_cargo:
+                # Si es de postas, por defecto no mostramos "Todos" (Cesfam incluído)
+                # sino que invitamos a filtrar o mostramos el primero de postas
+                # O simplemente dejamos "Todos" pero el backend ya filtró por Sector Luna
+                pass
+                
+            selected_est_filter = st.selectbox("Filtrar por Establecimiento:", options=est_options, index=default_est_idx, key="filter_est_main")
 
         # Cargar datos para el listado y búsqueda
         df_filtered_base = load_evaluaciones_df()
