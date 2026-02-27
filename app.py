@@ -1596,8 +1596,11 @@ def main():
             st.rerun()
 
     # --- MODO SIMULACIÓN (Solo Programador) ---
-    real_user_role = str(st.session_state.user_info.get('rol', '')).lower()
-    if real_user_role == 'programador':
+    # Guardamos el rol real en una variable para mantener el acceso al panel de simulación
+    if 'real_role' not in st.session_state:
+        st.session_state.real_role = str(st.session_state.user_info.get('rol', '')).lower()
+    
+    if st.session_state.real_role == 'programador':
         with st.sidebar:
             st.markdown("---")
             st.markdown("🛠️ **Zona de Pruebas (Simulación)**")
@@ -1609,6 +1612,9 @@ def main():
             )
             
             if sim_profile != "Original":
+                # Al simular, degradamos el 'rol' para que los filtros RBAC se activen
+                st.session_state.user_info['rol'] = "usuario" 
+                
                 if sim_profile == "Jefe Sector Sol":
                     st.session_state.user_info['cargo'] = "Jefe Sector Sol"
                     st.session_state.user_info['Programa/Unidad'] = "Sector Sol"
@@ -1622,13 +1628,21 @@ def main():
                     st.session_state.user_info['cargo'] = "Equipo de Sector"
                     st.session_state.user_info['Programa/Unidad'] = "Médico Sector Sol"
                 
-                st.warning(f"Simulando: **{sim_profile}**")
+                st.warning(f"Simulando: **{sim_profile}** (Privilegios restringidos)")
                 # Forzar recarga de datos con el nuevo filtro RBAC
                 if 'df_evaluaciones' in st.session_state:
                     del st.session_state['df_evaluaciones']
+                if 'raw_analytics_df' in st.session_state:
+                    del st.session_state['raw_analytics_df']
             else:
-                # Restaurar si es necesario (el login original está en st.session_state.user_info)
-                pass 
+                # Restaurar rol original
+                st.session_state.user_info['rol'] = st.session_state.real_role
+                # Restaurar cargo/unidad si es necesario (el login original está en st.session_state.user_info)
+                # Nota: El login original se perdió al sobrescribir, pero para el Programador
+                # podemos resetearlo a valores genéricos o recargar.
+                if st.session_state.user_info['rol'] == 'programador':
+                    st.session_state.user_info['cargo'] = "Programador"
+                    st.session_state.user_info['Programa/Unidad'] = "Administración"
             
     # El resto del main sigue aquí... (listado, pestañas, etc.)
     
