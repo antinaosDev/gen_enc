@@ -896,7 +896,10 @@ def load_record_into_state(record):
         fam_json = record.get('Grupo Familiar JSON', '[]')
         plan_json = record.get('Plan Intervención JSON', '[]')
         
-        st.session_state.family_members = pd.DataFrame(json.loads(fam_json) if fam_json else [])
+        df_fam = pd.DataFrame(json.loads(fam_json) if fam_json else [])
+        if not df_fam.empty and 'F. Nac' in df_fam.columns:
+            df_fam['F. Nac'] = pd.to_datetime(df_fam['F. Nac'], errors='coerce').dt.date
+        st.session_state.family_members = df_fam
         
         df_plan = pd.DataFrame(json.loads(plan_json) if plan_json else [])
         cols_date = ['Fecha Prog', 'Fecha Real']
@@ -1389,10 +1392,17 @@ def update_rem_p7(n_inscritas_sol=0, n_inscritas_luna=0):
 
 # --- ESTADO DE LA APLICACIÓN ---
 if 'family_members' not in st.session_state:
-    st.session_state.family_members = pd.DataFrame(columns=[
-        "Nombre y Apellidos", "RUT", "F. Nac", "Sexo", "Nacionalidad",
-        "E. Civil", "Ocupación", "Parentesco", "Resp"
-    ])
+    st.session_state.family_members = pd.DataFrame({
+        "Nombre y Apellidos": pd.Series(dtype='str'),
+        "RUT": pd.Series(dtype='str'),
+        "F. Nac": pd.Series(dtype='object'),
+        "Sexo": pd.Series(dtype='str'),
+        "Nacionalidad": pd.Series(dtype='str'),
+        "E. Civil": pd.Series(dtype='str'),
+        "Ocupación": pd.Series(dtype='str'),
+        "Parentesco": pd.Series(dtype='str'),
+        "Resp": pd.Series(dtype='bool')
+    })
 if 'intervention_plan' not in st.session_state:
     st.session_state.intervention_plan = pd.DataFrame({
         "Objetivo": pd.Series(dtype='str'),
@@ -1640,10 +1650,17 @@ def main():
                         del st.session_state[_k]
                 for rk in risk_keys:
                     st.session_state[rk] = False
-                st.session_state.family_members = pd.DataFrame(columns=[
-                    "Nombre y Apellidos", "RUT", "F. Nac", "Sexo", "Nacionalidad",
-                    "E. Civil", "Ocupación", "Parentesco", "Resp"
-                ])
+                st.session_state.family_members = pd.DataFrame({
+                    "Nombre y Apellidos": pd.Series(dtype='str'),
+                    "RUT": pd.Series(dtype='str'),
+                    "F. Nac": pd.Series(dtype='object'),
+                    "Sexo": pd.Series(dtype='str'),
+                    "Nacionalidad": pd.Series(dtype='str'),
+                    "E. Civil": pd.Series(dtype='str'),
+                    "Ocupación": pd.Series(dtype='str'),
+                    "Parentesco": pd.Series(dtype='str'),
+                    "Resp": pd.Series(dtype='bool')
+                })
                 st.session_state.intervention_plan = pd.DataFrame({
                     "Objetivo": pd.Series(dtype='str'), "Actividad": pd.Series(dtype='str'),
                     "Fecha Prog": pd.Series(dtype='datetime64[ns]'), "Responsable": pd.Series(dtype='str'),
