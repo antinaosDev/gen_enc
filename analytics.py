@@ -531,7 +531,9 @@ def render_analytics():
     """, unsafe_allow_html=True)
 
     with st.spinner("Cargando datos del servidor..."):
-        df = load_evaluaciones_df()
+        # Sincronizar con el filtro global de la app si existe
+        est_filter = st.session_state.get('filter_est_main', 'Todos')
+        df = load_evaluaciones_df(est_filter=est_filter)
 
     if df.empty:
         st.info("No hay datos disponibles. Ingresa evaluaciones para ver el análisis.")
