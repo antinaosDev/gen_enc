@@ -776,6 +776,36 @@ def get_google_sheet_client():
         st.error(f"Error conectando a Google Sheets: {e}")
         return None
 
+@st.cache_data(ttl=300)
+def get_all_ruts_mapping():
+    """Retorna un dict {rut: (familia, id_eval)} de todos los integrantes de la BD para validación."""
+    try:
+        client = get_google_sheet_client()
+        if not client: return {}
+        sh = client.open_by_url(SHEET_URL)
+        ws = sh.worksheet("Evaluaciones")
+        data = ws.get_all_values()
+        if len(data) <= 1: return {}
+        
+        df = pd.DataFrame(data[1:], columns=data[0])
+        rut_map = {}
+        for _, row in df.iterrows():
+            fid = row.get("ID Evaluación", "Desconocido")
+            fam = row.get("Familia", "Desconocida")
+            gf_json = row.get("Grupo Familiar JSON", "[]")
+            try:
+                gf = json.loads(gf_json)
+                for member in gf:
+                    rut = str(member.get("RUT", "")).strip().upper()
+                    if rut and rut != "S/R" and rut != "":
+                        rut_map[rut] = (fam, fid)
+            except:
+                continue
+        return rut_map
+    except Exception as e:
+        st.error(f"Error cargando mapeo de RUTs: {e}")
+        return {}
+
 
 def get_or_create_worksheet(spreadsheet, title, headers=None):
     """Obtiene una hoja por nombre, la crea si no existe y opcionalmente pone encabezados."""
@@ -2130,7 +2160,7 @@ def main():
             column_config={
                 "Nombre y Apellidos": st.column_config.TextColumn("Nombre y Apellidos", width="large"),
                 "RUT": st.column_config.TextColumn("RUT", width="medium"),
-                "F. Nac": st.column_config.TextColumn("F. Nac", width="small"),
+                "F. Nac": st.column_config.DateColumn("F. Nac", width="small", format="DD/MM/YYYY"),
                 "Sexo": st.column_config.SelectboxColumn(
                     "Sexo", 
                     options=["M", "F", "G"], 
@@ -2157,6 +2187,21 @@ def main():
         )
         st.session_state.family_members = edited_family
         
+        # --- VALIDACIÓN DE RUTS DUPLICADOS ---
+        all_ruts = get_all_ruts_mapping()
+        current_eval_id = st.session_state.get('idEvaluacion', '')
+        
+        dupes_found = []
+        for idx, m_row in edited_family.iterrows():
+            m_rut = str(m_row.get("RUT", "")).strip().upper()
+            if m_rut in all_ruts:
+                fam_name, other_id = all_ruts[m_rut]
+                if other_id != current_eval_id:
+                    dupes_found.append(f"• **{m_rut}** ({m_row.get('Nombre y Apellidos', 'Sin nombre')}) ya existe en la familia: **{fam_name}** (ID: {other_id})")
+        
+        if dupes_found:
+            st.warning("⚠️ **Alerta de Duplicidad detectada:**\n\n" + "\n".join(dupes_found))
+
         st.info("""
         🤰 **Guía de Gestación (Sexo 'G'):**
         - **Embarazo en curso**: Sexo='G' + E. Civil vacío o normal.
