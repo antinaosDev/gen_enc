@@ -19,7 +19,8 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None):
     pdf.set_font('helvetica', 'B', 12)
     
     # Logo
-    logo_path = r"D:\PROYECTOS PROGRAMACIÓN\ANTIGRAVITY_PROJECTS\encuesta_riesgo\NUEVO LOGO.png"
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    logo_path = os.path.join(base_dir, "NUEVO LOGO.png")
     if os.path.exists(logo_path):
         pdf.image(logo_path, 10, 8, 25)
     else:
