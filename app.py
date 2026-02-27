@@ -421,9 +421,12 @@ def check_access(row_data, user_info):
     reg_sector = str(row_data.get('Sector', '')).strip().lower()
     reg_unit = str(row_data.get('Programa/Unidad', '')).strip().lower()
 
-    if 'sector sol' in user_unit_clean or 'sector sol' in user_cargo_clean:
+    import re
+    full_context = f"{user_unit_clean} {user_cargo_clean}"
+
+    if re.search(r'\bsol\b', full_context):
         return reg_sector == 'sol'
-    if 'sector luna' in user_unit_clean or 'sector luna' in user_cargo_clean or 'postas' in user_cargo_clean or 'postas' in user_unit_clean:
+    if re.search(r'\bluna\b', full_context) or 'postas' in full_context:
         return reg_sector == 'luna'
         
     # Filtro por Programa (ej: Cardiovascular) - Comparación flexible

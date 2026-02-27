@@ -144,11 +144,14 @@ def load_evaluaciones_df(est_filter=None):
             user_cargo_clean = cargo.strip().lower()
             
             # Filtro por Sector (Prioridad: Encargado Postas ve Sector Luna)
+            import re
+            full_context = f"{user_unit_clean} {user_cargo_clean}"
+            
             if 'encargado' in user_cargo_clean and 'postas' in user_cargo_clean:
                 df = df[df['Sector'].str.strip().str.lower() == 'luna']
-            elif 'sector sol' in user_unit_clean or 'sector sol' in user_cargo_clean:
+            elif re.search(r'\bsol\b', full_context):
                 df = df[df['Sector'].str.strip().str.lower() == 'sol']
-            elif 'sector luna' in user_unit_clean or 'sector luna' in user_cargo_clean:
+            elif re.search(r'\bluna\b', full_context) or 'postas' in full_context:
                 df = df[df['Sector'].str.strip().str.lower() == 'luna']
             # Filtro por Programa
             elif user_unit_clean:
