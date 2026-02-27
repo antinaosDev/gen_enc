@@ -1725,7 +1725,9 @@ def main():
             est_options = ["Todos", "Cesfam Cholchol", "Posta Huentelar", "Posta Huamaqui", "Posta Malalche", "EMR Rapahue", "EMR Repocura"]
             selected_est_filter = st.selectbox("Filtrar por Establecimiento:", options=est_options, key="filter_est_main")
 
-        df_display = df_filtered.copy()
+        # Cargar datos para el listado y búsqueda
+        df_filtered_base = load_evaluaciones_df()
+        df_display = df_filtered_base.copy()
         
         # Filtro de búsqueda
         if search_query:
@@ -1739,7 +1741,10 @@ def main():
         
         # Filtro por Establecimiento
         if selected_est_filter != "Todos":
-            df_display = df_display[df_display['Establecimiento Base'].str.strip().str.lower() == selected_est_filter.lower()]
+            if 'Establecimiento' in df_display.columns:
+                df_display = df_display[df_display['Establecimiento'].str.strip().str.lower() == selected_est_filter.lower()]
+            elif 'Establecimiento Base' in df_display.columns:
+                df_display = df_display[df_display['Establecimiento Base'].str.strip().str.lower() == selected_est_filter.lower()]
 
         with st.expander("📋 Mis Encuestas Familiares"):
             st.caption("Fichas autorizadas para su perfil:")
