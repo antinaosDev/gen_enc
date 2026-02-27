@@ -423,7 +423,7 @@ def check_access(row_data, user_info):
 
     if 'sector sol' in user_unit_clean or 'sector sol' in user_cargo_clean:
         return reg_sector == 'sol'
-    if 'sector luna' in user_unit_clean or 'sector luna' in user_cargo_clean:
+    if 'sector luna' in user_unit_clean or 'sector luna' in user_cargo_clean or 'postas' in user_cargo_clean or 'postas' in user_unit_clean:
         return reg_sector == 'luna'
         
     # Filtro por Programa (ej: Cardiovascular) - Comparación flexible
@@ -437,7 +437,7 @@ def can_download_rem(user_info):
     """Verifica si el usuario puede descargar el reporte REM-P7."""
     role = str(user_info.get('rol', '')).lower()
     cargo = str(user_info.get('cargo', '')).lower()
-    return role in ['programador', 'encargado_mais'] or 'jefe' in cargo or 'mais' in cargo
+    return role in ['programador', 'encargado_mais'] or 'jefe' in cargo or 'mais' in cargo or 'encargado' in cargo
 
 RISK_LABELS = {
     't1_vif': 'Familia con VIF (física, psicológica, sexual, económica)',
