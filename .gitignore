@@ -1,6 +1,6 @@
 # Streamlit
 .streamlit/secrets.toml
-.streamlit/config.toml
+# .streamlit/config.toml  <-- No ignorar para mantener el tema visual
 
 # Python
 __pycache__/
@@ -22,7 +22,7 @@ PROTOCOLO INTERVENCION Y  VDI SJ.pdf
 procedimiento-de-construccion-de-genograma.pdf
 
 # Images & Screenshots
-*.png
+# *.png <-- No ignorar para mantener logos
 *.jpg
 *.jpeg
 *.svg
