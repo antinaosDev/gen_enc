@@ -2078,7 +2078,11 @@ def main():
             familia = st.text_input("Familia (Apellidos):", placeholder="Ej: Pérez González", key="familia")
             direccion = st.text_input("Dirección Completa:", key="direccion")
         with c2:
-            establecimiento = st.text_input("Establecimiento Base:", key="establecimiento")
+            establecimiento = st.selectbox(
+                "Establecimiento Base:", 
+                ["Cesfam Cholchol", "Posta Huentelar", "Posta Huamaqui", "Posta Malalche", "EMR Rapahue", "EMR Repocura"],
+                key="establecimiento"
+            )
             sector = st.selectbox("Sector Asignado:", ["Sol", "Luna", "No identificado"], key="sector")
 
         # Nuevos campos: Parentesco y Programa/Unidad
