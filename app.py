@@ -1699,49 +1699,31 @@ def main():
                 
             selected_est_filter = st.selectbox("Filtrar por Establecimiento:", options=est_options, index=default_est_idx, key="filter_est_main")
 
-        # Cargar datos para el listado y búsqueda
-        df_filtered_base = load_evaluaciones_df()
-        df_display = df_filtered_base.copy()
+        # Cargar datos para el listado y búsqueda (Usamos la función centralizada de analytics)
+        from analytics import load_evaluaciones_df
+        df_display = load_evaluaciones_df(est_filter=selected_est_filter)
         
-        # Filtro de búsqueda
+        # Filtro de búsqueda (se aplica sobre los datos ya filtrados por RBAC y Establecimiento)
         if search_query:
             q = search_query.lower()
             mask = (
-                df_display['Familia'].str.lower().str.contains(q, na=False) | 
-                df_display['Dirección'].str.lower().str.contains(q, na=False) |
-                df_display['Grupo Familiar JSON'].str.lower().str.contains(q, na=False)
+                df_display['Familia'].astype(str).str.lower().str.contains(q, na=False) | 
+                df_display['Dirección'].astype(str).str.lower().str.contains(q, na=False) |
+                df_display['Grupo Familiar JSON'].astype(str).str.lower().str.contains(q, na=False)
             )
             df_display = df_display[mask]
-        
-        # Filtro por Establecimiento
-        if selected_est_filter != "Todos":
-            if 'Establecimiento' in df_display.columns:
-                df_display = df_display[df_display['Establecimiento'].str.strip().str.lower() == selected_est_filter.lower()]
-            elif 'Establecimiento Base' in df_display.columns:
-                df_display = df_display[df_display['Establecimiento Base'].str.strip().str.lower() == selected_est_filter.lower()]
 
         with st.expander("📋 Mis Encuestas Familiares"):
-            st.caption("Fichas autorizadas para su perfil y filtros actuales:")
+            st.caption(f"Fichas autorizadas para: **{selected_est_filter}**")
+            # En este punto df_display YA está filtrado por RBAC, Establecimiento y Búsqueda
             if not df_display.empty:
-                # El df_display ya viene filtrado por búsqueda y establecimiento en el bloque anterior
-                # Ahora solo filtramos por check_access para asegurar RBAC si no se hizo en df_filtered_base
-                allowed_ids = []
-                for _, row in df_display.iterrows():
-                    if check_access(row.to_dict(), st.session_state.user_info):
-                        allowed_ids.append(row.to_dict())
-                
-                if allowed_ids:
-                    df_allowed = pd.DataFrame(allowed_ids)
-                    # Mostrar columnas clave
-                    cols_show = ["ID Evaluación", "Familia", "Sector", "Nivel"]
-                    # Verificar que existan
-                    cols_exist = [c for c in cols_show if c in df_allowed.columns]
-                    st.dataframe(df_allowed[cols_exist], use_container_width=True, hide_index=True)
-                    st.info("💡 Copie el ID y búsquelo arriba para cargar los datos.")
-                else:
-                    st.write("No hay encuestas para su unidad/sector.")
+                # Mostrar columnas clave
+                cols_show = ["ID Evaluación", "Familia", "Sector", "Nivel", "Establecimiento"]
+                cols_exist = [c for c in cols_show if c in df_display.columns]
+                st.dataframe(df_display[cols_exist], use_container_width=True, hide_index=True)
+                st.info("💡 Copie el ID y búsquelo arriba para cargar los datos.")
             else:
-                st.write("No se encontraron registros.")
+                st.write("No se encontraron registros para los filtros seleccionados.")
 
         if can_download_rem(user_info):
             st.markdown("---")

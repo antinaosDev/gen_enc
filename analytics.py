@@ -98,8 +98,8 @@ def _clean_layout(fig, title, subtitle=""):
     return fig
 
 
-def load_evaluaciones_df():
-    """Carga el DataFrame de evaluaciones con caché inteligente de datos crudos + filtrado dinámico RBAC."""
+def load_evaluaciones_df(est_filter=None):
+    """Carga el DataFrame de evaluaciones con caché inteligente de datos crudos + filtrado dinámico RBAC + filtro establecimiento."""
     # 1. Intentar obtener datos crudos del caché (5 min)
     raw_df = None
     if 'raw_analytics_df' in st.session_state and 'raw_df_ts' in st.session_state:
@@ -155,6 +155,14 @@ def load_evaluaciones_df():
                  if 'Programa/Unidad' in df.columns:
                      df = df[df['Programa/Unidad'].str.strip().str.lower().str.contains(user_unit_clean)]
     
+    
+    # 4. APLICAR FILTRO DE ESTABLECIMIENTO (Global de la UI)
+    if est_filter and est_filter != "Todos":
+        if 'Establecimiento' in df.columns:
+            df = df[df['Establecimiento'].str.strip().str.lower() == est_filter.lower()]
+        elif 'Establecimiento Base' in df.columns:
+            df = df[df['Establecimiento Base'].str.strip().str.lower() == est_filter.lower()]
+            
     return df
 
 
