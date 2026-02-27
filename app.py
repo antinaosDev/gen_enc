@@ -2140,9 +2140,9 @@ def main():
                 "Nacionalidad": st.column_config.TextColumn("Nacionalidad", width="medium"),
                 "E. Civil": st.column_config.SelectboxColumn(
                     "E. Civil", 
-                    options=["Soltero/a", "Casado/a", "Conviviente", "Divorciado/a", "Separado/a", "Viudo/a", "Fallecido/a", "Espontáneo", "Provocado"], 
+                    options=["Soltero/a (S)", "Casado/a (C)", "Conviviente (Co)", "Divorciado/a (D)", "Separado/a (Sep)", "Viudo/a (V)", "Fallecido/a (F)", "Espontáneo", "Provocado"], 
                     width="medium",
-                    help="Para Gestación: deje vacío (Embarazo), o elija Espontáneo/Provocado (Aborto)."
+                    help="Use abreviaturas tradicionales o elija el tipo de aborto para gestaciones."
                 ),
                 "Ocupación": st.column_config.TextColumn("Ocupación", width="medium"),
                 "Parentesco": st.column_config.SelectboxColumn(
@@ -2156,7 +2156,14 @@ def main():
             }
         )
         st.session_state.family_members = edited_family
-        st.info("💡 **Tips Genograma:** Use Sexo='G' para embarazos/abortos. Para gemelos, elija el parentesco 'Gemelo' correspondiente. Los crónicos aparecen con borde rojo.")
+        
+        st.info("""
+        🤰 **Guía de Gestación (Sexo 'G'):**
+        - **Embarazo en curso**: Sexo='G' + E. Civil vacío o normal.
+        - **Aborto Espontáneo**: Sexo='G' + E. Civil='Espontáneo' (Muestra △ con X).
+        - **Aborto Provocado**: Sexo='G' + E. Civil='Provocado' (Muestra △ con ●).
+        - **Simbología Tradicional:** Soltero (S), Casado (C), Viudo (V), Divorciado (D), Fallecido (F).
+        """)
 
 
     st.markdown("<br>", unsafe_allow_html=True)
