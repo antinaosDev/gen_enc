@@ -95,7 +95,7 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
         pdf.set_font('helvetica', 'B', 8)
         pdf.set_text_color(0, 0, 0)
         pdf.set_draw_color(0, 0, 0)
-        cols = ["Nombre y Apellidos", "RUT", "Sexo", "Parentesco", "E. Civil", "Ocupación"]
+        cols = ["Nombre y Apellidos", "RUT", "Sexo", "Parentesco", "E. Civil", "Ocupacion"]
         w = [55, 25, 10, 30, 15, 55] # Total ~190
         
         for i, c in enumerate(cols):
@@ -110,12 +110,63 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
             pdf.cell(w[2], 6, str(row.get("Sexo", "")), border=1)
             pdf.cell(w[3], 6, str(row.get("Parentesco", "")), border=1)
             pdf.cell(w[4], 6, str(row.get("E. Civil", "")), border=1)
-            pdf.cell(w[5], 6, str(row.get("Ocupación", "")), border=1)
+            pdf.cell(w[5], 6, str(row.get("Ocupacion", "")), border=1)
             pdf.ln()
     else:
         pdf.set_font('helvetica', 'I', 8)
         pdf.set_text_color(0, 0, 0)
         pdf.cell(0, 6, "Sin integrantes registrados.", ln=True)
+
+    # --- LEYENDA DISCRETA (solo en modo blanco) ---
+    if is_blank:
+        pdf.ln(4)
+        pdf.set_draw_color(180, 180, 180)
+        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+        pdf.set_draw_color(0, 0, 0)
+        pdf.ln(2)
+
+        # Helper local para imprimir una etiqueta bold + valor normal en la misma linea
+        # IMPORTANTE: usar ancho explicito (168) en multi_cell, NO 0
+        # porque despues de cell(ln=False) el cursor X esta desplazado
+        _LBL_W = 22   # ancho de la etiqueta
+        _TXT_W = 168  # 190 (ancho util) - 22 (etiqueta)
+
+        def leyenda_fila(label, texto):
+            pdf.set_font('helvetica', 'B', 7)
+            pdf.set_text_color(130, 130, 130)
+            pdf.cell(_LBL_W, 4, label, ln=False)
+            pdf.set_font('helvetica', '', 7)
+            pdf.multi_cell(_TXT_W, 4, texto)
+
+        leyenda_fila("SEXO:",
+            "M = Hombre     F = Mujer     G = Gestacion / Embarazo (ver Gestacion)")
+
+        pdf.ln(1)
+        leyenda_fila("E. CIVIL:",
+            "S=Soltero/a   C=Casado/a   Co=Conviviente   D=Divorciado/a   "
+            "Sep=Separado/a   V=Viudo/a   F=Fallecido/a")
+        pdf.set_font('helvetica', '', 7)
+        pdf.set_text_color(130, 130, 130)
+        pdf.cell(_LBL_W, 4, "", ln=False)
+        pdf.multi_cell(_TXT_W, 4,
+            "Espontaneo = Aborto espontaneo (solo cuando Sexo=G)     "
+            "Provocado = Aborto provocado (solo cuando Sexo=G)")
+
+        pdf.ln(1)
+        leyenda_fila("GESTACION:",
+            "Embarazo en curso: E.Civil vacio     "
+            "Aborto Espontaneo: E.Civil='Espontaneo'     "
+            "Aborto Provocado: E.Civil='Provocado'")
+
+        pdf.ln(1)
+        leyenda_fila("PARENTESCO:",
+            "Jefe/a de Hogar  /  Conyuge/Pareja  /  Hijo/a  /  Hijo/a Gemelo Fraterno  /  "
+            "Hijo/a Gemelo Identico  /  Padre/Madre  /  Hermano/a  /  Abuelo/a  /  Nieto/a  /  "
+            "Tio/a  /  Sobrino/a  /  Hijo/a Adoptivo/a  /  Otro familiar  /  No familiar")
+
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_font('helvetica', '', 9)
+
 
     pdf.ln(5)
 
@@ -263,69 +314,7 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
     pdf.cell(50, 8, level_text, border=1 if not is_blank else 0, align='C')
     pdf.ln(8)
 
-    # --- APGAR FAMILIAR (SIGUE A LOS RIESGOS) ---
-    pdf.ln(5)
-    pdf.set_font('helvetica', 'B', 11)
-    pdf.set_fill_color(240, 240, 240)
-    pdf.cell(0, 8, "INSTRUMENTO DE EVALUACIÓN FAMILIAR: APGAR", ln=True, fill=True, border=1, align='C')
-    pdf.ln(3)
-    
-    pdf.set_font('helvetica', '', 9)
-    pdf.multi_cell(0, 4, "El APGAR familiar evalúa la percepción subjetiva del funcionamiento familiar en cinco dimensiones: Adaptación, Participación, Crecimiento, Afecto y Resolución.")
-    pdf.ln(3)
-    
-    # Tabla APGAR
-    pdf.set_font('helvetica', 'B', 8)
-    pdf.set_fill_color(245, 245, 245)
-    pdf.cell(140, 7, "Pregunta / Componente", border=1, fill=True)
-    pdf.cell(50, 7, "Puntaje (0-2)", border=1, fill=True, align='C', ln=True)
-    
-    apgar_questions = [
-        ("Adaptación: ¿Está satisfecho con la ayuda que recibe de su familia cuando tiene problemas?", 'apgar_a1'),
-        ("Participación: ¿Está satisfecho con la forma en que su familia discute problemas y comparte soluciones?", 'apgar_a2'),
-        ("Crecimiento: ¿Siente que su familia acepta y apoya sus nuevos intereses o cambios?", 'apgar_a3'),
-        ("Afecto: ¿Está satisfecho con la forma en que su familia expresa afecto y responde a sus emociones?", 'apgar_a4'),
-        ("Resolución: ¿Está satisfecho con la cantidad de tiempo que comparte con su familia?", 'apgar_a5')
-    ]
-    
-    pdf.set_font('helvetica', '', 8)
-    for q_text, q_key in apgar_questions:
-        val = data.get(q_key, 0)
-        checked_apgar = str(val) if not is_blank else "  "
-        pdf.cell(140, 7, q_text, border=1)
-        pdf.cell(50, 7, checked_apgar, border=1, align='C', ln=True)
-        
-    apgar_total = data.get('apgar_total', 0)
-    
-    if is_blank:
-        apgar_label = "_______________________"
-        apgar_color = (0, 0, 0)
-    else:
-        # Prevención de error si apgar_total no es numérico
-        try:
-            val_num = int(apgar_total)
-        except (ValueError, TypeError):
-            val_num = 0
-            
-        if val_num >= 7:
-            apgar_label = "FAMILIA FUNCIONAL (7-10 pts)"
-            apgar_color = (22, 101, 52)
-        elif 4 <= val_num <= 6:
-            apgar_label = "DISFUNCIÓN LEVE (4-6 pts)"
-            apgar_color = (133, 77, 14)
-        else:
-            apgar_label = "DISFUNCIÓN SEVERA (0-3 pts)"
-            apgar_color = (153, 27, 27)
-        
-    pdf.ln(3)
-    pdf.set_font('helvetica', 'B', 10)
-    pdf.set_text_color(*apgar_color)
-    pdf.cell(100, 7, f"TOTAL APGAR: {apgar_total} puntos", border=0)
-    pdf.cell(90, 7, f"INTERPRETACIÓN: {apgar_label}", border=0, align='R', ln=True)
-    pdf.set_text_color(0, 0, 0) # Reset
-    pdf.ln(2)
-
-    # Evaluator Sig Area
+    # Evaluator Sig Area — immediately after PUNTAJE TOTAL
     pdf.ln(10)
     pdf.set_font('helvetica', '', 9)
     if not is_blank:
@@ -337,6 +326,257 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
     if is_blank: sig_eval = '____________________________________'
     pdf.cell(80, 5, f"Evaluador: {sig_eval}", border=0, align='C', ln=True)
     pdf.ln(5)
+
+    # =====================================================================
+    # PÁGINA 2: INSTRUMENTOS COMPLEMENTARIOS — APGAR FAMILIAR
+    # =====================================================================
+    pdf.add_page()
+    draw_header(pdf, data, "INSTRUMENTOS COMPLEMENTARIOS", is_blank=is_blank)
+    pdf.ln(8)
+
+    # --- APGAR FAMILIAR ---
+    pdf.set_font('helvetica', 'B', 11)
+    pdf.set_fill_color(220, 230, 255)
+    pdf.cell(0, 8, "INSTRUMENTO 1: APGAR FAMILIAR", ln=True, fill=True, border=1, align='C')
+    pdf.ln(3)
+
+    pdf.set_font('helvetica', 'I', 9)
+    pdf.set_text_color(80, 80, 80)
+    pdf.multi_cell(0, 4,
+        "El APGAR Familiar (Smilkstein, 1978) evalua la percepcion subjetiva del funcionamiento familiar "
+        "desde la perspectiva de un integrante. Mide cinco dimensiones: "
+        "Adaptacion (A), Participacion (P), Crecimiento (G), Afecto (A) y Resolucion (R)."
+    )
+    pdf.set_text_color(0, 0, 0)
+    pdf.ln(4)
+
+    # Cabecera en dos filas para evitar desborde
+    pdf.set_font('helvetica', 'B', 8)
+    pdf.set_fill_color(245, 245, 245)
+    pdf.cell(140, 6, "Pregunta / Componente", border=1, fill=True)
+    pdf.cell(50, 6, "Puntaje", border=1, fill=True, align='C', ln=True)
+    pdf.cell(140, 5, "", border=0)
+    pdf.cell(50, 5, "0=Casi nunca  1=A veces  2=Casi siempre", border=0, align='C', ln=True)
+
+    apgar_questions = [
+        ("A - Adaptación: ¿Está satisfecho con la ayuda que recibe de su familia cuando tiene problemas?", 'apgar_a1'),
+        ("P - Participación: ¿Está satisfecho con la forma en que su familia discute problemas y comparte soluciones?", 'apgar_a2'),
+        ("G - Crecimiento: ¿Siente que su familia acepta y apoya sus nuevos intereses o cambios?", 'apgar_a3'),
+        ("A - Afecto: ¿Está satisfecho con la forma en que su familia expresa afecto y responde a sus emociones?", 'apgar_a4'),
+        ("R - Resolución: ¿Está satisfecho con la cantidad de tiempo que comparte con su familia?", 'apgar_a5'),
+    ]
+
+    pdf.set_font('helvetica', '', 8)
+    for q_text, q_key in apgar_questions:
+        val = data.get(q_key, 0)
+        checked_apgar = str(val) if not is_blank else "  "
+        pdf.cell(140, 7, q_text, border=1)
+        pdf.cell(50, 7, checked_apgar, border=1, align='C', ln=True)
+
+    apgar_total = data.get('apgar_total', 0)
+
+    if is_blank:
+        apgar_label = "_______________________"
+        apgar_color = (0, 0, 0)
+    else:
+        try:
+            val_num = int(apgar_total)
+        except (ValueError, TypeError):
+            val_num = 0
+        if val_num >= 7:
+            apgar_label = "FAMILIA FUNCIONAL (7-10 pts)"
+            apgar_color = (22, 101, 52)
+        elif 4 <= val_num <= 6:
+            apgar_label = "DISFUNCIÓN LEVE (4-6 pts)"
+            apgar_color = (133, 77, 14)
+        else:
+            apgar_label = "DISFUNCIÓN SEVERA (0-3 pts)"
+            apgar_color = (153, 27, 27)
+
+    pdf.ln(3)
+    pdf.set_font('helvetica', 'B', 10)
+    pdf.set_text_color(*apgar_color)
+    pdf.cell(100, 7, f"TOTAL APGAR: {apgar_total} puntos", border=0)
+    pdf.cell(90, 7, f"INTERPRETACIÓN: {apgar_label}", border=0, align='R', ln=True)
+    pdf.set_text_color(0, 0, 0)
+    pdf.ln(5)
+
+    # Interpretación APGAR
+    pdf.set_font('helvetica', 'B', 8)
+    pdf.set_fill_color(240, 240, 240)
+    pdf.cell(0, 6, "TABLA DE INTERPRETACIÓN APGAR", ln=True, fill=True)
+    pdf.set_font('helvetica', '', 8)
+    pdf.cell(60, 6, "7 - 10 pts", border=1, align='C')
+    pdf.cell(130, 6, "Familia Funcional - Funcionamiento familiar adecuado.", border=1, ln=True)
+    pdf.cell(60, 6, "4 - 6 pts", border=1, align='C')
+    pdf.cell(130, 6, "Disfuncion Leve - Dificultades moderadas que requieren seguimiento.", border=1, ln=True)
+    pdf.cell(60, 6, "0 - 3 pts", border=1, align='C')
+    pdf.cell(130, 6, "Disfuncion Severa - Alteracion grave del funcionamiento familiar.", border=1, ln=True)
+    pdf.ln(8)
+
+    # Observaciones APGAR
+    pdf.set_font('helvetica', 'B', 9)
+    pdf.cell(0, 6, "OBSERVACIONES / INTERPRETACIÓN CLÍNICA:", ln=True)
+    pdf.set_font('helvetica', '', 9)
+    if is_blank:
+        for _ in range(4):
+            pdf.cell(0, 7, "", border="B", ln=True)
+            pdf.ln(2)
+    else:
+        pdf.multi_cell(0, 7, data.get('observaciones_apgar', ''))
+    pdf.ln(5)
+
+    # =====================================================================
+    # INSTRUMENTO 2: GENOGRAMA FAMILIAR
+    # =====================================================================
+    pdf.add_page()
+    draw_header(pdf, data, "INSTRUMENTO 2: GENOGRAMA", is_blank=is_blank)
+    pdf.ln(8)
+    pdf.set_font('helvetica', 'B', 11)
+    pdf.set_fill_color(220, 255, 230)
+    pdf.cell(0, 8, "INSTRUMENTO 2: GENOGRAMA FAMILIAR", ln=True, fill=True, border=1, align='C')
+    pdf.ln(3)
+
+    pdf.set_font('helvetica', 'I', 9)
+    pdf.set_text_color(80, 80, 80)
+    if is_blank:
+        pdf.multi_cell(0, 4,
+            "El Genograma (Murray Bowen, 1978) es una representacion grafica de la estructura y "
+            "dinamica de una familia a traves de al menos tres generaciones. Permite visualizar patrones de "
+            "relaciones, enfermedades hereditarias, ciclos vitales y dinamicas familiares."
+        )
+    else:
+        pdf.multi_cell(0, 4,
+            "El Genograma (Murray Bowen, 1978) es una representacion grafica de la estructura y "
+            "dinamica de una familia a traves de al menos tres generaciones. Permite visualizar patrones de "
+            "relaciones, enfermedades hereditarias, ciclos vitales y dinamicas familiares. "
+            "Es generado automaticamente por el sistema a partir del Grupo Familiar registrado."
+        )
+    pdf.set_text_color(0, 0, 0)
+    pdf.ln(4)
+
+    # Simbología
+    pdf.set_font('helvetica', 'B', 8)
+    pdf.set_fill_color(240, 240, 240)
+    pdf.cell(0, 6, "SIMBOLOGÍA BÁSICA DEL GENOGRAMA", ln=True, fill=True)
+    pdf.set_font('helvetica', '', 8)
+    simbolos = [
+        ("[ ] (cuadrado)", "Hombre"),
+        ("( ) (circulo)", "Mujer"),
+        ("/\ (triangulo)", "Gestacion / Embarazo"),
+        ("/\+X (triangulo con X)", "Aborto Espontaneo"),
+        ("/\+* (triangulo con punto)", "Aborto Provocado"),
+        ("Doble borde", "Persona indice del caso (Resp)"),
+        ("Borde rojo", "Enfermedad cronica (Cron)"),
+        ("Simbolo relleno", "Fallecido/a"),
+        ("=== linea doble", "Matrimonio"),
+        ("--- linea simple", "Convivencia"),
+        ("= / = linea cortada", "Separacion/Divorcio"),
+    ]
+    col_w = [60, 130]
+    for sym, desc in simbolos:
+        pdf.cell(col_w[0], 6, sym, border=1)
+        pdf.cell(col_w[1], 6, desc, border=1, ln=True)
+    pdf.ln(4)
+
+    pdf.set_font('helvetica', 'I', 8)
+    pdf.set_text_color(100, 100, 100)
+    if is_blank:
+        pdf.multi_cell(0, 4,
+            "Instrucciones: Utilice la simbologia de arriba para dibujar el genograma familiar "
+            "en el espacio en blanco de abajo. Incluya al menos tres generaciones cuando sea posible."
+        )
+    else:
+        pdf.multi_cell(0, 4,
+            "NOTA: El genograma ha sido generado automaticamente por el sistema "
+            "a partir de los datos del Grupo Familiar registrado."
+        )
+    pdf.set_text_color(0, 0, 0)
+    pdf.ln(4)
+
+    # Espacio para genograma manual
+    pdf.set_font('helvetica', 'B', 9)
+    pdf.cell(0, 6, "ESPACIO PARA DIBUJO DEL GENOGRAMA:", ln=True)
+    y_start_box = pdf.get_y()
+    pdf.rect(pdf.get_x(), y_start_box, 190, 80)
+    pdf.ln(85)
+
+    # =====================================================================
+    # INSTRUMENTO 3: ECOMAPA FAMILIAR
+    # =====================================================================
+    pdf.add_page()
+    draw_header(pdf, data, "INSTRUMENTO 3: ECOMAPA", is_blank=is_blank)
+    pdf.ln(8)
+    pdf.set_font('helvetica', 'B', 11)
+    pdf.set_fill_color(255, 235, 205)
+    pdf.cell(0, 8, "INSTRUMENTO 3: ECOMAPA FAMILIAR", ln=True, fill=True, border=1, align='C')
+    pdf.ln(3)
+
+    pdf.set_font('helvetica', 'I', 9)
+    pdf.set_text_color(80, 80, 80)
+    if is_blank:
+        pdf.multi_cell(0, 4,
+            "El Ecomapa (Ann Hartman, 1978) es una representacion grafica de las relaciones "
+            "y recursos que una familia tiene con sistemas externos (instituciones, redes, comunidad). "
+            "Permite identificar redes de apoyo, recursos disponibles e identificar areas de aislamiento."
+        )
+    else:
+        pdf.multi_cell(0, 4,
+            "El Ecomapa (Ann Hartman, 1978) es una representacion grafica de las relaciones "
+            "y recursos que una familia tiene con sistemas externos (instituciones, redes, comunidad). "
+            "Permite identificar redes de apoyo, recursos disponibles e identificar areas de aislamiento. "
+            "Es generado automaticamente por el sistema segun los sistemas vinculados."
+        )
+    pdf.set_text_color(0, 0, 0)
+    pdf.ln(4)
+
+    pdf.set_font('helvetica', 'B', 8)
+    pdf.set_fill_color(240, 240, 240)
+    pdf.cell(0, 6, "SISTEMAS EXTERNOS Y TIPO DE VINCULO", ln=True, fill=True)
+    pdf.set_font('helvetica', '', 8)
+    sistemas = [
+        ("CESFAM", "Sistema de salud primaria"),
+        ("RELIGION", "Comunidades religiosas o espirituales"),
+        ("TRABAJO", "Empleadores y entornos laborales"),
+        ("ESCUELA", "Establecimientos educativos"),
+        ("COMUNIDAD", "Redes comunitarias, juntas de vecinos"),
+        ("JUSTICIA", "Instituciones judiciales o policiales"),
+        ("RED FAMILIAR", "Familia extensa fuera del hogar"),
+        ("VECINOS", "Entorno vecinal inmediato"),
+        ("OTRO", "Otros sistemas relevantes"),
+    ]
+    for sis, desc in sistemas:
+        # Fila 1: Sistema + Descripcion
+        pdf.cell(50, 5, sis, border='LRT', align='C')
+        pdf.cell(140, 5, desc, border='LRT', ln=True)
+        # Fila 2: Vinculo (ocupa toda la fila debajo)
+        pdf.cell(50, 5, "", border='LRB')
+        pdf.cell(140, 5, "Vinculo: [ ] Reciproco  [ ] Hacia Familia  [ ] Desde Familia  [ ] Sin flujo", border='LRB', ln=True)
+    pdf.ln(4)
+
+    pdf.set_font('helvetica', 'I', 8)
+    pdf.set_text_color(100, 100, 100)
+    if is_blank:
+        pdf.multi_cell(0, 4,
+            "Instrucciones: Marque con X el tipo de vinculo para cada sistema externo "
+            "que tenga relacion con la familia. Utilice el espacio de abajo para dibujar "
+            "el ecomapa con los sistemas seleccionados y su familia al centro."
+        )
+    else:
+        pdf.multi_cell(0, 4,
+            "NOTA: El ecomapa ha sido generado automaticamente por el sistema "
+            "segun los sistemas vinculados registrados en la vista Analisis Familiar."
+        )
+    pdf.set_text_color(0, 0, 0)
+    pdf.ln(4)
+
+    # Espacio para ecomapa manual
+    pdf.set_font('helvetica', 'B', 9)
+    pdf.cell(0, 6, "ESPACIO PARA DIBUJO DEL ECOMAPA:", ln=True)
+    y_start_box2 = pdf.get_y()
+    pdf.rect(pdf.get_x(), y_start_box2, 190, 90)
+    pdf.ln(95)
+
 
     # --- 4. PLAN INTERVENCIÓN (OTRA PÁGINA) ---
     pdf.add_page()
