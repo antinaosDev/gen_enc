@@ -8,7 +8,7 @@ import toml
 import os
 import uuid
 import io
-from pdf_gen import generate_pdf_report
+from pdf_gen import generate_pdf_report, generate_blank_pdf
 
 # Módulos de visualización (carga lazy para no bloquear inicio)
 # Módulos de visualización (carga lazy para no bloquear inicio)
@@ -458,11 +458,14 @@ RISK_LABELS = {
     't2_saludMentalLeve': 'Patología de salud mental leve o moderada',
     't2_judicial': 'Conflictos o problemas con la justicia',
     't2_rolesParentales': 'Incumplimiento de roles parentales',
+    't2_sobrecargaCuidador': 'Sobrecarga del cuidador principal',
+    't2_conflictosSeveros': 'Conflictos familiares severos o crisis de comunicación',
     't2_adultosRiesgo': 'Adultos en riesgo biopsicosocial a cargo de niños',
     't3_patologiaCronica': 'Patología crónica descompensada sintomática',
     't3_discapacidadLeve': 'Miembro con discapacidad leve/moderada (40-55pts)',
     't3_rezago': 'Rezago desarrollo psicomotor',
     't3_madreAdolescente': 'Madre adolescente',
+    't3_duelo': 'Duelo reciente (pérdida de integrante significativo)',
     't3_sinRedApoyo': 'Ausencia o escasa red de apoyo social/familiar',
     't3_cesantia': 'Cesantía de más de 1 mes del proveedor',
     't3_vulneNoExtrema': 'Vulnerabilidad socioeconómica no extrema',
@@ -855,10 +858,23 @@ def load_record_into_state(record):
         'Programa/Unidad': 'programa_unidad',
         'Sector': 'sector',
         'Tipo Unión': 'tipo_union',
+        'Observaciones': 'observaciones',
     }
     
     for header, state_key in mapping.items():
         st.session_state[state_key] = record.get(header, '')
+
+    # APGAR
+    try:
+        st.session_state['apgar_total'] = int(record.get('APGAR Total', 0))
+        st.session_state['apgar_a1'] = int(record.get('A1', 0))
+        st.session_state['apgar_a2'] = int(record.get('A2', 0))
+        st.session_state['apgar_a3'] = int(record.get('A3', 0))
+        st.session_state['apgar_a4'] = int(record.get('A4', 0))
+        st.session_state['apgar_a5'] = int(record.get('A5', 0))
+    except (ValueError, TypeError):
+        st.session_state['apgar_total'] = 0
+        for i in range(1, 6): st.session_state[f'apgar_a{i}'] = 0
 
     # Dates
     try:
@@ -952,8 +968,9 @@ def save_evaluacion_to_sheet(data, headers):
             worksheet.append_row(headers)
             all_values = [headers]
         elif all_values[0] != headers:
-            # Header may differ, just keep existing
-            pass
+            # Si los encabezados cambiaron, actualizar la primera fila
+            worksheet.update(range_name="A1", values=[headers])
+            all_values[0] = headers
 
         new_id = str(data[0]).strip()
         
@@ -1421,8 +1438,8 @@ risk_keys = [
     't1_vif', 't1_drogas', 't1_alcohol', 't1_saludMentalDescomp', 't1_abusoSexual', 
     't1_riesgoBiopsicoGrave', 't1_epsaRiesgo', 't1_vulnerabilidadExtrema', 't1_trabajoInfantil',
     't2_enfermedadGrave', 't2_altoRiesgoHosp', 't2_discapacidad', 't2_saludMentalLeve', 
-    't2_judicial', 't2_rolesParentales', 't2_adultosRiesgo',
-    't3_patologiaCronica', 't3_discapacidadLeve', 't3_rezago', 't3_madreAdolescente', 
+    't2_judicial', 't2_rolesParentales', 't2_sobrecargaCuidador', 't2_conflictosSeveros', 't2_adultosRiesgo',
+    't3_patologiaCronica', 't3_discapacidadLeve', 't3_rezago', 't3_madreAdolescente', 't3_duelo', 
     't3_sinRedApoyo', 't3_cesantia', 't3_vulneNoExtrema', 't3_precariedadLaboral', 
     't3_hacinamiento', 't3_entornoInseguro', 't3_adultoSolo', 't3_desercionEscolar', 
     't3_analfabetismo', 't3_escolaridadIncompleta', 't3_dificultadAcceso',
@@ -1506,7 +1523,7 @@ def render_login_page():
             user = st.text_input("Profesional", placeholder="Usuario registrado")
             password = st.text_input("Contraseña", type="password", placeholder="Su contraseña")
             st.markdown("<br>", unsafe_allow_html=True)
-            submitted = st.form_submit_button("Ingresar a la Plataforma", use_container_width=True, type="primary")
+            submitted = st.form_submit_button("Ingresar a la Plataforma", width='stretch', type="primary")
             
             if submitted:
                 users_df = load_users()
@@ -1552,7 +1569,7 @@ def main():
             </div>
         """, unsafe_allow_html=True)
         
-        if st.button("Cerrar Sesión", use_container_width=True):
+        if st.button("Cerrar Sesión", width='stretch'):
             # Limpieza atómica de toda la sesión para evitar fugas de datos RBAC
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
@@ -1635,7 +1652,7 @@ def main():
         st.markdown('<div style="color: #475569; font-size: 0.85rem; line-height: 1.5; margin-bottom: 20px;">Gestione y busque los registros consolidados en la base médica centralizada.</div>', unsafe_allow_html=True)
         
         with st.container(border=True):
-            if st.button("➕ Nueva Ficha", use_container_width=True):
+            if st.button("➕ Nueva Ficha", width='stretch'):
                 keys_to_clear = [
                     'idEvaluacion', 'familia', 'direccion', 'establecimiento',
                     'sector', 'parentesco', 'programa_unidad', 'tipo_union',
@@ -1672,7 +1689,7 @@ def main():
         with st.container(border=True):
             st.markdown('<div style="font-weight: 700; font-size: 0.9rem; color: #334155; margin-bottom: 8px;">Búsqueda Directa</div>', unsafe_allow_html=True)
             search_id = st.text_input("ID Evaluación", placeholder="Ej: FAM-0123...", label_visibility="collapsed")
-            if st.button("🔍 Cargar Registro", type="primary", use_container_width=True):
+            if st.button("🔍 Cargar Registro", type="primary", width='stretch'):
                 with st.spinner("Conectando con base de datos segura..."):
                     record = search_record(search_id)
                     if record:
@@ -1703,6 +1720,23 @@ def main():
                         st.rerun()
                     else:
                         st.error("❌ El ID ingresado no coincide con ningún registro.")
+        
+        # --- NUEVO: DESCARGA FORMULARIO BLANCO ---
+        st.markdown('<div style="font-weight: 700; font-size: 0.9rem; color: #334155; margin-top: 10px; margin-bottom: 8px;">Instrumentos en Blanco</div>', unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown('<div style="font-size: 0.8rem; color: #64748b; margin-bottom: 10px;">Descargue la pauta vacía para aplicación manual en terreno.</div>', unsafe_allow_html=True)
+            
+            def get_blank_pdf_bytes():
+                return generate_blank_pdf()
+            
+            blank_pdf = get_blank_pdf_bytes()
+            st.download_button(
+                label="📄 Descargar Pauta en Blanco",
+                data=blank_pdf,
+                file_name=f"Pauta_Blank_{date.today()}.pdf",
+                mime="application/pdf",
+                width='stretch'
+            )
 
         col_busq, col_est = st.columns([2, 1])
         with col_busq:
@@ -1743,7 +1777,7 @@ def main():
                 # Mostrar columnas clave
                 cols_show = ["ID Evaluación", "Familia", "Sector", "Nivel", "Establecimiento"]
                 cols_exist = [c for c in cols_show if c in df_display.columns]
-                st.dataframe(df_display[cols_exist], use_container_width=True, hide_index=True)
+                st.dataframe(df_display[cols_exist], width='stretch', hide_index=True)
                 st.info("💡 Copie el ID y búsquelo arriba para cargar los datos.")
             else:
                 st.write("No se encontraron registros para los filtros seleccionados.")
@@ -1754,7 +1788,7 @@ def main():
             st.markdown("*Familias inscritas por sector (para el informe REM-P7):*")
             n_inscritas_sol  = st.number_input("Inscritas Sector Sol",  min_value=0, value=st.session_state.get('n_inscritas_sol', 0),  step=1, key="n_inscritas_sol")
             n_inscritas_luna = st.number_input("Inscritas Sector Luna", min_value=0, value=st.session_state.get('n_inscritas_luna', 0), step=1, key="n_inscritas_luna")
-            if st.button("🔄 Actualizar REM-P7 (Sheets)", use_container_width=True):
+            if st.button("🔄 Actualizar REM-P7 (Sheets)", width='stretch'):
                 with st.spinner("Generando REM-P7..."):
                     ok, msg = update_rem_p7(n_inscritas_sol, n_inscritas_luna)
                     if ok:
@@ -1765,7 +1799,7 @@ def main():
                         st.error(f"❌ {msg}")
 
             st.markdown("**Exportar Excel:**")
-            if st.button("📥 Descargar REM-P7 Excel", use_container_width=True):
+            if st.button("📥 Descargar REM-P7 Excel", width='stretch'):
                 with st.spinner("Generando Excel..."):
                     buf, err = export_rem_p7_excel(n_inscritas_sol, n_inscritas_luna)
                     if err:
@@ -1781,7 +1815,7 @@ def main():
                     data=st.session_state['rem_p7_excel'],
                     file_name=fname,
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    use_container_width=True
+                    width='stretch'
                 )
         else:
             st.info("ℹ️ Su cargo no tiene permisos para descargar el REM-P7.")
@@ -1792,7 +1826,7 @@ def main():
             with st.expander("🔄 Migrar IDs al nuevo formato"):
                 st.caption("Reescribe todos los IDs de evaluación existentes al formato **EVA-NNN-FAM-XXX**.")
                 st.warning("⚠️ Esta operación modifica los IDs de todos los registros en Google Sheets. Ejecutar solo una vez.")
-                if st.button("🚀 Ejecutar Migración de IDs", type="primary", use_container_width=True):
+                if st.button("🚀 Ejecutar Migración de IDs", type="primary", width='stretch'):
                     with st.spinner("Migrando IDs... puede tomar unos segundos por cada registro..."):
                         ok_m, msg_m, n_m = migrate_eval_ids_to_new_format()
                         if ok_m:
@@ -1976,7 +2010,7 @@ def main():
                         tipo_union=st.session_state.get('tipo_union', 'Casados'),
                         interpersonal_relations=st.session_state.get('interpersonal_relations', [])
                     )
-                    st.graphviz_chart(dot_geno, use_container_width=True)
+                    st.graphviz_chart(dot_geno, width='stretch')
                 else:
                     st.info("💡 Agregue integrantes en la pestaña 'Ficha Familiar'.")
                     
@@ -1985,7 +2019,7 @@ def main():
                 if generate_ecomap_dot:
                     # Pasamos los sistemas seleccionados y sus flujos
                     dot_eco = generate_ecomap_dot(familia_val, members_list, active_risks, prog_val, nivel_val, selected_systems, system_flows)
-                    st.graphviz_chart(dot_eco, use_container_width=True)
+                    st.graphviz_chart(dot_eco, width='stretch')
                 else:
                     st.error("Error modular en Ecomapa.")
             
@@ -2008,7 +2042,7 @@ def main():
         with tab_plan:
             st.markdown("#### 📅 Plan de Intervención Familiar Actual")
             if not st.session_state.intervention_plan.empty:
-                st.dataframe(st.session_state.intervention_plan, use_container_width=True, hide_index=True)
+                st.dataframe(st.session_state.intervention_plan, width='stretch', hide_index=True)
             else:
                 st.info("💡 No se ha definido un plan de intervención para esta familia.")
 
@@ -2016,7 +2050,7 @@ def main():
         # Barra de acciones de estudio
         col_s1, col_s2 = st.columns([1, 4])
         with col_s1:
-            if st.button("💾 Guardar Estudio Completo", type="primary", use_container_width=True):
+            if st.button("💾 Guardar Estudio Completo", type="primary", width='stretch'):
                 with st.spinner("Persistiendo estudio en el historial..."):
                     # 1. Preparar datos para Hoja 1 (Evaluaciones)
                     evaluador_n = st.session_state.get('evaluadorName', 'N/A')
@@ -2198,7 +2232,7 @@ def main():
         edited_family = st.data_editor(
             st.session_state.family_members,
             num_rows="dynamic",
-            use_container_width=True,
+            width='stretch',
             column_config={
                 "Nombre y Apellidos": st.column_config.TextColumn("Nombre y Apellidos", width="large"),
                 "RUT": st.column_config.TextColumn("RUT", width="medium"),
@@ -2289,6 +2323,8 @@ def main():
         with c2:
             st.checkbox("Conflictos o problemas con la justicia", key='t2_judicial')
             st.checkbox("Incumplimiento de roles parentales", key='t2_rolesParentales')
+            st.checkbox("Sobrecarga del cuidador principal", key='t2_sobrecargaCuidador')
+            st.checkbox("Conflictos familiares severos o crisis de comunicación", key='t2_conflictosSeveros')
             st.checkbox("Adultos en riesgo biopsicosocial a cargo de niños", key='t2_adultosRiesgo')
 
         # TABLA 3
@@ -2299,6 +2335,7 @@ def main():
             st.checkbox("Miembro con discapacidad leve/moderada (40-55pts)", key='t3_discapacidadLeve')
             st.checkbox("Rezago desarrollo psicomotor", key='t3_rezago')
             st.checkbox("Madre adolescente", key='t3_madreAdolescente')
+            st.checkbox("Duelo reciente (pérdida de integrante significativo)", key='t3_duelo')
             st.checkbox("Ausencia o escasa red de apoyo social/familiar", key='t3_sinRedApoyo')
             st.checkbox("Cesantía de más de 1 mes del proveedor", key='t3_cesantia')
             st.checkbox("Vulnerabilidad socioeconómica no extrema", key='t3_vulneNoExtrema')
@@ -2339,6 +2376,40 @@ def main():
             st.checkbox("Recursos socioeconómicos suficientes", key='t5_recursosSuficientes')
             st.checkbox("Resiliencia (sobreponerse a crisis)", key='t5_resiliencia')
             st.checkbox("Vivienda adecuada", key='t5_viviendaAdecuada')
+
+        # --- SECCIÓN APGAR FAMILIAR ---
+        st.markdown("<hr style='border-top: 1px solid #e2e8f0; margin: 24px 0;'>", unsafe_allow_html=True)
+        st.markdown('<div style="background: #f1f5f9; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 0.9rem; margin-bottom: 12px;">📊 APGAR FAMILIAR (Funcionamiento Familiar)</div>', unsafe_allow_html=True)
+        
+        apgar_options = {
+            0: "0 - Casi nunca",
+            1: "1 - A veces",
+            2: "2 - Casi siempre"
+        }
+        
+        c_ap1, c_ap2 = st.columns(2, gap="medium")
+        with c_ap1:
+            a1 = st.selectbox("Adaptación: ¿Está satisfecho con la ayuda que recibe de su familia cuando tiene problemas?", options=[0,1,2], format_func=lambda x: apgar_options[x], key="apgar_a1")
+            a2 = st.selectbox("Participación: ¿Está satisfecho con la forma en que su familia discute problemas y comparte soluciones?", options=[0,1,2], format_func=lambda x: apgar_options[x], key="apgar_a2")
+            a3 = st.selectbox("Graduación/Crecimiento: ¿Siente que su familia acepta y apoya sus nuevos intereses o cambios?", options=[0,1,2], format_func=lambda x: apgar_options[x], key="apgar_a3")
+        with c_ap2:
+            a4 = st.selectbox("Afecto: ¿Está satisfecho con la forma en que su familia expresa afecto y responde a sus emociones?", options=[0,1,2], format_func=lambda x: apgar_options[x], key="apgar_a4")
+            a5 = st.selectbox("Resolución: ¿Está satisfecho con la cantidad de tiempo que comparte con su familia?", options=[0,1,2], format_func=lambda x: apgar_options[x], key="apgar_a5")
+            
+        apgar_total = a1 + a2 + a3 + a4 + a5
+        st.session_state['apgar_total'] = apgar_total
+        
+        if apgar_total >= 7:
+            apgar_label = "FAMILIA FUNCIONAL (7-10 pts)"
+            apgar_color = "#166534"
+        elif 4 <= apgar_total <= 6:
+            apgar_label = "DISFUNCIÓN LEVE (4-6 pts)"
+            apgar_color = "#854d0e"
+        else:
+            apgar_label = "DISFUNCIÓN SEVERA (0-3 pts)"
+            apgar_color = "#991b1b"
+            
+        st.markdown(f'<div style="text-align: right; font-weight: 700; color: {apgar_color};">Resultado APGAR: {apgar_label}</div>', unsafe_allow_html=True)
 
     # CÁLCULO
     count_t1 = sum([st.session_state[k] for k in risk_keys if k.startswith('t1_')])
@@ -2414,7 +2485,7 @@ def main():
         edited_plan = st.data_editor(
             st.session_state.intervention_plan,
             num_rows="dynamic",
-            use_container_width=True,
+            width='stretch',
             column_config={
                 "Objetivo": st.column_config.TextColumn("OBJETIVO"),
                 "Actividad": st.column_config.TextColumn("ACTIVIDAD"),
@@ -2450,7 +2521,7 @@ def main():
             edited_team = st.data_editor(
                 st.session_state.team_members,
                 num_rows="dynamic",
-                use_container_width=True,
+                width='stretch',
                 column_config={
                     "Nombre y Profesión": st.column_config.TextColumn("Registrar Nombre Completo", width="large"),
                     "Firma": st.column_config.CheckboxColumn("Firma Digital", width="small"),
@@ -2536,7 +2607,7 @@ def main():
         id_evaluacion = st.session_state.get('idEvaluacion', '')
         _es_registro_existente = bool(id_evaluacion)
         btn_label = "🔄 ACTUALIZAR REGISTRO" if _es_registro_existente else "💾 GUARDAR REGISTRO DIGITAL"
-        if st.button(btn_label, use_container_width=True, type="primary"):
+        if st.button(btn_label, width='stretch', type="primary"):
             with st.spinner("Guardando en la nube..."):
                 # Si es registro nuevo, generar el ID ahora con el apellido ingresado
                 if not id_evaluacion:
@@ -2574,6 +2645,7 @@ def main():
                     total_points,
                     level,
                     evaluador_nombre,
+                    st.session_state.get('tipo_union', 'Casados'), # Tipo Unión
                     ruts_concatenados,   # RUTs del grupo familiar
                 ]
                 
@@ -2592,9 +2664,26 @@ def main():
                 df_team = st.session_state.team_members.fillna("")
                 team_json = json.dumps(df_team.to_dict('records'), ensure_ascii=False, default=str)
                 
+                rel_json = json.dumps(st.session_state.get('interpersonal_relations', []), ensure_ascii=False)
+                
+                # Extra data (APGAR)
+                apgar_val = st.session_state.get('apgar_total', 0)
+                a1 = st.session_state.get('apgar_a1', 0)
+                a2 = st.session_state.get('apgar_a2', 0)
+                a3 = st.session_state.get('apgar_a3', 0)
+                a4 = st.session_state.get('apgar_a4', 0)
+                a5 = st.session_state.get('apgar_a5', 0)
+                
                 data_row.append(family_json)
                 data_row.append(plan_json)
                 data_row.append(team_json)
+                data_row.append(rel_json)
+                data_row.append(apgar_val)
+                data_row.append(a1)
+                data_row.append(a2)
+                data_row.append(a3)
+                data_row.append(a4)
+                data_row.append(a5)
                 
                 extra_data = [
                     st.session_state.get('comp_rep_sector', ''),
@@ -2621,9 +2710,10 @@ def main():
                     "ID Evaluación", "Fecha", "Familia", "Dirección", "Establecimiento", "Sector",
                     "Parentesco", "Programa/Unidad",
                     "Puntaje", "Nivel", "Evaluador",
-                    "RUTs Grupo Familiar",   # ← NUEVO
+                    "Tipo Unión", "RUTs Grupo Familiar",
                 ] + risk_keys + [
-                    "Grupo Familiar JSON", "Plan Intervención JSON", "Equipo Salud JSON"
+                    "Grupo Familiar JSON", "Plan Intervención JSON", "Equipo Salud JSON", "Relaciones JSON",
+                    "APGAR Total", "A1", "A2", "A3", "A4", "A5"
                 ] + [
                     "Rep Sector", "Familia Comp", "Dir Comp", "Rep Familia", "RUT Rep", "Fecha Comp",
                     "Firma Funcionario", "Firma Beneficiario", "Firma Equipo", "Firma Jefe", "Firma Evaluador",
@@ -2659,7 +2749,7 @@ def main():
                     st.error(f"❌ Error al guardar evaluación: {msg1}")
 
     with col_down:
-        if st.button("📄 Preparar PDF Evaluación", use_container_width=True):
+        if st.button("📄 Preparar PDF Evaluación", width='stretch'):
             try:
                 id_evaluacion = st.session_state.get('idEvaluacion', 'sin_id')
                 with st.spinner("Preparando archivo PDF..."):
@@ -2683,7 +2773,7 @@ def main():
                 data=st.session_state['temp_pdf_report'],
                 file_name=f"ficha_oficial_{id_eval_filename}.pdf",
                 mime="application/pdf",
-                use_container_width=True,
+                width='stretch',
             )
 
     # --- FOOTER PROFESIONAL (dentro de main - sólo usuarios autenticados ven la app) ---

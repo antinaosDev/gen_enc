@@ -1,0 +1,76 @@
+﻿Pauta de riesgo familiar en APS?
+Identificaci¾n de la familia
+Nombre del jefe/a de hogar
+Integrantes (edad, sexo, relaci¾n)
+Tipo de familia (nuclear, monoparental, extensa, etc.)
+Direcci¾n y sector
+CESFAM de referencia
+Condiciones sociodemogrßficas
+Nivel educacional
+Situaci¾n laboral
+Ingresos y previsi¾n
+Condiciones de vivienda (hacinamiento, saneamiento, servicios bßsicos)
+Redes de apoyo (familiares, comunitarias)
+Factores de riesgo biomÚdicos
+Enfermedades cr¾nicas (HTA, DM2, EPOC, etc.)
+Salud mental (depresi¾n, consumo de sustancias, riesgo suicida)
+Embarazo adolescente
+Ni±os con rezago del desarrollo
+Adultos mayores dependientes
+Discapacidad
+Factores psicosociales
+Violencia intrafamiliar
+Consumo problemßtico de alcohol/drogas
+Conflictos familiares severos
+Duelo reciente
+Sobrecarga del cuidador
+Funcionamiento familiar
+Comunicaci¾n
+Roles definidos
+Resoluci¾n de conflictos
+Nivel de cohesi¾n
+(Se puede usar herramientas como APGAR familiar)
+Clasificaci¾n del riesgo
+Generalmente se clasifica en:
+Bajo riesgo
+Mediano riesgo
+Alto riesgo
+Seg·n acumulaci¾n y gravedad de factores.
+┐C¾mo deben ir dirigidas las intervenciones?
+Las intervenciones deben ser:
+1. Integrales
+No solo centradas en la enfermedad, sino en lo social, emocional y familiar.
+2. Multidisciplinarias
+Trabajo coordinado entre:
+MÚdico
+Enfermera
+Trabajador/a social
+Psic¾logo/a
+Matrona
+TENS
+3. Seg·n nivel de riesgo
+Bajo riesgo
+Educaci¾n en salud
+Promoci¾n y prevenci¾n
+Controles habituales
+Mediano riesgo
+Seguimiento mßs frecuente
+Visitas domiciliarias integrales
+Talleres familiares
+Derivaci¾n a programas (salud mental, cardiovascular, etc.)
+Alto riesgo
+Plan de intervenci¾n familiar formal
+Intervenci¾n en crisis si corresponde
+Coordinaci¾n intersectorial (municipio, colegio, OPD, tribunales si aplica)
+Visitas domiciliarias peri¾dicas
+Registro y monitoreo continuo
+El plan de intervenci¾n debe incluir:
+Problema identificado
+Objetivo claro (medible y realista)
+Actividades concretas
+Profesional responsable
+Plazo
+Evaluaci¾n de seguimiento
+Problema | Objetivo | Intervenci¾n | Responsable | Plazo
+Sobrecarga cuidador | Disminuir estrÚs en 3 meses | Visita domiciliaria + terapia o derivaci¾n a taller de autocuidado u otro | Psic¾logo
+PROSAM | 90 dÝas

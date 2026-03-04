@@ -9,15 +9,7 @@ class PDF(FPDF):
         self.set_font('helvetica', 'I', 8)
         self.cell(0, 10, f'Página {self.page_no()}/{{nb}}', align='C')
 
-def generate_pdf_report(data, family_df, plan_df, team_df=None):
-    pdf = PDF()
-    pdf.alias_nb_pages()
-    pdf.add_page()
-    pdf.set_auto_page_break(auto=True, margin=15)
-    
-    # --- HEADER ---
-    pdf.set_font('helvetica', 'B', 12)
-    
+def draw_header(pdf, data, title_text="FICHA DE INGRESO", is_blank=False):
     # Logo
     base_dir = os.path.dirname(os.path.abspath(__file__))
     logo_path = os.path.join(base_dir, "NUEVO LOGO.png")
@@ -25,9 +17,11 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None):
         pdf.image(logo_path, 10, 8, 25)
     else:
         pdf.set_xy(10, 10)
+        pdf.set_font('helvetica', 'B', 10)
         pdf.cell(25, 10, "LOGO", border=1, align='C')
 
     # Title
+    pdf.set_font('helvetica', 'B', 12)
     pdf.set_xy(40, 10)
     pdf.cell(0, 5, "ILUSTRE MUNICIPALIDAD DE CHOLCHOL", ln=True, align='C')
     pdf.set_font('helvetica', '', 10)
@@ -35,17 +29,29 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None):
     pdf.cell(0, 5, "Departamento de Salud | CESFAM Cholchol", ln=True, align='C')
     
     # ID Box
-    pdf.set_xy(150, 20)
-    pdf.set_font('helvetica', 'B', 10)
-    pdf.cell(50, 6, "FICHA DE INGRESO", border=0, align='C', ln=True)
-    pdf.set_x(150)
+    # User requested compact ID Eval and Fecha
+    pdf.set_xy(140, 20)
+    pdf.set_font('helvetica', 'B', 9)
+    pdf.cell(60, 6, title_text, border=0, align='C', ln=True)
+    
+    pdf.set_x(140)
     pdf.set_font('helvetica', '', 9)
-    pdf.cell(20, 6, "ID Eval:", border=1)
-    pdf.cell(30, 6, str(data.get('idEvaluacion', '')), border=1, ln=True)
-    pdf.set_x(150)
-    pdf.cell(20, 6, "Fecha:", border=1)
-    pdf.cell(30, 6, str(data.get('fechaEvaluacion', '')), border=1)
+    # If blank, remove internal borders for a "cleaner" look if that's what "doble linea" meant
+    border_val = 1 if not is_blank else 0
+    pdf.cell(20, 6, "ID Eval:", border=border_val)
+    pdf.cell(40, 6, str(data.get('idEvaluacion', '')), border=border_val, ln=True)
+    pdf.set_x(140)
+    pdf.cell(20, 6, "Fecha:", border=border_val)
+    pdf.cell(40, 6, str(data.get('fechaEvaluacion', '')), border=border_val, ln=True)
+    pdf.ln(5)
 
+def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
+    pdf = PDF()
+    pdf.alias_nb_pages()
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    
+    draw_header(pdf, data, is_blank=is_blank)
     pdf.ln(15)
     
     # --- 1. IDENTIFICACIÓN ---
@@ -56,21 +62,23 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None):
     pdf.set_font('helvetica', '', 9)
     # Row 1
     pdf.cell(25, 6, "FAMILIA:", border=0)
-    pdf.cell(70, 6, str(data.get('familia', '')), border="B")
+    pdf.cell(70, 6, str(data.get('familia', '')), border="B" if not is_blank else 0)
     pdf.cell(5, 6, "")
     pdf.cell(35, 6, "ESTABLECIMIENTO:", border=0)
-    pdf.cell(55, 6, str(data.get('establecimiento', '')), border="B", ln=True)
+    pdf.cell(55, 6, str(data.get('establecimiento', '')), border="B" if not is_blank else 0, ln=True)
     pdf.ln(2)
     # Row 2
     pdf.cell(25, 6, "DIRECCIÓN:", border=0)
-    pdf.cell(70, 6, str(data.get('direccion', '')), border="B")
+    pdf.cell(70, 6, str(data.get('direccion', '')), border="B" if not is_blank else 0)
     pdf.cell(5, 6, "")
     pdf.cell(35, 6, "SECTOR:", border=0)
-    pdf.cell(55, 6, str(data.get('sector', '')), border="B", ln=True)
+    pdf.cell(55, 6, str(data.get('sector', '')), border="B" if not is_blank else 0, ln=True)
     pdf.ln(2)
     # Row 3 (New)
     pdf.cell(25, 6, "TIPO UNIÓN:", border=0)
-    pdf.cell(70, 6, str(data.get('tipo_union', 'Casados')), border="B", ln=True)
+    tu = data.get('tipo_union', '')
+    if not tu: tu = '________________' if is_blank else 'Casados'
+    pdf.cell(70, 6, str(tu), border="B" if not is_blank else 0, ln=True)
     pdf.ln(5)
 
     # --- 2. GRUPO FAMILIAR ---
@@ -119,7 +127,7 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None):
     pdf.set_fill_color(255, 255, 255)
     pdf.ln(2)
 
-    def print_risk_table(title, items, color_rgb=None):
+    def print_risk_table(title, items, color_rgb=None, is_blank=False):
         if color_rgb:
              pdf.set_fill_color(*color_rgb)
         else:
@@ -137,14 +145,14 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None):
         for i in range(0, len(items), 2):
             # Left Item
             key1, label1 = items[i]
-            checked1 = "X" if data.get(key1) is True else " "
+            checked1 = "X" if (not is_blank and data.get(key1) is True) else " "
             pdf.cell(5, 5, f"[{checked1}]", border=0)
             pdf.cell(col_width - 5, 5, label1, border=0)
             
             # Right Item
             if i + 1 < len(items):
                 key2, label2 = items[i+1]
-                checked2 = "X" if data.get(key2) is True else " "
+                checked2 = "X" if (not is_blank and data.get(key2) is True) else " "
                 pdf.cell(5, 5, f"[{checked2}]", border=0)
                 pdf.cell(col_width - 5, 5, label2, border=0, ln=True)
             else:
@@ -162,7 +170,7 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None):
         ('t1_vulnerabilidadExtrema', "Vulnerabilidad socioeconómica extrema (indigencia)"),
         ('t1_trabajoInfantil', "Trabajo infantil en niños < 14 años")
     ]
-    print_risk_table("TABLA 1: FACTORES DE RIESGO MÁXIMO (NO OTORGAN PTS.)", t1_items, (254, 226, 226))
+    print_risk_table("TABLA 1: FACTORES DE RIESGO MÁXIMO (NO OTORGAN PTS.)", t1_items, (254, 226, 226), is_blank)
     pdf.ln(2)
 
     # TABLA 2
@@ -173,9 +181,11 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None):
         ('t2_saludMentalLeve', "Patología de salud mental leve o moderada"),
         ('t2_judicial', "Conflictos o problemas con la justicia"),
         ('t2_rolesParentales', "Incumplimiento de roles parentales"),
+        ('t2_sobrecargaCuidador', "Sobrecarga del cuidador principal"),
+        ('t2_conflictosSeveros', "Conflictos familiares severos o crisis de comunicación"),
         ('t2_adultosRiesgo', "Adultos en riesgo biopsicosocial a cargo de niños")
     ]
-    print_risk_table("TABLA 2: FACTORES DE RIESGO ALTO (NO OTORGAN PTS.)", t2_items, (255, 237, 213))
+    print_risk_table("TABLA 2: FACTORES DE RIESGO ALTO (NO OTORGAN PTS.)", t2_items, (255, 237, 213), is_blank)
     pdf.ln(2)
 
     # TABLA 3
@@ -184,6 +194,7 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None):
         ('t3_discapacidadLeve', "Miembro con discapacidad leve/moderada (40-55pts)"),
         ('t3_rezago', "Rezago desarrollo psicomotor"),
         ('t3_madreAdolescente', "Madre adolescente"),
+        ('t3_duelo', "Duelo reciente (pérdida de integrante significativo)"),
         ('t3_sinRedApoyo', "Ausencia o escasa red de apoyo social/familiar"),
         ('t3_cesantia', "Cesantía de más de 1 mes del proveedor"),
         ('t3_vulneNoExtrema', "Vulnerabilidad socioeconómica no extrema"),
@@ -196,7 +207,7 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None):
         ('t3_escolaridadIncompleta', "Escolaridad básica incompleta padres"),
         ('t3_dificultadAcceso', "Dificultad de acceso a servicios")
     ]
-    print_risk_table("TABLA 3: FACTORES DE RIESGO MEDIO (4 PTS. C/U)", t3_items, (254, 249, 195))
+    print_risk_table("TABLA 3: FACTORES DE RIESGO MEDIO (4 PTS. C/U)", t3_items, (254, 249, 195), is_blank)
     pdf.ln(2)
 
     # TABLA 4
@@ -210,7 +221,7 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None):
         ('t4_endeudamiento', "Endeudamiento familiar elevado (>40%)"),
         ('t4_serviciosIncompletos', "Servicios básicos incompletos/inadecuados")
     ]
-    print_risk_table("TABLA 4: FACTORES DE RIESGO BAJO (3 PTS. C/U)", t4_items, (220, 252, 231))
+    print_risk_table("TABLA 4: FACTORES DE RIESGO BAJO (3 PTS. C/U)", t4_items, (220, 252, 231), is_blank)
     pdf.ln(2)
 
     # TABLA 5
@@ -224,7 +235,7 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None):
         ('t5_resiliencia', "Resiliencia (sobreponerse a crisis)"),
         ('t5_viviendaAdecuada', "Vivienda adecuada")
     ]
-    print_risk_table("TABLA 5: FACTORES PROTECTORES (NO OTORGAN PTS.)", t5_items, (219, 234, 254))
+    print_risk_table("TABLA 5: FACTORES PROTECTORES (NO OTORGAN PTS.)", t5_items, (219, 234, 254), is_blank)
     
     # Score Box
     pdf.ln(3)
@@ -245,23 +256,93 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None):
     pdf.ln(2)
 
     pdf.set_font('helvetica', 'B', 10)
-    pdf.cell(40, 8, "PUNTAJE TOTAL:", border=1, align='R')
-    pdf.cell(20, 8, str(data.get('total_points', 0)), border=1, align='C')
-    pdf.cell(40, 8, "NIVEL DE RIESGO:", border=1, align='R')
-    pdf.cell(50, 8, str(data.get('level', 'SIN RIESGO')), border=1, align='C')
+    pdf.cell(40, 8, "PUNTAJE TOTAL:", border=1 if not is_blank else 0, align='R')
+    pdf.cell(20, 8, str(data.get('total_points', 0)), border=1 if not is_blank else 0, align='C')
+    pdf.cell(40, 8, "NIVEL DE RIESGO:", border=1 if not is_blank else 0, align='R')
+    level_text = str(data.get('level', 'SIN RIESGO')) if not is_blank else '____________________'
+    pdf.cell(50, 8, level_text, border=1 if not is_blank else 0, align='C')
     pdf.ln(8)
 
-    # Evaluator Sig Area
-    pdf.ln(15) # Increased space
+    # --- APGAR FAMILIAR (SIGUE A LOS RIESGOS) ---
+    pdf.ln(5)
+    pdf.set_font('helvetica', 'B', 11)
+    pdf.set_fill_color(240, 240, 240)
+    pdf.cell(0, 8, "INSTRUMENTO DE EVALUACIÓN FAMILIAR: APGAR", ln=True, fill=True, border=1, align='C')
+    pdf.ln(3)
+    
     pdf.set_font('helvetica', '', 9)
-    pdf.cell(100, 5, "", border=0)
-    pdf.cell(80, 5, "____________________________________", border=0, align='C', ln=True)
+    pdf.multi_cell(0, 4, "El APGAR familiar evalúa la percepción subjetiva del funcionamiento familiar en cinco dimensiones: Adaptación, Participación, Crecimiento, Afecto y Resolución.")
+    pdf.ln(3)
+    
+    # Tabla APGAR
+    pdf.set_font('helvetica', 'B', 8)
+    pdf.set_fill_color(245, 245, 245)
+    pdf.cell(140, 7, "Pregunta / Componente", border=1, fill=True)
+    pdf.cell(50, 7, "Puntaje (0-2)", border=1, fill=True, align='C', ln=True)
+    
+    apgar_questions = [
+        ("Adaptación: ¿Está satisfecho con la ayuda que recibe de su familia cuando tiene problemas?", 'apgar_a1'),
+        ("Participación: ¿Está satisfecho con la forma en que su familia discute problemas y comparte soluciones?", 'apgar_a2'),
+        ("Crecimiento: ¿Siente que su familia acepta y apoya sus nuevos intereses o cambios?", 'apgar_a3'),
+        ("Afecto: ¿Está satisfecho con la forma en que su familia expresa afecto y responde a sus emociones?", 'apgar_a4'),
+        ("Resolución: ¿Está satisfecho con la cantidad de tiempo que comparte con su familia?", 'apgar_a5')
+    ]
+    
+    pdf.set_font('helvetica', '', 8)
+    for q_text, q_key in apgar_questions:
+        val = data.get(q_key, 0)
+        checked_apgar = str(val) if not is_blank else "  "
+        pdf.cell(140, 7, q_text, border=1)
+        pdf.cell(50, 7, checked_apgar, border=1, align='C', ln=True)
+        
+    apgar_total = data.get('apgar_total', 0)
+    
+    if is_blank:
+        apgar_label = "_______________________"
+        apgar_color = (0, 0, 0)
+    else:
+        # Prevención de error si apgar_total no es numérico
+        try:
+            val_num = int(apgar_total)
+        except (ValueError, TypeError):
+            val_num = 0
+            
+        if val_num >= 7:
+            apgar_label = "FAMILIA FUNCIONAL (7-10 pts)"
+            apgar_color = (22, 101, 52)
+        elif 4 <= val_num <= 6:
+            apgar_label = "DISFUNCIÓN LEVE (4-6 pts)"
+            apgar_color = (133, 77, 14)
+        else:
+            apgar_label = "DISFUNCIÓN SEVERA (0-3 pts)"
+            apgar_color = (153, 27, 27)
+        
+    pdf.ln(3)
+    pdf.set_font('helvetica', 'B', 10)
+    pdf.set_text_color(*apgar_color)
+    pdf.cell(100, 7, f"TOTAL APGAR: {apgar_total} puntos", border=0)
+    pdf.cell(90, 7, f"INTERPRETACIÓN: {apgar_label}", border=0, align='R', ln=True)
+    pdf.set_text_color(0, 0, 0) # Reset
+    pdf.ln(2)
+
+    # Evaluator Sig Area
+    pdf.ln(10)
+    pdf.set_font('helvetica', '', 9)
+    if not is_blank:
+        pdf.cell(100, 5, "", border=0)
+        pdf.cell(80, 5, "____________________________________", border=0, align='C', ln=True)
+    
     pdf.cell(100, 5, "", border=0)
     sig_eval = data.get('sig_evaluador_input', '') or data.get('evaluador_nombre', '')
+    if is_blank: sig_eval = '____________________________________'
     pdf.cell(80, 5, f"Evaluador: {sig_eval}", border=0, align='C', ln=True)
     pdf.ln(5)
 
-    # --- 4. PLAN INTERVENCIÓN ---
+    # --- 4. PLAN INTERVENCIÓN (OTRA PÁGINA) ---
+    pdf.add_page()
+    draw_header(pdf, data, "PLAN DE TRABAJO", is_blank=is_blank)
+    pdf.ln(10)
+    
     pdf.set_font('helvetica', 'B', 10)
     pdf.set_fill_color(240, 240, 240)
     pdf.set_text_color(0, 0, 0)
@@ -379,18 +460,21 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None):
     pdf.ln(10)
 
     # Jefe Equipo (Separate)
-    # Ensure we have space if the loop broke page? Auto-page break handles it usually, but let's be safe.
     if pdf.get_y() > 250: pdf.add_page()
     
     pdf.ln(15)
     
     y = pdf.get_y()
-    pdf.line(60, y, 150, y) # Centered line
+    # If not blank, draw a line for signature. If blank, the underscores are the line.
+    if not is_blank:
+        pdf.line(60, y, 150, y) # Centered line
     
     pdf.set_xy(60, y+2)
     pdf.set_font('helvetica', '', 9)
     # Name from input
-    pdf.multi_cell(90, 4, f"{data.get('sig_jefe','')}", align='C')
+    sig_jefe_val = data.get('sig_jefe','')
+    if is_blank and not sig_jefe_val: sig_jefe_val = "____________________________________"
+    pdf.multi_cell(90, 4, f"{sig_jefe_val}", align='C')
     
     # Title below name
     pdf.set_x(60)
@@ -457,3 +541,36 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None):
     pdf.ln()
 
     return bytes(pdf.output())
+
+def generate_blank_pdf():
+    """Genera un archivo PDF con la pauta en blanco para llenado manual."""
+    # Data con campos vacíos y placeholders para líneas
+    l = "____________________________________"
+    blank_data = {
+        'idEvaluacion': '______________',
+        'fechaEvaluacion': '______________',
+        'familia': l,
+        'direccion': l,
+        'establecimiento': l,
+        'sector': '________________',
+        'parentesco': '________________',
+        'programa_unidad': '________________',
+        'total_points': '___',
+        'level': '_______________',
+        'tipo_union': '________________',
+        'evaluador_nombre': l,
+        'apgar_total': '___',
+        'apgar_a1': 0, 'apgar_a2': 0, 'apgar_a3': 0, 'apgar_a4': 0, 'apgar_a5': 0,
+        'observaciones': '\n' * 5,
+        'sig_jefe': l
+    }
+    
+    # Dataframes vacíos con filas en blanco para que se vean las tablas
+    import pandas as pd
+    blank_family = pd.DataFrame([{"Nombre": "", "Vínculo": "", "Edad": "", "Esc": "", "Situación": ""}] * 10)
+    blank_plan = pd.DataFrame([{"Objetivo": "", "Actividad": "", "Fecha Prog": "", "Responsable": "", "Fecha Real": "", "Evaluación": ""}] * 10)
+    
+    # Equipo salud en blanco
+    blank_team = pd.DataFrame([{"Nombre y Profesión": "", "Firma": ""}] * 5)
+    
+    return generate_pdf_report(blank_data, blank_family, blank_plan, team_df=blank_team, is_blank=True)
