@@ -791,13 +791,43 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
     
     pdf.set_font('helvetica', '', 9)
     pdf.set_text_color(0, 0, 0)
-    text = (
-        f"El equipo de cabecera del sector {data.get('comp_sector','')} representado por {data.get('comp_rep_sector','')} "
-        f"y la familia {data.get('comp_familia','')} domiciliada en {data.get('comp_dir','')} "
-        f"representada por {data.get('comp_rep_fam','')} (RUT {data.get('comp_rut','')}) "
-        f"mediante el presente documento manifiestan el acuerdo de ejecutar el Plan de Trabajo elaborado en conjunto con el equipo de salud, con fecha: {data.get('comp_fecha','')}."
-    )
-    pdf.multi_cell(0, 5, text)
+
+    def _val(key, default="____________________________"):
+        v = str(data.get(key, "")).strip()
+        return v if v else (default if is_blank else "")
+
+    def comp_row(label, value, full_width=False):
+        """Print a label + underlined value on one line."""
+        pdf.set_font('helvetica', '', 9)
+        lw = 60 if not full_width else 40
+        vw = 190 - lw
+        pdf.cell(lw, 7, label, border=0)
+        y0 = pdf.get_y()
+        x0 = pdf.get_x()
+        pdf.cell(vw, 7, value, border="B", ln=True)
+
+    comp_row("El equipo de cabecera del sector:", _val('comp_sector', '________________________________'))
+    comp_row("Representado por (nombre/cargo):", _val('comp_rep_sector'))
+    comp_row("Y la familia:", _val('comp_familia'))
+    comp_row("Domiciliada en:", _val('comp_dir'))
+    comp_row("Representada por don(ña):", _val('comp_rep_fam'))
+    comp_row("RUT N°:", _val('comp_rut', '___________________'))
+
+    pdf.ln(3)
+    pdf.set_font('helvetica', '', 8)
+    pdf.set_text_color(80, 80, 80)
+    pdf.multi_cell(0, 4,
+        "Mediante el presente documento manifiestan el acuerdo de ejecutar el Plan de Trabajo "
+        "elaborado en conjunto con el equipo de salud, con fecha de entrada en vigencia:")
+    pdf.set_text_color(0, 0, 0)
+    pdf.ln(2)
+
+    fecha_comp_val = _val('comp_fecha', '___/___/______')
+    pdf.set_font('helvetica', 'B', 9)
+    pdf.cell(60, 7, "Fecha de entrada en vigencia:", border=0)
+    pdf.set_font('helvetica', '', 9)
+    pdf.cell(80, 7, fecha_comp_val, border="B", ln=True)
+    pdf.ln(4)
     
     # Firmas Compromiso
     pdf.ln(25) # More space for signing
