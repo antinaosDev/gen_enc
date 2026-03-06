@@ -463,7 +463,7 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
     simbolos = [
         ("[ ] (cuadrado)", "Hombre"),
         ("( ) (circulo)", "Mujer"),
-        ("<> / ◇ (rombo)", "Identidad No Binaria / Transgénero / Otra"),
+        ("<> (rombo)", "Identidad No Binaria / Transgénero / Otra"),
         ("/\ (triangulo)", "Gestacion / Embarazo"),
         ("/\+X (triangulo con X)", "Aborto Espontaneo"),
         ("/\+* (triangulo con punto)", "Aborto Provocado"),
