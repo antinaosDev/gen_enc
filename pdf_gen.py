@@ -95,7 +95,7 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
         pdf.set_font('helvetica', 'B', 8)
         pdf.set_text_color(0, 0, 0)
         pdf.set_draw_color(0, 0, 0)
-        cols = ["Nombre y Apellidos", "RUT", "Id. Género", "Parentesco", "E. Civil", "Ocupacion"]
+        cols = ["Nombre y Apellidos", "RUT", "Género", "Parentesco", "E. Civil", "Ocupacion"]
         w = [55, 25, 10, 30, 15, 55] # Total ~190
         
         for i, c in enumerate(cols):
@@ -138,7 +138,7 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
             pdf.set_font('helvetica', '', 7)
             pdf.multi_cell(_TXT_W, 4, texto)
 
-        leyenda_fila("ID. GÉNERO:",
+        leyenda_fila("GÉNERO:",
             "Masculino, Femenino, No binario, Transgénero, Prefiero no decir, Gestación/Aborto. (G = Gestación)")
 
         pdf.ln(1)
