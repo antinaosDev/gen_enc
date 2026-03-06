@@ -277,6 +277,23 @@ PARENTESCO_FAMILIA_OPTIONS = [
 
 TIPO_UNION_OPTIONS = ["Casados", "Convivencia", "Separados", "Divorciados"]
 
+# Opciones de Autoidentificación Étnica (INE Chile - Censo 2017)
+PUEBLO_ORIGINARIO_OPTIONS = [
+    "Ninguno",
+    "Mapuche",
+    "Aymara",
+    "Rapa Nui",
+    "Atacameño (Lickanantay)",
+    "Quechua",
+    "Colla",
+    "Diaguita",
+    "Kawésqar",
+    "Yagán",
+    "Changos",
+    "Afrodescendiente",
+    "Otro (especifique en Observaciones)"
+]
+
 def generate_family_id():
     """Genera un ID único para la familia en formato FAM-AAAAMMDD-XXXX."""
     today = date.today().strftime('%Y%m%d')
@@ -1128,7 +1145,8 @@ def save_intervention_rows(id_eval, familia, fecha_eval, nivel, programa, parent
     plan_headers = [
         "ID Evaluación", "Familia", "Fecha Evaluación", "Nivel Riesgo",
         "Programa/Unidad", "Parentesco",
-        "Objetivo", "Actividad", "Fecha Prog", "Responsable", "Fecha Real", "Evaluación"
+        "Objetivo", "Actividad", "Fecha Prog", "Responsable", "Fecha Real", "Evaluación",
+        "Estado", "F. Seguimiento", "Obs. Seguimiento"
     ]
     
     try:
@@ -1179,6 +1197,14 @@ def save_intervention_rows(id_eval, familia, fecha_eval, nivel, programa, parent
                 except:
                     pass
                     
+                fecha_seg = ""
+                try:
+                    fs = plan_row.get("F. Seguimiento")
+                    if fs and pd.notnull(fs):
+                        fecha_seg = fs.strftime('%Y-%m-%d') if hasattr(fs, 'strftime') else str(fs)
+                except:
+                    pass
+
                 new_rows.append([
                     str(id_eval),
                     str(familia),
@@ -1191,7 +1217,10 @@ def save_intervention_rows(id_eval, familia, fecha_eval, nivel, programa, parent
                     fecha_prog,
                     str(plan_row.get("Responsable", "")),
                     fecha_real,
-                    str(plan_row.get("Evaluación", ""))
+                    str(plan_row.get("Evaluación", "")),
+                    str(plan_row.get("Estado", "")),
+                    fecha_seg,
+                    str(plan_row.get("Obs. Seguimiento", ""))
                 ])
             
             if new_rows:
@@ -1679,6 +1708,7 @@ def main():
                     "RUT": pd.Series(dtype='str'),
                     "F. Nac": pd.Series(dtype='object'),
                     "Identidad de género": pd.Series(dtype='str'),
+                    "Pueblo Originario": pd.Series(dtype='str'),
                     "Nacionalidad": pd.Series(dtype='str'),
                     "E. Civil": pd.Series(dtype='str'),
                     "Ocupación": pd.Series(dtype='str'),
@@ -1688,7 +1718,9 @@ def main():
                 st.session_state.intervention_plan = pd.DataFrame({
                     "Objetivo": pd.Series(dtype='str'), "Actividad": pd.Series(dtype='str'),
                     "Fecha Prog": pd.Series(dtype='datetime64[ns]'), "Responsable": pd.Series(dtype='str'),
-                    "Fecha Real": pd.Series(dtype='datetime64[ns]'), "Evaluación": pd.Series(dtype='str')
+                    "Fecha Real": pd.Series(dtype='datetime64[ns]'), "Evaluación": pd.Series(dtype='str'),
+                    "Estado": pd.Series(dtype='str'), "F. Seguimiento": pd.Series(dtype='datetime64[ns]'),
+                    "Obs. Seguimiento": pd.Series(dtype='str')
                 })
                 st.session_state.team_members = pd.DataFrame(columns=["Nombre y Profesión", "Firma"])
                 st.rerun()
@@ -2250,6 +2282,12 @@ def main():
                     width="medium", 
                     help="Identidad inclusiva. Use 'Gestación/Aborto' para gestaciones (Triángulo)."
                 ),
+                "Pueblo Originario": st.column_config.SelectboxColumn(
+                    "Pueblo Originario",
+                    options=PUEBLO_ORIGINARIO_OPTIONS,
+                    width="medium",
+                    help="Autoidentificación étnica según INE Chile (Censo 2017)."
+                ),
                 "Nacionalidad": st.column_config.TextColumn("Nacionalidad", width="medium"),
                 "E. Civil": st.column_config.SelectboxColumn(
                     "E. Civil", 
@@ -2501,6 +2539,14 @@ def main():
                 "Responsable": st.column_config.TextColumn("RESPONSABLE"),
                 "Fecha Real": st.column_config.DateColumn("FECHA REAL."),
                 "Evaluación": st.column_config.TextColumn("EVALUACIÓN"),
+                "Estado": st.column_config.SelectboxColumn(
+                    "ESTADO",
+                    options=["Pendiente", "En progreso", "Completado", "Cancelado"],
+                    width="medium",
+                    help="Estado actual de la actividad."
+                ),
+                "F. Seguimiento": st.column_config.DateColumn("F. SEGUIMIENTO"),
+                "Obs. Seguimiento": st.column_config.TextColumn("OBS. SEGUIMIENTO"),
             }
         )
 
@@ -2520,6 +2566,15 @@ def main():
         
         st.markdown('<div style="margin-top:16px; font-weight:600; color: #334155;">Observaciones Clínicas:</div>', unsafe_allow_html=True)
         st.text_area("Observaciones", label_visibility="collapsed", height=80, key="observaciones")
+        
+        st.markdown('<div style="margin-top:12px; font-weight:600; color: #334155;">📁 Carpeta Digital (Google Drive):</div>', unsafe_allow_html=True)
+        st.text_input(
+            "Enlace Carpeta Drive",
+            label_visibility="collapsed",
+            placeholder="https://drive.google.com/drive/folders/...",
+            key="link_drive",
+            help="Pegue aquí el enlace de la carpeta Google Drive de esta familia (ID: {id}). El sistema lo guardará junto al registro." 
+        )
         
         # Firmas Equipo Salud 
         st.markdown("<hr style='border-top: 1px solid #e2e8f0; margin: 24px 0;'>", unsafe_allow_html=True)
@@ -2710,7 +2765,8 @@ def main():
                     st.session_state.get('egreso_derivacion', False),
                     st.session_state.get('egreso_abandono', False),
                     str(st.session_state.get('fechaEgreso', '')) if st.session_state.get('fechaEgreso') else "",
-                    st.session_state.get('observaciones', '')
+                    st.session_state.get('observaciones', ''),
+                    st.session_state.get('link_drive', '')
                 ]
                 data_row.extend(extra_data)
 
@@ -2726,7 +2782,7 @@ def main():
                     "Rep Sector", "Familia Comp", "Dir Comp", "Rep Familia", "RUT Rep", "Fecha Comp",
                     "Firma Funcionario", "Firma Beneficiario", "Firma Equipo", "Firma Jefe", "Firma Evaluador",
                     "egreso_alta", "egreso_traslado", "egreso_derivacion", "egreso_abandono",
-                    "Fecha Egreso", "Observaciones"
+                    "Fecha Egreso", "Observaciones", "Carpeta Digital (Drive)"
                 ]
                 
                 success1, msg1 = save_evaluacion_to_sheet(data_row, final_headers)

@@ -92,25 +92,33 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
     # Check if empty (Robust)
     if family_df is not None and len(family_df) > 0:
         # Table Header
-        pdf.set_font('helvetica', 'B', 8)
+        pdf.set_font('helvetica', 'B', 7)
         pdf.set_text_color(0, 0, 0)
         pdf.set_draw_color(0, 0, 0)
-        cols = ["Nombre y Apellidos", "RUT", "Género", "Parentesco", "E. Civil", "Ocupacion"]
-        w = [55, 25, 10, 30, 15, 55] # Total ~190
+        cols = ["Nombre y Apellidos", "RUT", "Género", "Parentesco", "E. Civil", "Nacionalidad", "Etnia", "Ocupacion"]
+        w    = [50,                   23,    12,       22,           12,          20,              18,      33]  # 190 total
         
         for i, c in enumerate(cols):
             pdf.cell(w[i], 6, c, border=1, align='C')
         pdf.ln()
         
         # Table Rows
-        pdf.set_font('helvetica', '', 8)
+        pdf.set_font('helvetica', '', 7)
         for index, row in family_df.iterrows():
-            pdf.cell(w[0], 6, str(row.get("Nombre y Apellidos", "")), border=1)
+            pdf.cell(w[0], 6, str(row.get("Nombre y Apellidos", ""))[:28], border=1)
             pdf.cell(w[1], 6, str(row.get("RUT", "")), border=1)
-            pdf.cell(w[2], 6, str(row.get("Identidad de género", row.get("Sexo", ""))), border=1)
-            pdf.cell(w[3], 6, str(row.get("Parentesco", "")), border=1)
-            pdf.cell(w[4], 6, str(row.get("E. Civil", "")), border=1)
-            pdf.cell(w[5], 6, str(row.get("Ocupacion", "")), border=1)
+            gender_val = str(row.get("Identidad de género", row.get("Sexo", "")))
+            # Abbreviate for small column
+            gen_abbr = {"Masculino": "M", "Femenino": "F", "No binario": "NB", "Transgénero": "Trans",
+                        "Prefiero no decir": "N/D", "Gestación/Aborto": "G"}.get(gender_val, gender_val[:5])
+            pdf.cell(w[2], 6, gen_abbr, border=1, align='C')
+            pdf.cell(w[3], 6, str(row.get("Parentesco", ""))[:12], border=1)
+            pdf.cell(w[4], 6, str(row.get("E. Civil", ""))[:5], border=1, align='C')
+            pdf.cell(w[5], 6, str(row.get("Nacionalidad", ""))[:10], border=1)
+            etnia_val = str(row.get("Pueblo Originario", row.get("Etnia", "")))
+            etnia_val = etnia_val if etnia_val not in ["Ninguno", "nan", ""] else "-"
+            pdf.cell(w[6], 6, etnia_val[:10], border=1)
+            pdf.cell(w[7], 6, str(row.get("Ocupación", row.get("Ocupacion", "")))[:16], border=1)
             pdf.ln()
     else:
         pdf.set_font('helvetica', 'I', 8)
@@ -641,6 +649,51 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
         pdf.set_font('helvetica', 'I', 9)
         pdf.cell(0, 5, "Sin observaciones.", ln=True)
     
+    # Link carpeta digital (Drive)
+    link_drive = str(data.get('link_drive', ''))
+    if link_drive:
+        pdf.set_font('helvetica', 'I', 7)
+        pdf.set_text_color(0, 0, 200)
+        pdf.cell(0, 5, f"Carpeta Digital: {link_drive}", ln=True)
+        pdf.set_text_color(0, 0, 0)
+    
+    pdf.ln(4)
+
+    # --- SEGUIMIENTO DEL PLAN ---
+    pdf.set_font('helvetica', 'B', 10)
+    pdf.set_fill_color(230, 240, 255)
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(0, 6, "SEGUIMIENTO DEL PLAN DE INTERVENCIÓN", ln=True, fill=True)
+    pdf.set_fill_color(255, 255, 255)
+    pdf.ln(2)
+
+    if plan_df is not None and len(plan_df) > 0:
+        pdf.set_font('helvetica', 'B', 7)
+        seg_cols = ["Objetivo", "Actividad", "Estado", "F. Seguimiento", "Obs. Seguimiento"]
+        seg_w    = [50, 50, 25, 25, 40]  # 190 total
+        for i, c in enumerate(seg_cols):
+            pdf.cell(seg_w[i], 6, c, border=1, align='C')
+        pdf.ln()
+
+        pdf.set_font('helvetica', '', 7)
+        for _, row in plan_df.iterrows():
+            estado_val = str(row.get("Estado", ""))
+            f_seg = str(row.get("F. Seguimiento", ""))
+            if " 00:00:00" in f_seg: f_seg = f_seg.split(" ")[0]
+            obs_seg = str(row.get("Obs. Seguimiento", ""))
+            # Only print rows that have any tracking data
+            obj_val = str(row.get("Objetivo", ""))
+            act_val = str(row.get("Actividad", ""))
+            pdf.cell(seg_w[0], 6, obj_val[:24], border=1)
+            pdf.cell(seg_w[1], 6, act_val[:24], border=1)
+            pdf.cell(seg_w[2], 6, estado_val[:12], border=1, align='C')
+            pdf.cell(seg_w[3], 6, f_seg[:10], border=1, align='C')
+            pdf.cell(seg_w[4], 6, obs_seg[:22], border=1)
+            pdf.ln()
+    else:
+        pdf.set_font('helvetica', 'I', 8)
+        pdf.cell(0, 6, "Sin seguimiento registrado.", ln=True)
+
     pdf.ln(5)
 
     # --- FIRMAS EQUIPO (Dynamic) ---
@@ -808,8 +861,8 @@ def generate_blank_pdf():
     
     # Dataframes vacíos con filas en blanco para que se vean las tablas
     import pandas as pd
-    blank_family = pd.DataFrame([{"Nombre y Apellidos": "", "RUT": "", "Identidad de género": "", "Parentesco": "", "E. Civil": "", "Ocupacion": ""}] * 10)
-    blank_plan = pd.DataFrame([{"Objetivo": "", "Actividad": "", "Fecha Prog": "", "Responsable": "", "Fecha Real": "", "Evaluación": ""}] * 10)
+    blank_family = pd.DataFrame([{"Nombre y Apellidos": "", "RUT": "", "Identidad de género": "", "Pueblo Originario": "", "Nacionalidad": "", "Parentesco": "", "E. Civil": "", "Ocupacion": ""}] * 10)
+    blank_plan = pd.DataFrame([{"Objetivo": "", "Actividad": "", "Fecha Prog": "", "Responsable": "", "Fecha Real": "", "Evaluación": "", "Estado": "", "F. Seguimiento": "", "Obs. Seguimiento": ""}] * 10)
     
     # Equipo salud en blanco
     blank_team = pd.DataFrame([{"Nombre y Profesión": "", "Firma": ""}] * 5)
