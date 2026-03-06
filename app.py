@@ -980,6 +980,7 @@ def save_evaluacion_to_sheet(data, headers):
         
         if not new_id:
              worksheet.append_row(data)
+             if 'raw_analytics_df' in st.session_state: del st.session_state['raw_analytics_df']
              return True, "Registro agregado (sin ID)."
 
         id_col_idx = 0
@@ -1002,9 +1003,11 @@ def save_evaluacion_to_sheet(data, headers):
         
         if row_to_update != -1:
             worksheet.update(range_name=f"A{row_to_update}", values=[data])
+            if 'raw_analytics_df' in st.session_state: del st.session_state['raw_analytics_df']
             return True, f"Registro actualizado (Fila {row_to_update})."
         else:
             worksheet.append_row(data)
+            if 'raw_analytics_df' in st.session_state: del st.session_state['raw_analytics_df']
             return True, "Nuevo registro agregado."
             
     except Exception as e:
