@@ -939,10 +939,14 @@ def load_record_into_state(record):
         st.session_state.family_members = df_fam
         
         df_plan = pd.DataFrame(json.loads(plan_json) if plan_json else [])
-        cols_date = ['Fecha Prog', 'Fecha Real']
+        cols_date = ['Fecha Prog', 'Fecha Real', 'F. Seguimiento']
         for c in cols_date:
             if c in df_plan.columns:
                 df_plan[c] = pd.to_datetime(df_plan[c], errors='coerce').dt.date
+        # Backfill new tracking columns if missing (older records)
+        for tracking_col in ['Estado', 'F. Seguimiento', 'Obs. Seguimiento']:
+            if tracking_col not in df_plan.columns:
+                df_plan[tracking_col] = None if 'Fecha' in tracking_col else ''
         
         st.session_state.intervention_plan = df_plan
     except Exception as e:
@@ -2294,7 +2298,7 @@ def main():
                     help="Identidad inclusiva. Use 'Gestación/Aborto' para gestaciones (Triángulo)."
                 ),
                 "Pueblo Originario": st.column_config.SelectboxColumn(
-                    "Pueblo Originario",
+                    "Etnia",
                     options=PUEBLO_ORIGINARIO_OPTIONS,
                     width="medium",
                     help="Autoidentificación étnica según INE Chile (Censo 2017)."
@@ -2334,21 +2338,16 @@ def main():
         if dupes_found:
             st.warning("⚠️ **Alerta de Duplicidad detectada:**\n\n" + "\n".join(dupes_found))
 
-        st.info("""
-        🧑‍⚕️ **Composición Familiar — Guia de Campos:**
-
-        **GÉNERO:** Masculino | Femenino | No binario | Transgénero | Prefiero no decir | Gestación/Aborto
-
-        **PUEBLO ORIGINARIO (INE):** Ninguno | Mapuche | Aymara | Rapa Nui | Atacameño (Lickanantay) | Quechua | Colla | Diaguita | Kawésqar | Yagán | Changos | Afrodescendiente | Otro (especifique en Observaciones)
-
-        **PARENTESCO:** Jefe/a de Hogar | Cónyuge/Pareja | Hijo/a | Hijo/a (Gemelo Fraterno) | Hijo/a (Gemelo Idéntico) | Padre/Madre | Hermano/a | Abuelo/a | Nieto/a | Tío/a | Sobrino/a | Hijo/a Adoptivo/a | Otro familiar | No familiar
-
-        **E. CIVIL:** S=Soltero/a  C=Casado/a  Co=Conviviente  D=Divorciado/a  Sep=Separado/a  V=Viudo/a  F=Fallecido/a
-
-        🤰 **Gestación:** Identidad='Gestación/Aborto' + E.Civil vacío (en curso) | E.Civil='Espontáneo' (△ con X) | E.Civil='Provocado' (△ relleno)
-
-        **Géneros Inclusivos** (No binario, Transgénero, Prefiero no decir): dibujan **Rombo (◇)** en el Genograma.
-        """)
+        st.markdown("""
+<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:12px 16px;font-size:0.8rem;color:#1e3a5f;line-height:1.7">
+<b>Composición Familiar — Guía de Campos</b><br>
+<b>GÉNERO:</b> Masculino | Femenino | No binario | Transgénero | Prefiero no decir | Gestación/Aborto<br>
+<b>ETNIA (INE):</b> Ninguno | Mapuche | Aymara | Rapa Nui | Atacameño (Lickanantay) | Quechua | Colla | Diaguita | Kawésqar | Yagán | Changos | Afrodescendiente | Otro<br>
+<b>PARENTESCO:</b> Jefe/a de Hogar | Cónyuge/Pareja | Hijo/a | Gemelo Fraterno/Idéntico | Padre/Madre | Hermano/a | Abuelo/a | Nieto/a | Tío/a | Sobrino/a | Adoptivo/a | Otro familiar | No familiar<br>
+<b>E. CIVIL:</b> S=Soltero/a &nbsp; C=Casado/a &nbsp; Co=Conviviente &nbsp; D=Divorciado/a &nbsp; Sep=Separado/a &nbsp; V=Viudo/a &nbsp; F=Fallecido/a<br>
+<b>GESTACIÓN:</b> Identidad='Gestación/Aborto' + E.Civil vacío (en curso) | E.Civil='Espontáneo' (▵ con X) | E.Civil='Provocado' (▵ relleno)<br>
+<b>GÉNEROS INCLUSIVOS</b> (No binario / Transgénero / Prefiero no decir): dibujan <b>Rombo (◇)</b> en el Genograma.
+</div>""", unsafe_allow_html=True)
 
 
     st.markdown("<br>", unsafe_allow_html=True)
