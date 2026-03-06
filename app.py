@@ -2275,6 +2275,15 @@ def main():
             key="tipo_union",
             help="Define cómo se dibujará la línea de unión en el genograma (Guía Clínica)"
         )
+        st.markdown('<hr style="border-top: 1px solid #e2e8f0; margin: 12px 0;">', unsafe_allow_html=True)
+        st.markdown('<div style="font-weight:600; color: #334155; margin-bottom:4px;">📁 Carpeta Digital (Google Drive) — Referencia del Registro Físico:</div>', unsafe_allow_html=True)
+        st.text_input(
+            "Enlace Carpeta Drive",
+            label_visibility="collapsed",
+            placeholder="https://drive.google.com/drive/folders/...",
+            key="link_drive",
+            help="Ingrese el enlace a la carpeta Drive donde se almacena la pauta física escaneada de esta familia."
+        )
 
     st.markdown("<br>", unsafe_allow_html=True)
     
@@ -2597,16 +2606,7 @@ def main():
         st.markdown('<div style="margin-top:16px; font-weight:600; color: #334155;">Observaciones Clínicas:</div>', unsafe_allow_html=True)
         st.text_area("Observaciones", label_visibility="collapsed", height=80, key="observaciones")
         
-        st.markdown('<div style="margin-top:12px; font-weight:600; color: #334155;">📁 Carpeta Digital (Google Drive):</div>', unsafe_allow_html=True)
-        st.text_input(
-            "Enlace Carpeta Drive",
-            label_visibility="collapsed",
-            placeholder="https://drive.google.com/drive/folders/...",
-            key="link_drive",
-            help="Pegue aquí el enlace de la carpeta Google Drive de esta familia (ID: {id}). El sistema lo guardará junto al registro." 
-        )
 
-        # --- SEGUIMIENTO DEL PLAN ---
         st.markdown('<hr style="border-top: 1px solid #e2e8f0; margin: 20px 0;">', unsafe_allow_html=True)
         st.markdown('<div style="color: #0f172a; font-size: 1rem; font-weight: 700; margin-bottom: 8px;">📊 Seguimiento del Plan de Intervención</div>', unsafe_allow_html=True)
         st.caption("Registre el avance de cada actividad del plan. Esta tabla se guarda junto la evaluación para auditoría.")
