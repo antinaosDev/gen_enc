@@ -808,7 +808,7 @@ def generate_blank_pdf():
     
     # Dataframes vacíos con filas en blanco para que se vean las tablas
     import pandas as pd
-    blank_family = pd.DataFrame([{"Nombre": "", "Vínculo": "", "Edad": "", "Esc": "", "Situación": ""}] * 10)
+    blank_family = pd.DataFrame([{"Nombre y Apellidos": "", "RUT": "", "Identidad de género": "", "Parentesco": "", "E. Civil": "", "Ocupacion": ""}] * 10)
     blank_plan = pd.DataFrame([{"Objetivo": "", "Actividad": "", "Fecha Prog": "", "Responsable": "", "Fecha Real": "", "Evaluación": ""}] * 10)
     
     # Equipo salud en blanco

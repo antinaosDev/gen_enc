@@ -1740,7 +1740,7 @@ def main():
             st.download_button(
                 label="📄 Descargar Pauta en Blanco",
                 data=blank_pdf,
-                file_name=f"Pauta_Blank_{date.today()}.pdf",
+                file_name=f"Pauta_Blank_{date.today()}_{uuid.uuid4().hex[:6]}.pdf",
                 mime="application/pdf",
                 width='stretch'
             )
