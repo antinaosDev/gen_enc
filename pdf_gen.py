@@ -314,10 +314,26 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
     s_t3 = data.get('score_medium', 0)
     c_t4 = data.get('count_t4', 0)
     s_t4 = data.get('score_low', 0)
-    
-    pdf.cell(0, 5, f"Factores Riesgo Medio (T3): {c_t3} x 4 = {s_t3} pts.", ln=True)
-    pdf.cell(0, 5, f"Factores Riesgo Bajo  (T4): {c_t4} x 3 = {s_t4} pts.", ln=True)
-    pdf.ln(2)
+    total = data.get('total_points', 0)
+    level = data.get('level', 'SIN RIESGO')
+
+    if is_blank:
+        pdf.set_font('helvetica', '', 8)
+        pdf.set_text_color(80, 80, 80)
+        pdf.cell(0, 5, "T3 (Riesgo Medio, 4 pts c/u): ____ factores x 4 = ____ pts.", ln=True)
+        pdf.cell(0, 5, "T4 (Riesgo Bajo,  3 pts c/u): ____ factores x 3 = ____ pts.", ln=True)
+        pdf.set_text_color(0, 0, 0)
+    else:
+        pdf.set_font('helvetica', '', 8)
+        pdf.set_text_color(80, 80, 80)
+        pdf.cell(0, 5,
+            f"Tabla 3 (Riesgo Medio, 4 pts c/u): {c_t3} factores marcados x 4 = {s_t3} pts.", ln=True)
+        pdf.cell(0, 5,
+            f"Tabla 4 (Riesgo Bajo,  3 pts c/u): {c_t4} factores marcados x 3 = {s_t4} pts.", ln=True)
+        pdf.cell(0, 5,
+            f"PUNTAJE TOTAL = {s_t3} + {s_t4} = {total} pts.  →  Clasificación: {level}", ln=True)
+        pdf.set_text_color(0, 0, 0)
+    pdf.ln(1)
 
     pdf.set_font('helvetica', 'B', 10)
     pdf.cell(40, 8, "PUNTAJE TOTAL:", border=1 if not is_blank else 0, align='R')
@@ -792,26 +808,42 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
     pdf.set_font('helvetica', '', 9)
     pdf.set_text_color(0, 0, 0)
 
-    def _val(key, default="____________________________"):
-        v = str(data.get(key, "")).strip()
-        return v if v else (default if is_blank else "")
+    def _v(key, blank="__________________________"):
+        v = str(data.get(key, "" if not is_blank else blank)).strip()
+        return v if v else blank
 
-    def comp_row(label, value, full_width=False):
-        """Print a label + underlined value on one line."""
+    # Build inline paragraph with underlined fill-in slots
+    # We use write() calls to mix normal and underlined segments
+    def write_plain(txt):
         pdf.set_font('helvetica', '', 9)
-        lw = 60 if not full_width else 40
-        vw = 190 - lw
-        pdf.cell(lw, 7, label, border=0)
-        y0 = pdf.get_y()
-        x0 = pdf.get_x()
-        pdf.cell(vw, 7, value, border="B", ln=True)
+        pdf.write(5.5, txt)
 
-    comp_row("El equipo de cabecera del sector:", _val('comp_sector', '________________________________'))
-    comp_row("Representado por (nombre/cargo):", _val('comp_rep_sector'))
-    comp_row("Y la familia:", _val('comp_familia'))
-    comp_row("Domiciliada en:", _val('comp_dir'))
-    comp_row("Representada por don(ña):", _val('comp_rep_fam'))
-    comp_row("RUT N°:", _val('comp_rut', '___________________'))
+    def write_blank(val, width_chars=28):
+        """Write a value (or underscores) with underline border."""
+        pdf.set_font('helvetica', '', 9)
+        display = val if (val and val != "__________________________") else ("_" * width_chars)
+        pdf.write(5.5, display)
+
+    # Line 1: sector + rep equipo
+    write_plain("El equipo de cabecera del sector ")
+    write_blank(_v('comp_sector', '_______'), 10)
+    write_plain(", representado por don(ña) ")
+    write_blank(_v('comp_rep_sector', '________________________________'), 30)
+    pdf.ln(6)
+
+    # Line 2: familia + direccion
+    write_plain("y la familia ")
+    write_blank(_v('comp_familia', '________________________'), 22)
+    write_plain(", domiciliada en ")
+    write_blank(_v('comp_dir', '____________________________________'), 35)
+    pdf.ln(6)
+
+    # Line 3: rep familia + rut
+    write_plain("representada por don(ña) ")
+    write_blank(_v('comp_rep_fam', '________________________________'), 30)
+    write_plain("  RUT N° ")
+    write_blank(_v('comp_rut', '___________________'), 18)
+    pdf.ln(6)
 
     pdf.ln(3)
     pdf.set_font('helvetica', '', 8)
@@ -822,17 +854,16 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
     pdf.set_text_color(0, 0, 0)
     pdf.ln(2)
 
-    fecha_comp_val = _val('comp_fecha', '___/___/______')
-    pdf.set_font('helvetica', 'B', 9)
-    pdf.cell(60, 7, "Fecha de entrada en vigencia:", border=0)
-    pdf.set_font('helvetica', '', 9)
-    pdf.cell(80, 7, fecha_comp_val, border="B", ln=True)
-    pdf.ln(4)
+    fecha_comp_val = _v('comp_fecha', '___/___/______')
+    write_plain("Fecha de entrada en vigencia: ")
+    write_blank(fecha_comp_val, 14)
+    pdf.ln(8)
     
     # Firmas Compromiso
     pdf.ln(25) # More space for signing
     y = pdf.get_y()
     pdf.line(20, y, 90, y)
+    
     pdf.line(110, y, 180, y)
     
     pdf.set_xy(20, y+2)
