@@ -675,9 +675,9 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
     if plan_df is not None and len(plan_df) > 0:
         pdf.set_font('helvetica', 'B', 7)
         seg_cols = ["Objetivo", "Actividad", "Estado", "F. Seguimiento", "Obs. Seguimiento"]
-        seg_w    = [50, 50, 25, 25, 40]  # 190 total
+        seg_w    = [52, 48, 28, 24, 38]  # 190 total
         for i, c in enumerate(seg_cols):
-            pdf.cell(seg_w[i], 6, c, border=1, align='C')
+            pdf.cell(seg_w[i], 8, c, border=1, align='C')
         pdf.ln()
 
         pdf.set_font('helvetica', '', 7)
@@ -686,14 +686,13 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
             f_seg = str(row.get("F. Seguimiento", ""))
             if " 00:00:00" in f_seg: f_seg = f_seg.split(" ")[0]
             obs_seg = str(row.get("Obs. Seguimiento", ""))
-            # Only print rows that have any tracking data
             obj_val = str(row.get("Objetivo", ""))
             act_val = str(row.get("Actividad", ""))
-            pdf.cell(seg_w[0], 6, obj_val[:24], border=1)
-            pdf.cell(seg_w[1], 6, act_val[:24], border=1)
-            pdf.cell(seg_w[2], 6, estado_val[:12], border=1, align='C')
-            pdf.cell(seg_w[3], 6, f_seg[:10], border=1, align='C')
-            pdf.cell(seg_w[4], 6, obs_seg[:22], border=1)
+            pdf.cell(seg_w[0], 9, obj_val[:26], border=1)
+            pdf.cell(seg_w[1], 9, act_val[:24], border=1)
+            pdf.cell(seg_w[2], 9, estado_val[:12], border=1, align='C')
+            pdf.cell(seg_w[3], 9, f_seg[:10], border=1, align='C')
+            pdf.cell(seg_w[4], 9, obs_seg[:20], border=1)
             pdf.ln()
     else:
         pdf.set_font('helvetica', 'I', 8)
@@ -867,7 +866,7 @@ def generate_blank_pdf():
     # Dataframes vacíos con filas en blanco para que se vean las tablas
     import pandas as pd
     blank_family = pd.DataFrame([{"Nombre y Apellidos": "", "RUT": "", "Identidad de género": "", "Pueblo Originario": "", "Nacionalidad": "", "Parentesco": "", "E. Civil": "", "Ocupacion": ""}] * 10)
-    blank_plan = pd.DataFrame([{"Objetivo": "", "Actividad": "", "Fecha Prog": "", "Responsable": "", "Fecha Real": "", "Evaluación": "", "Estado": "", "F. Seguimiento": "", "Obs. Seguimiento": ""}] * 10)
+    blank_plan = pd.DataFrame([{"Objetivo": "", "Actividad": "", "Fecha Prog": "", "Responsable": "", "Fecha Real": "", "Evaluación": "", "Estado": "", "F. Seguimiento": "", "Obs. Seguimiento": ""}] * 5)
     
     # Equipo salud en blanco
     blank_team = pd.DataFrame([{"Nombre y Profesión": "", "Firma": ""}] * 5)

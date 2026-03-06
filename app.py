@@ -949,6 +949,19 @@ def load_record_into_state(record):
                 df_plan[tracking_col] = None if 'Fecha' in tracking_col else ''
         
         st.session_state.intervention_plan = df_plan
+
+        # Load seguimiento plan
+        seg_json_load = record.get('Seguimiento Plan JSON', '[]')
+        try:
+            df_seg = pd.DataFrame(json.loads(seg_json_load) if seg_json_load else [])
+            for _sc in ['Objetivo', 'Actividad', 'Estado', 'F. Seguimiento', 'Obs. Seguimiento']:
+                if _sc not in df_seg.columns:
+                    df_seg[_sc] = ''
+            if 'F. Seguimiento' in df_seg.columns:
+                df_seg['F. Seguimiento'] = pd.to_datetime(df_seg['F. Seguimiento'], errors='coerce').dt.date
+            st.session_state.seguimiento_plan = df_seg
+        except:
+            st.session_state.seguimiento_plan = pd.DataFrame(columns=['Objetivo', 'Actividad', 'Estado', 'F. Seguimiento', 'Obs. Seguimiento'])
     except Exception as e:
         st.warning(f"Error cargando tablas: {e}")
 
@@ -2592,6 +2605,43 @@ def main():
             key="link_drive",
             help="Pegue aquí el enlace de la carpeta Google Drive de esta familia (ID: {id}). El sistema lo guardará junto al registro." 
         )
+
+        # --- SEGUIMIENTO DEL PLAN ---
+        st.markdown('<hr style="border-top: 1px solid #e2e8f0; margin: 20px 0;">', unsafe_allow_html=True)
+        st.markdown('<div style="color: #0f172a; font-size: 1rem; font-weight: 700; margin-bottom: 8px;">📊 Seguimiento del Plan de Intervención</div>', unsafe_allow_html=True)
+        st.caption("Registre el avance de cada actividad del plan. Esta tabla se guarda junto la evaluación para auditoría.")
+
+        if 'seguimiento_plan' not in st.session_state:
+            st.session_state.seguimiento_plan = pd.DataFrame({
+                "Objetivo": pd.Series(dtype='str'),
+                "Actividad": pd.Series(dtype='str'),
+                "Estado": pd.Series(dtype='str'),
+                "F. Seguimiento": pd.Series(dtype='object'),
+                "Obs. Seguimiento": pd.Series(dtype='str'),
+            })
+        # Ensure columns always exist
+        for _sc in ['Objetivo', 'Actividad', 'Estado', 'F. Seguimiento', 'Obs. Seguimiento']:
+            if _sc not in st.session_state.seguimiento_plan.columns:
+                st.session_state.seguimiento_plan[_sc] = ''
+
+        edited_seg = st.data_editor(
+            st.session_state.seguimiento_plan,
+            num_rows="dynamic",
+            width='stretch',
+            key="seguimiento_editor",
+            column_config={
+                "Objetivo": st.column_config.TextColumn("OBJETIVO", width="large"),
+                "Actividad": st.column_config.TextColumn("ACTIVIDAD", width="large"),
+                "Estado": st.column_config.SelectboxColumn(
+                    "ESTADO",
+                    options=["Pendiente", "En progreso", "Completado", "Cancelado"],
+                    width="medium",
+                ),
+                "F. Seguimiento": st.column_config.DateColumn("FECHA SEGUIMIENTO", width="medium"),
+                "Obs. Seguimiento": st.column_config.TextColumn("OBSERVACIONES", width="large"),
+            }
+        )
+        st.session_state.seguimiento_plan = edited_seg
         
         # Firmas Equipo Salud 
         st.markdown("<hr style='border-top: 1px solid #e2e8f0; margin: 24px 0;'>", unsafe_allow_html=True)
@@ -2758,12 +2808,17 @@ def main():
                 data_row.append(plan_json)
                 data_row.append(team_json)
                 data_row.append(rel_json)
+                data_row.append(seg_json)
                 data_row.append(apgar_val)
                 data_row.append(a1)
                 data_row.append(a2)
                 data_row.append(a3)
                 data_row.append(a4)
                 data_row.append(a5)
+                
+                # Seguimiento del Plan
+                df_seg_save = st.session_state.get('seguimiento_plan', pd.DataFrame()).copy()
+                seg_json = json.dumps(df_seg_save.fillna('').to_dict('records'), ensure_ascii=False, default=str)
                 
                 extra_data = [
                     st.session_state.get('comp_rep_sector', ''),
@@ -2793,7 +2848,7 @@ def main():
                     "Puntaje", "Nivel", "Evaluador",
                     "Tipo Unión", "RUTs Grupo Familiar",
                 ] + risk_keys + [
-                    "Grupo Familiar JSON", "Plan Intervención JSON", "Equipo Salud JSON", "Relaciones JSON",
+                    "Grupo Familiar JSON", "Plan Intervención JSON", "Equipo Salud JSON", "Relaciones JSON", "Seguimiento Plan JSON",
                     "APGAR Total", "A1", "A2", "A3", "A4", "A5"
                 ] + [
                     "Rep Sector", "Familia Comp", "Dir Comp", "Rep Familia", "RUT Rep", "Fecha Comp",
