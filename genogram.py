@@ -58,10 +58,10 @@ def get_generation_level(parentesco: str) -> int:
 
 
 def _detect_sex(sexo_raw: str) -> str:
-    """Retorna 'M', 'F', 'G' o '?' según el campo Sexo."""
+    """Retorna 'M', 'F', 'G' o '?' según el campo Sexo/Identidad de género."""
     s = str(sexo_raw).strip().upper()
     # Orden importante: "G" para gestación primero, luego "F", luego "M"
-    if s in ("G", "GESTACION", "GESTACIÓN", "EMBARAZO"):
+    if s in ("G", "GESTACION", "GESTACIÓN", "EMBARAZO", "GESTACIÓN/ABORTO"):
         return "G"
     if s in ("F", "FEM", "FEMENINO", "MUJER"):
         return "F"
@@ -127,7 +127,7 @@ def generate_genogram_dot(members: list,
 
     for i, m in enumerate(members):
         nombre    = str(m.get("Nombre y Apellidos", f"Miembro {i+1}"))
-        sexo_raw  = str(m.get("Sexo", "?"))
+        sexo_raw  = str(m.get("Identidad de género", m.get("Sexo", "?")))
         is_index  = bool(m.get("Resp", False)) or str(m.get("Resp", "")).upper() == "TRUE"
         parentesco = str(m.get("Parentesco", "Familiar"))
         # Calcular edad desde F. Nac si no viene explícita

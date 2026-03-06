@@ -95,7 +95,7 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
         pdf.set_font('helvetica', 'B', 8)
         pdf.set_text_color(0, 0, 0)
         pdf.set_draw_color(0, 0, 0)
-        cols = ["Nombre y Apellidos", "RUT", "Sexo", "Parentesco", "E. Civil", "Ocupacion"]
+        cols = ["Nombre y Apellidos", "RUT", "Id. Género", "Parentesco", "E. Civil", "Ocupacion"]
         w = [55, 25, 10, 30, 15, 55] # Total ~190
         
         for i, c in enumerate(cols):
@@ -107,7 +107,7 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
         for index, row in family_df.iterrows():
             pdf.cell(w[0], 6, str(row.get("Nombre y Apellidos", "")), border=1)
             pdf.cell(w[1], 6, str(row.get("RUT", "")), border=1)
-            pdf.cell(w[2], 6, str(row.get("Sexo", "")), border=1)
+            pdf.cell(w[2], 6, str(row.get("Identidad de género", row.get("Sexo", ""))), border=1)
             pdf.cell(w[3], 6, str(row.get("Parentesco", "")), border=1)
             pdf.cell(w[4], 6, str(row.get("E. Civil", "")), border=1)
             pdf.cell(w[5], 6, str(row.get("Ocupacion", "")), border=1)
@@ -138,8 +138,8 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
             pdf.set_font('helvetica', '', 7)
             pdf.multi_cell(_TXT_W, 4, texto)
 
-        leyenda_fila("SEXO:",
-            "M = Hombre     F = Mujer     G = Gestacion / Embarazo (ver Gestacion)")
+        leyenda_fila("ID. GÉNERO:",
+            "Masculino, Femenino, No binario, Transgénero, Prefiero no decir, Gestación/Aborto. (G = Gestación)")
 
         pdf.ln(1)
         leyenda_fila("E. CIVIL:",
@@ -149,8 +149,8 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
         pdf.set_text_color(130, 130, 130)
         pdf.cell(_LBL_W, 4, "", ln=False)
         pdf.multi_cell(_TXT_W, 4,
-            "Espontaneo = Aborto espontaneo (solo cuando Sexo=G)     "
-            "Provocado = Aborto provocado (solo cuando Sexo=G)")
+            "Espontaneo = Aborto espontaneo (solo cuando Identidad=Gestación)     "
+            "Provocado = Aborto provocado (solo cuando Identidad=Gestación)")
 
         pdf.ln(1)
         leyenda_fila("GESTACION:",
@@ -463,6 +463,7 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
     simbolos = [
         ("[ ] (cuadrado)", "Hombre"),
         ("( ) (circulo)", "Mujer"),
+        ("<> / ◇ (rombo)", "Identidad No Binaria / Transgénero / Otra"),
         ("/\ (triangulo)", "Gestacion / Embarazo"),
         ("/\+X (triangulo con X)", "Aborto Espontaneo"),
         ("/\+* (triangulo con punto)", "Aborto Provocado"),

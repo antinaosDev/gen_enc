@@ -74,7 +74,7 @@ def seed_data():
                 "Nombre y Apellidos": f"{random.choice(NOMBRES)} {apellido}",
                 "RUT": generate_rut(),
                 "F. Nac": (date.today() - timedelta(days=random.randint(365*1, 365*80))).strftime("%Y-%m-%d"),
-                "Sexo": random.choice(["M", "F"]),
+                "Identidad de género": random.choice(["Masculino", "Femenino", "No binario", "Transgénero", "Prefiero no decir"]),
                 "Resp": (m == 0)
             })
         

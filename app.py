@@ -913,8 +913,12 @@ def load_record_into_state(record):
         plan_json = record.get('Plan Intervención JSON', '[]')
         
         df_fam = pd.DataFrame(json.loads(fam_json) if fam_json else [])
-        if not df_fam.empty and 'F. Nac' in df_fam.columns:
-            df_fam['F. Nac'] = pd.to_datetime(df_fam['F. Nac'], errors='coerce').dt.date
+        if not df_fam.empty:
+            if 'Sexo' in df_fam.columns and 'Identidad de género' not in df_fam.columns:
+                migration_map = {"M": "Masculino", "F": "Femenino", "G": "Gestación/Aborto"}
+                df_fam['Identidad de género'] = df_fam['Sexo'].map(lambda x: migration_map.get(str(x).upper(), str(x)))
+            if 'F. Nac' in df_fam.columns:
+                df_fam['F. Nac'] = pd.to_datetime(df_fam['F. Nac'], errors='coerce').dt.date
         st.session_state.family_members = df_fam
         
         df_plan = pd.DataFrame(json.loads(plan_json) if plan_json else [])
@@ -1413,7 +1417,7 @@ if 'family_members' not in st.session_state:
         "Nombre y Apellidos": pd.Series(dtype='str'),
         "RUT": pd.Series(dtype='str'),
         "F. Nac": pd.Series(dtype='object'),
-        "Sexo": pd.Series(dtype='str'),
+        "Identidad de género": pd.Series(dtype='str'),
         "Nacionalidad": pd.Series(dtype='str'),
         "E. Civil": pd.Series(dtype='str'),
         "Ocupación": pd.Series(dtype='str'),
@@ -1671,7 +1675,7 @@ def main():
                     "Nombre y Apellidos": pd.Series(dtype='str'),
                     "RUT": pd.Series(dtype='str'),
                     "F. Nac": pd.Series(dtype='object'),
-                    "Sexo": pd.Series(dtype='str'),
+                    "Identidad de género": pd.Series(dtype='str'),
                     "Nacionalidad": pd.Series(dtype='str'),
                     "E. Civil": pd.Series(dtype='str'),
                     "Ocupación": pd.Series(dtype='str'),
@@ -2237,11 +2241,11 @@ def main():
                 "Nombre y Apellidos": st.column_config.TextColumn("Nombre y Apellidos", width="large"),
                 "RUT": st.column_config.TextColumn("RUT", width="medium"),
                 "F. Nac": st.column_config.DateColumn("F. Nac", width="small", format="DD/MM/YYYY"),
-                "Sexo": st.column_config.SelectboxColumn(
-                    "Sexo", 
-                    options=["M", "F", "G"], 
-                    width="small", 
-                    help="HOMBRE (M), MUJER (F). Use 'G' para GESTACIÓN/ABORTO (Triángulo)."
+                "Identidad de género": st.column_config.SelectboxColumn(
+                    "Identidad de género", 
+                    options=["Masculino", "Femenino", "No binario", "Transgénero", "Prefiero no decir", "Gestación/Aborto"], 
+                    width="medium", 
+                    help="Identidad inclusiva. Use 'Gestación/Aborto' para gestaciones (Triángulo)."
                 ),
                 "Nacionalidad": st.column_config.TextColumn("Nacionalidad", width="medium"),
                 "E. Civil": st.column_config.SelectboxColumn(
@@ -2279,10 +2283,11 @@ def main():
             st.warning("⚠️ **Alerta de Duplicidad detectada:**\n\n" + "\n".join(dupes_found))
 
         st.info("""
-        🤰 **Guía de Gestación (Sexo 'G'):**
-        - **Embarazo en curso**: Sexo='G' + E. Civil vacío o normal.
-        - **Aborto Espontáneo**: Sexo='G' + E. Civil='Espontáneo' (Muestra △ con X).
-        - **Aborto Provocado**: Sexo='G' + E. Civil='Provocado' (Muestra △ con ●).
+        🤰 **Guía de Gestación y Género Inclusivo:**
+        - **Gestación en curso**: Id. Género='Gestación/Aborto' + E. Civil normal.
+        - **Aborto Espontáneo**: Id. Género='Gestación' + E. Civil='Espontáneo' (Muestra △ con X).
+        - **Aborto Provocado**: Id. Género='Gestación' + E. Civil='Provocado' (Muestra △ con ●).
+        - **Géneros Inclusivos**: No binario, Transgénero y Prefiero no decir adoptan la forma clínica de **Rombo (◇)**.
         - **Simbología Tradicional:** Soltero (S), Casado (C), Viudo (V), Divorciado (D), Fallecido (F).
         """)
 
