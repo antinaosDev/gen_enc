@@ -150,6 +150,12 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
             "Masculino, Femenino, No binario, Transgénero, Prefiero no decir, Gestación/Aborto. (G = Gestación)")
 
         pdf.ln(1)
+        leyenda_fila("PARENTESCO:",
+            "Jefe/a de Hogar  /  Conyuge/Pareja  /  Hijo/a  /  Hijo/a Gemelo Fraterno  /  "
+            "Hijo/a Gemelo Identico  /  Padre/Madre  /  Hermano/a  /  Abuelo/a  /  Nieto/a  /  "
+            "Tio/a  /  Sobrino/a  /  Hijo/a Adoptivo/a  /  Otro familiar  /  No familiar")
+
+        pdf.ln(1)
         leyenda_fila("E. CIVIL:",
             "S=Soltero/a   C=Casado/a   Co=Conviviente   D=Divorciado/a   "
             "Sep=Separado/a   V=Viudo/a   F=Fallecido/a")
@@ -167,10 +173,9 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
             "Aborto Provocado: E.Civil='Provocado'")
 
         pdf.ln(1)
-        leyenda_fila("PARENTESCO:",
-            "Jefe/a de Hogar  /  Conyuge/Pareja  /  Hijo/a  /  Hijo/a Gemelo Fraterno  /  "
-            "Hijo/a Gemelo Identico  /  Padre/Madre  /  Hermano/a  /  Abuelo/a  /  Nieto/a  /  "
-            "Tio/a  /  Sobrino/a  /  Hijo/a Adoptivo/a  /  Otro familiar  /  No familiar")
+        leyenda_fila("ETNIA (INE):",
+            "Ninguno  /  Mapuche  /  Aymara  /  Rapa Nui  /  Atacameno (Lickanantay)  /  Quechua  /  "
+            "Colla  /  Diaguita  /  Kawesqar  /  Yagan  /  Changos  /  Afrodescendiente  /  Otro")
 
         pdf.set_text_color(0, 0, 0)
         pdf.set_font('helvetica', '', 9)

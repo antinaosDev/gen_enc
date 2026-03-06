@@ -1450,6 +1450,7 @@ if 'family_members' not in st.session_state:
         "RUT": pd.Series(dtype='str'),
         "F. Nac": pd.Series(dtype='object'),
         "Identidad de género": pd.Series(dtype='str'),
+        "Pueblo Originario": pd.Series(dtype='str'),
         "Nacionalidad": pd.Series(dtype='str'),
         "E. Civil": pd.Series(dtype='str'),
         "Ocupación": pd.Series(dtype='str'),
@@ -1463,7 +1464,10 @@ if 'intervention_plan' not in st.session_state:
         "Fecha Prog": pd.Series(dtype='datetime64[ns]'),
         "Responsable": pd.Series(dtype='str'),
         "Fecha Real": pd.Series(dtype='datetime64[ns]'),
-        "Evaluación": pd.Series(dtype='str')
+        "Evaluación": pd.Series(dtype='str'),
+        "Estado": pd.Series(dtype='str'),
+        "F. Seguimiento": pd.Series(dtype='datetime64[ns]'),
+        "Obs. Seguimiento": pd.Series(dtype='str')
     })
 
 if 'team_members' not in st.session_state:
@@ -2261,7 +2265,14 @@ def main():
     st.markdown('<div style="color: #0f172a; font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">2. Composición Familiar</div>', unsafe_allow_html=True)
     
     with st.container(border=True):
-        # Asegurar que la columna Parentesco exista en el df
+        # Ensure 'Pueblo Originario' column always exists for older records
+        if 'Pueblo Originario' not in st.session_state.family_members.columns:
+            st.session_state.family_members.insert(
+                st.session_state.family_members.columns.get_loc('Identidad de género') + 1
+                if 'Identidad de género' in st.session_state.family_members.columns else 3,
+                'Pueblo Originario', ""
+            )
+        # Ensure 'Parentesco' column exists
         if 'Parentesco' not in st.session_state.family_members.columns:
             st.session_state.family_members.insert(
                 len(st.session_state.family_members.columns) - 1,
@@ -2324,12 +2335,19 @@ def main():
             st.warning("⚠️ **Alerta de Duplicidad detectada:**\n\n" + "\n".join(dupes_found))
 
         st.info("""
-        🤰 **Guía de Gestación y Género Inclusivo:**
-        - **Gestación en curso**: Id. Género='Gestación/Aborto' + E. Civil normal.
-        - **Aborto Espontáneo**: Id. Género='Gestación' + E. Civil='Espontáneo' (Muestra △ con X).
-        - **Aborto Provocado**: Id. Género='Gestación' + E. Civil='Provocado' (Muestra △ con ●).
-        - **Géneros Inclusivos**: No binario, Transgénero y Prefiero no decir adoptan la forma clínica de **Rombo (◇)**.
-        - **Simbología Tradicional:** Soltero (S), Casado (C), Viudo (V), Divorciado (D), Fallecido (F).
+        🧑‍⚕️ **Composición Familiar — Guia de Campos:**
+
+        **GÉNERO:** Masculino | Femenino | No binario | Transgénero | Prefiero no decir | Gestación/Aborto
+
+        **PUEBLO ORIGINARIO (INE):** Ninguno | Mapuche | Aymara | Rapa Nui | Atacameño (Lickanantay) | Quechua | Colla | Diaguita | Kawésqar | Yagán | Changos | Afrodescendiente | Otro (especifique en Observaciones)
+
+        **PARENTESCO:** Jefe/a de Hogar | Cónyuge/Pareja | Hijo/a | Hijo/a (Gemelo Fraterno) | Hijo/a (Gemelo Idéntico) | Padre/Madre | Hermano/a | Abuelo/a | Nieto/a | Tío/a | Sobrino/a | Hijo/a Adoptivo/a | Otro familiar | No familiar
+
+        **E. CIVIL:** S=Soltero/a  C=Casado/a  Co=Conviviente  D=Divorciado/a  Sep=Separado/a  V=Viudo/a  F=Fallecido/a
+
+        🤰 **Gestación:** Identidad='Gestación/Aborto' + E.Civil vacío (en curso) | E.Civil='Espontáneo' (△ con X) | E.Civil='Provocado' (△ relleno)
+
+        **Géneros Inclusivos** (No binario, Transgénero, Prefiero no decir): dibujan **Rombo (◇)** en el Genograma.
         """)
 
 
