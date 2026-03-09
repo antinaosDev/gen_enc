@@ -173,7 +173,7 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
             "Aborto Provocado: E.Civil='Provocado'")
 
         pdf.ln(1)
-        leyenda_fila("ETNIA (INE):",
+        leyenda_fila("ETNIA:",
             "Ninguno  /  Mapuche  /  Aymara  /  Rapa Nui  /  Atacameno (Lickanantay)  /  Quechua  /  "
             "Colla  /  Diaguita  /  Kawesqar  /  Yagan  /  Changos  /  Afrodescendiente  /  Otro")
 
