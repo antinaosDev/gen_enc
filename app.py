@@ -2293,17 +2293,16 @@ def main():
     with st.container(border=True):
         # Ensure 'Pueblo Originario' column always exists for older records
         if 'Pueblo Originario' not in st.session_state.family_members.columns:
-            st.session_state.family_members.insert(
-                st.session_state.family_members.columns.get_loc('Identidad de género') + 1
-                if 'Identidad de género' in st.session_state.family_members.columns else 3,
-                'Pueblo Originario', ""
-            )
+            if 'Identidad de género' in st.session_state.family_members.columns:
+                loc = st.session_state.family_members.columns.get_loc('Identidad de género') + 1
+            else:
+                loc = min(3, len(st.session_state.family_members.columns))
+            st.session_state.family_members.insert(loc, 'Pueblo Originario', "")
+            
         # Ensure 'Parentesco' column exists
         if 'Parentesco' not in st.session_state.family_members.columns:
-            st.session_state.family_members.insert(
-                len(st.session_state.family_members.columns) - 1,
-                'Parentesco', ""
-            )
+            loc = max(0, len(st.session_state.family_members.columns) - 1)
+            st.session_state.family_members.insert(loc, 'Parentesco', "")
 
         if 'F. Nac' in st.session_state.family_members.columns:
             def to_date_safe_fnac(x):
