@@ -2304,6 +2304,14 @@ def main():
                 len(st.session_state.family_members.columns) - 1,
                 'Parentesco', ""
             )
+
+        if 'F. Nac' in st.session_state.family_members.columns:
+            def to_date_safe_fnac(x):
+                try:
+                    return pd.to_datetime(x, dayfirst=True).date() if pd.notnull(x) and str(x).strip() != "" else None
+                except:
+                    return None
+            st.session_state.family_members['F. Nac'] = st.session_state.family_members['F. Nac'].apply(to_date_safe_fnac)
         
         edited_family = st.data_editor(
             st.session_state.family_members,
@@ -2796,6 +2804,10 @@ def main():
                 
                 rel_json = json.dumps(st.session_state.get('interpersonal_relations', []), ensure_ascii=False)
                 
+                # Seguimiento del Plan
+                df_seg_save = st.session_state.get('seguimiento_plan', pd.DataFrame()).copy()
+                seg_json = json.dumps(df_seg_save.fillna('').to_dict('records'), ensure_ascii=False, default=str)
+                
                 # Extra data (APGAR)
                 apgar_val = st.session_state.get('apgar_total', 0)
                 a1 = st.session_state.get('apgar_a1', 0)
@@ -2815,10 +2827,6 @@ def main():
                 data_row.append(a3)
                 data_row.append(a4)
                 data_row.append(a5)
-                
-                # Seguimiento del Plan
-                df_seg_save = st.session_state.get('seguimiento_plan', pd.DataFrame()).copy()
-                seg_json = json.dumps(df_seg_save.fillna('').to_dict('records'), ensure_ascii=False, default=str)
                 
                 extra_data = [
                     st.session_state.get('comp_rep_sector', ''),
