@@ -2113,6 +2113,17 @@ def main():
             if st.button("💾 Guardar Estudio Completo", type="primary", width='stretch'):
                 with st.spinner("Persistiendo estudio en el historial..."):
                     # 1. Preparar datos para Hoja 1 (Evaluaciones)
+                    # ---- EXTRAER RUTs DEL GRUPO FAMILIAR ----
+                    def normalizar_rut(rut_str):
+                        return rut_str.replace(".", "").strip()
+
+                    df_fam_rut = st.session_state.family_members.fillna("")
+                    if 'RUT' in df_fam_rut.columns:
+                        ruts_list = [normalizar_rut(str(r)) for r in df_fam_rut['RUT'].tolist() if str(r).strip()]
+                        ruts_concatenados = ",".join(ruts_list)
+                    else:
+                        ruts_concatenados = ""
+
                     evaluador_n = st.session_state.get('evaluadorName', 'N/A')
                     data_row = [
                         eval_id, str(st.session_state.get('fechaEvaluacion', date.today())),
@@ -2120,7 +2131,7 @@ def main():
                         st.session_state.get('establecimiento', ''), st.session_state.get('sector', ''),
                         st.session_state.get('parentesco', ''), prog_val,
                         st.session_state.get('total_points', 0), nivel_val, evaluador_n,
-                        st.session_state.get('tipo_union', 'Casados')
+                        st.session_state.get('tipo_union', 'Casados'), ruts_concatenados
                     ]
                     
                     # Riesgos
@@ -2140,6 +2151,23 @@ def main():
                     df_team = st.session_state.team_members.fillna("")
                     data_row.append(json.dumps(df_team.to_dict('records'), ensure_ascii=False, default=str))
 
+                    rel_json = json.dumps(st.session_state.get('interpersonal_relations', []), ensure_ascii=False)
+                    data_row.append(rel_json)
+                    
+                    # Seguimiento del Plan
+                    df_seg_save = st.session_state.get('seguimiento_plan', pd.DataFrame()).copy()
+                    data_row.append(json.dumps(df_seg_save.fillna('').to_dict('records'), ensure_ascii=False, default=str))
+                    
+                    # Extra data (APGAR)
+                    data_row.extend([
+                        st.session_state.get('apgar_total', 0),
+                        st.session_state.get('apgar_a1', 0),
+                        st.session_state.get('apgar_a2', 0),
+                        st.session_state.get('apgar_a3', 0),
+                        st.session_state.get('apgar_a4', 0),
+                        st.session_state.get('apgar_a5', 0)
+                    ])
+
                     # Extra data
                     extra_data = [
                         st.session_state.get('comp_rep_sector', ''), st.session_state.get('comp_familia', ''),
@@ -2151,18 +2179,24 @@ def main():
                         st.session_state.get('egreso_alta', False), st.session_state.get('egreso_traslado', False),
                         st.session_state.get('egreso_derivacion', False), st.session_state.get('egreso_abandono', False),
                         str(st.session_state.get('fechaEgreso', '')) if st.session_state.get('fechaEgreso') else "",
-                        st.session_state.get('observaciones', '')
+                        st.session_state.get('observaciones', ''),
+                        st.session_state.get('link_drive', '')
                     ]
                     data_row.extend(extra_data)
 
                     final_headers = [
                         "ID Evaluación", "Fecha", "Familia", "Dirección", "Establecimiento", "Sector",
-                        "Parentesco", "Programa/Unidad", "Puntaje", "Nivel", "Evaluador", "Tipo Unión"
-                    ] + risk_keys + ["Grupo Familiar JSON", "Plan Intervención JSON", "Equipo Salud JSON", "Relaciones JSON"] + [
+                        "Parentesco", "Programa/Unidad",
+                        "Puntaje", "Nivel", "Evaluador",
+                        "Tipo Unión", "RUTs Grupo Familiar",
+                    ] + risk_keys + [
+                        "Grupo Familiar JSON", "Plan Intervención JSON", "Equipo Salud JSON", "Relaciones JSON", "Seguimiento Plan JSON",
+                        "APGAR Total", "A1", "A2", "A3", "A4", "A5"
+                    ] + [
                         "Rep Sector", "Familia Comp", "Dir Comp", "Rep Familia", "RUT Rep", "Fecha Comp",
                         "Firma Funcionario", "Firma Beneficiario", "Firma Equipo", "Firma Jefe", "Firma Evaluador",
                         "egreso_alta", "egreso_traslado", "egreso_derivacion", "egreso_abandono",
-                        "Fecha Egreso", "Observaciones"
+                        "Fecha Egreso", "Observaciones", "Carpeta Digital (Drive)"
                     ]
 
                     # 2. Guardar en Sheets
