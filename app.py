@@ -2143,10 +2143,10 @@ def main():
                     data_row.append(json.dumps(df_fam.to_dict('records'), ensure_ascii=False, default=str))
                     
                     df_plan_save = st.session_state.intervention_plan.copy()
-                    for c in ['Fecha Prog', 'Fecha Real']:
+                    for c in ['Fecha Prog', 'Fecha Real', 'F. Seguimiento']:
                         if c in df_plan_save.columns:
                             df_plan_save[c] = df_plan_save[c].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) and hasattr(x, 'strftime') else "")
-                    data_row.append(json.dumps(df_plan_save.to_dict('records'), ensure_ascii=False))
+                    data_row.append(json.dumps(df_plan_save.fillna("").to_dict('records'), ensure_ascii=False, default=str))
                     
                     df_team = st.session_state.team_members.fillna("")
                     data_row.append(json.dumps(df_team.to_dict('records'), ensure_ascii=False, default=str))
@@ -2827,10 +2827,10 @@ def main():
                 family_json = json.dumps(df_fam.to_dict('records'), ensure_ascii=False, default=str)
                 
                 df_plan_save = st.session_state.intervention_plan.copy()
-                for c in ['Fecha Prog', 'Fecha Real']:
+                for c in ['Fecha Prog', 'Fecha Real', 'F. Seguimiento']:
                     if c in df_plan_save.columns:
                         df_plan_save[c] = df_plan_save[c].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) and hasattr(x, 'strftime') else "")
-                plan_json = json.dumps(df_plan_save.to_dict('records'), ensure_ascii=False)
+                plan_json = json.dumps(df_plan_save.fillna("").to_dict('records'), ensure_ascii=False, default=str)
                 
                 df_team = st.session_state.team_members.fillna("")
                 team_json = json.dumps(df_team.to_dict('records'), ensure_ascii=False, default=str)
