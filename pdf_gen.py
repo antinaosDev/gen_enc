@@ -331,7 +331,7 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
         pdf.cell(0, 5,
             f"Tabla 4 (Riesgo Bajo,  3 pts c/u): {c_t4} factores marcados x 3 = {s_t4} pts.", ln=True)
         pdf.cell(0, 5,
-            f"PUNTAJE TOTAL = {s_t3} + {s_t4} = {total} pts.  →  Clasificación: {level}", ln=True)
+            f"PUNTAJE TOTAL = {s_t3} + {s_t4} = {total} pts.  ->  Clasificación: {level}", ln=True)
         pdf.set_text_color(0, 0, 0)
     pdf.ln(1)
 
