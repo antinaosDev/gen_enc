@@ -1571,8 +1571,15 @@ def render_login_page():
     col1, col2, col3 = st.columns([1, 1.3, 1])
     with col2:
         with st.form("login_form", clear_on_submit=False, border=False):
+            LOGO_PATH = "Logo_enc_fam.png"
+            if os.path.exists(LOGO_PATH):
+                c_img1, c_img2, c_img3 = st.columns([1, 2, 1])
+                with c_img2:
+                    st.image(LOGO_PATH, use_container_width=True)
+            else:
+                st.markdown('<div class="login-brand-wrapper"><div class="login-brand">SISTEMA MAIS</div></div>', unsafe_allow_html=True)
+                
             st.markdown("""
-                <div class="login-brand-wrapper"><div class="login-brand">SISTEMA MAIS</div></div>
                 <div class="login-title">Bienvenido/a</div>
                 <div class="login-subtitle">Gestión de Riesgo Familiar · CESFAM Cholchol</div>
             """, unsafe_allow_html=True)
@@ -2234,7 +2241,7 @@ def main():
         
         with col_logo:
             # Normalizado para compatibilidad con Windows local y Streamlit Cloud (Linux)
-            LOGO_PATH = "NUEVO LOGO.png"
+            LOGO_PATH = "Logo_enc_fam.png"
             if os.path.exists(LOGO_PATH):
                 st.image(LOGO_PATH, width=120)
             else:
