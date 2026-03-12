@@ -2241,7 +2241,7 @@ def main():
         
         with col_logo:
             # Normalizado para compatibilidad con Windows local y Streamlit Cloud (Linux)
-            LOGO_PATH = "Logo_enc_fam.png"
+            LOGO_PATH = "NUEVO LOGO.png"
             if os.path.exists(LOGO_PATH):
                 st.image(LOGO_PATH, width=120)
             else:
