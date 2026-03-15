@@ -917,12 +917,12 @@ def load_record_into_state(record):
     # Booleans (Risk Factors + Egreso)
     for key in risk_keys:
         val = record.get(key, False)
-        st.session_state[key] = True if str(val).upper() in ['TRUE', '1', 'YES'] else False
+        st.session_state[key] = True if str(val).upper() in ['TRUE', '1', 'YES', 'VERDADERO'] else False
         
     egreso_keys = ['egreso_alta', 'egreso_traslado', 'egreso_derivacion', 'egreso_abandono']
     for k in egreso_keys:
         val = record.get(k, False)
-        st.session_state[k] = True if str(val).upper() in ['TRUE', '1', 'YES'] else False
+        st.session_state[k] = True if str(val).upper() in ['TRUE', '1', 'YES', 'VERDADERO'] else False
 
     # Dynamic Tables (JSON)
     try:
