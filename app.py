@@ -1421,7 +1421,7 @@ def update_rem_p7(n_inscritas_sol=0, n_inscritas_luna=0):
         # Estructura: lista de filas, cada fila = lista de celdas
         H_urbano = ["Clasificación de las familias por sector", "TOTAL", "Sector Sol\n(Urbano)", "Sector 2", "Sector 3", "Sector 4", "Sector 5", "Sector 6", "Sector 7", "Sector 8"]
         H_rural  = ["Clasificación de las familias por sector", "TOTAL", "Sector Luna\n(Rural)", "Sector 2", "Sector 3", "Sector 4", "Sector 5", "Sector 6", "Sector 7", "Sector 8"]
-        H_inter  = ["Intervención en familias",                 "TOTAL", "Sol (Urbano)", "Luna\n(Rural)", "Sector 3", "Sector 4", "Sector 5", "Sector 6", "Sector 7", "Sector 8"]
+        H_inter  = ["Intervención en familias",                 "", "TOTAL", "Sol (Urbano)", "Luna\n(Rural)", "Sector 3", "Sector 4", "Sector 5", "Sector 6", "Sector 7", "Sector 8"]
 
         rows = [
             ["REM-P7. FAMILIAS EN CONTROL DE SALUD FAMILIAR"],
@@ -1442,15 +1442,15 @@ def update_rem_p7(n_inscritas_sol=0, n_inscritas_luna=0):
             ["N° De familias en riesgo alto",                       luna_alto,      luna_alto,        "", "", "", "", "", "", ""],
             ["SECCIÓN B. INTERVENCIÓN EN FAMILIAS SECTOR URBANO Y RURAL"],
             H_inter,
-            ["N° Familias con plan de intervención",                tot_con_plan,  sol_con_plan,  luna_con_plan,  "", "", "", "", "", ""],
-            ["N° Familias sin plan de intervención", "Riesgo bajo", tot_sin_bajo,   sol_sin_bajo,  luna_sin_bajo,  "", "", "", "", ""],
-            ["",                                     "Riesgo medio",tot_sin_medio,  sol_sin_medio, luna_sin_medio, "", "", "", "", ""],
-            ["",                                     "Riesgo alto", tot_sin_alto,   sol_sin_alto,  luna_sin_alto,  "", "", "", "", ""],
-            ["N° Familias egresadas de planes de intervención", "Total de egresos", tot_egreso,     sol_egreso,    luna_egreso,    "", "", "", "", ""],
-            ["",  "Alta por cumplir plan",                           tot_eg_alta,    sol_egreso_alta,  luna_egreso_alta,  "", "", "", "", ""],
-            ["",  "Traslado de establecimiento",                     tot_eg_tras,    sol_egreso_tras,  luna_egreso_tras,  "", "", "", "", ""],
-            ["",  "Derivación por complejidad",                      tot_eg_deriv,   sol_egreso_deriv, luna_egreso_deriv, "", "", "", "", ""],
-            ["",  "Por abandono",                                    tot_eg_aban,    sol_egreso_aban,  luna_egreso_aban,  "", "", "", "", ""],
+            ["N° Familias con plan de intervención",                "", tot_con_plan,  sol_con_plan,  luna_con_plan,  "", "", "", "", "", ""],
+            ["N° Familias sin plan de intervención", "Riesgo bajo", tot_sin_bajo,   sol_sin_bajo,  luna_sin_bajo,  "", "", "", "", "", ""],
+            ["",                                     "Riesgo medio",tot_sin_medio,  sol_sin_medio, luna_sin_medio, "", "", "", "", "", ""],
+            ["",                                     "Riesgo alto", tot_sin_alto,   sol_sin_alto,  luna_sin_alto,  "", "", "", "", "", ""],
+            ["N° Familias egresadas de planes de intervención", "Total de egresos", tot_egreso,     sol_egreso,    luna_egreso,    "", "", "", "", "", ""],
+            ["",  "Alta por cumplir plan",                           tot_eg_alta,    sol_egreso_alta,  luna_egreso_alta,  "", "", "", "", "", ""],
+            ["",  "Traslado de establecimiento",                     tot_eg_tras,    sol_egreso_tras,  luna_egreso_tras,  "", "", "", "", "", ""],
+            ["",  "Derivación por complejidad",                      tot_eg_deriv,   sol_egreso_deriv, luna_egreso_deriv, "", "", "", "", "", ""],
+            ["",  "Por abandono",                                    tot_eg_aban,    sol_egreso_aban,  luna_egreso_aban,  "", "", "", "", "", ""],
         ]
 
         # ------- Escribir en Hoja REM-P7 -------
