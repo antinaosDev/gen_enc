@@ -676,11 +676,15 @@ def export_rem_p7_excel(n_inscritas_sol=0, n_inscritas_luna=0):
         for ci, h in enumerate(cols_B, 1): set_cell(r, ci, h, CELESTE, BOLD_DARK, CENTER)
         
         secB_data = [
-            ("N° Fam con plan", "", sol_cp+luna_cp, sol_cp, luna_cp),
-            ("N° Fam sin plan", "Riesgo bajo", sol_sb+luna_sb, sol_sb, luna_sb),
+            ("N° Familias con plan de intervención", "", sol_cp+luna_cp, sol_cp, luna_cp),
+            ("N° Familias sin plan de intervención", "Riesgo bajo", sol_sb+luna_sb, sol_sb, luna_sb),
             ("", "Riesgo medio", sol_sm+luna_sm, sol_sm, luna_sm),
             ("", "Riesgo alto", sol_sa+luna_sa, sol_sa, luna_sa),
-            ("N° Fam egresadas", "Total egresos", sol_eg_t+luna_eg_t, sol_eg_t, luna_eg_t),
+            ("N° Familias egresadas de planes de intervención", "Total de egresos", sol_eg_t+luna_eg_t, sol_eg_t, luna_eg_t),
+            ("", "Alta por cumplir plan de intervención", sol_egs.get("egreso_alta", 0)+luna_egs.get("egreso_alta", 0), sol_egs.get("egreso_alta", 0), luna_egs.get("egreso_alta", 0)),
+            ("", "Traslado de establecimiento", sol_egs.get("egreso_traslado", 0)+luna_egs.get("egreso_traslado", 0), sol_egs.get("egreso_traslado", 0), luna_egs.get("egreso_traslado", 0)),
+            ("", "Derivación por complejidad del caso", sol_egs.get("egreso_derivacion", 0)+luna_egs.get("egreso_derivacion", 0), sol_egs.get("egreso_derivacion", 0), luna_egs.get("egreso_derivacion", 0)),
+            ("", "Por abandono", sol_egs.get("egreso_abandono", 0)+luna_egs.get("egreso_abandono", 0), sol_egs.get("egreso_abandono", 0), luna_egs.get("egreso_abandono", 0)),
         ]
         for l1, l2, tot, s1, s2 in secB_data:
             r += 1
