@@ -1474,7 +1474,7 @@ if 'family_members' not in st.session_state:
     st.session_state.family_members = pd.DataFrame({
         "Nombre y Apellidos": pd.Series(dtype='str'),
         "RUT": pd.Series(dtype='str'),
-        "F. Nac": pd.Series(dtype='object'),
+        "F. Nac": pd.Series(dtype='datetime64[ns]'),
         "Identidad de género": pd.Series(dtype='str'),
         "Pueblo Originario": pd.Series(dtype='str'),
         "Nacionalidad": pd.Series(dtype='str'),
@@ -1743,7 +1743,7 @@ def main():
                 st.session_state.family_members = pd.DataFrame({
                     "Nombre y Apellidos": pd.Series(dtype='str'),
                     "RUT": pd.Series(dtype='str'),
-                    "F. Nac": pd.Series(dtype='object'),
+                    "F. Nac": pd.Series(dtype='datetime64[ns]'),
                     "Identidad de género": pd.Series(dtype='str'),
                     "Pueblo Originario": pd.Series(dtype='str'),
                     "Nacionalidad": pd.Series(dtype='str'),
