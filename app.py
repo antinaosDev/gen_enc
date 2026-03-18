@@ -2378,8 +2378,9 @@ def main():
                     
                     if ok1 and ok2:
                         # Auditoría de Guardado/Actualización
+                        _es_registro_existente = bool(eval_id and eval_id != 'N/A')
                         accion_audit = "Actualización de Registro" if _es_registro_existente else "Creación de Registro"
-                        log_audit_event(st.session_state.user_info, accion_audit, f"Evaluación guardada en Sheets. Familia: {familia_val}", eval_id=id_evaluacion)
+                        log_audit_event(st.session_state.user_info, accion_audit, f"Evaluación guardada en Sheets. Familia: {familia_val}", eval_id=eval_id)
                         
                         st.success(f"✅ Estudio Completo Guardado: {msg1} | {msg2} | {msg3}")
                         st.balloons()
