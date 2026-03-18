@@ -130,15 +130,34 @@ def render_seg_fragment():
 
 @st.fragment
 def render_team_fragment():
-    edited_team = st.data_editor(
-        st.session_state.team_members,
-        num_rows="dynamic",
-        width='stretch',
-        key="team_editor",
-        hide_index=True,
-        column_config={
-            "Nombre y Profesión": st.column_config.TextColumn("Registrar Nombre Completo", width="large"),
-            "Firma": st.column_config.CheckboxColumn("Firma Digital", width="small"),
-        }
-    )
-    st.session_state.team_members = edited_team
+    try:
+        if 'team_members' not in st.session_state or st.session_state.team_members is None:
+            st.session_state.team_members = pd.DataFrame(columns=["Nombre y Profesión", "Firma"])
+        
+        df_team = st.session_state.team_members
+        if not isinstance(df_team, pd.DataFrame):
+            df_team = pd.DataFrame(columns=["Nombre y Profesión", "Firma"])
+        
+        if "Nombre y Profesión" not in df_team.columns:
+            df_team["Nombre y Profesión"] = ""
+        if "Firma" not in df_team.columns:
+            df_team["Firma"] = False
+        
+        df_team = df_team[["Nombre y Profesión", "Firma"]].fillna({"Nombre y Profesión": "", "Firma": False})
+        
+        edited_team = st.data_editor(
+            df_team,
+            num_rows="dynamic",
+            width='stretch',
+            key="team_editor",
+            hide_index=True,
+            column_config={
+                "Nombre y Profesión": st.column_config.TextColumn("Registrar Nombre Completo", width="large"),
+                "Firma": st.column_config.CheckboxColumn("Firma Digital", width="small"),
+            }
+        )
+        if edited_team is not None:
+            st.session_state.team_members = edited_team
+    except Exception as e:
+        st.error(f"Error al editar equipo de salud: {str(e)}")
+        st.session_state.team_members = pd.DataFrame(columns=["Nombre y Profesión", "Firma"])
