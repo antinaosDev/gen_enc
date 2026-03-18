@@ -2365,7 +2365,7 @@ def main():
 
                     # 2. Guardar en Sheets
                     ok1, msg1 = save_evaluacion_to_sheet(data_row, final_headers)
-                    ok2, msg2 = save_intervention_rows(eval_id, familia_val, str(st.session_state.get('fechaEvaluacion', date.today())), nivel_val, prog_val, st.session_state.get('parentesco', ''), st.session_state.intervention_plan)
+                    ok2, msg2 = save_intervention_rows(eval_id, familia_val, str(st.session_state.get('fechaEvaluacion', date.today())), nivel_val, prog_val, st.session_state.get('parentesco', ''), df_plan_save)
                     
                     # 3. Guardar Ecomapa
                     ecomap_elements = {
@@ -2943,7 +2943,7 @@ def main():
                     level,
                     _programa,
                     _parentesco,
-                    st.session_state.intervention_plan
+                    df_plan_save
                 )
 
                 # ---- HOJA 3: REM-P7 (auto-actualizar) ----
@@ -2965,12 +2965,16 @@ def main():
             try:
                 id_evaluacion = st.session_state.get('idEvaluacion', 'sin_id')
                 with st.spinner("Preparando archivo PDF..."):
+                    df_fam_pdf = apply_edits_df(st.session_state.family_members, "family_editor")
+                    df_plan_pdf = apply_edits_df(st.session_state.intervention_plan, "intervention_editor")
+                    df_team_pdf = apply_edits_df(st.session_state.team_members, "team_editor")
+                    
                     pdf_bytes = generate_pdf_report(
                         dict(st.session_state), 
-                        st.session_state.family_members, 
-                        st.session_state.intervention_plan,
-                        st.session_state.team_members
-                    ) 
+                        df_fam_pdf, 
+                        df_plan_pdf,
+                        df_team_pdf
+                    )
                     st.session_state['temp_pdf_report'] = pdf_bytes
                     # Auditoría PDF
                     log_audit_event(st.session_state.user_info, "Generación de PDF", f"PDF preparado para la familia: {st.session_state.get('familia', 'N/A')}", eval_id=id_evaluacion)
