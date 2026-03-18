@@ -934,6 +934,11 @@ def load_record_into_state(record):
         plan_json = record.get('Plan Intervención JSON', '[]')
         
         df_fam = pd.DataFrame(json.loads(fam_json) if fam_json else [])
+        # Backfill columns for older records
+        for _fc in ['Pueblo Originario', 'Parentesco']:
+            if _fc not in df_fam.columns:
+                df_fam[_fc] = ''
+                
         if not df_fam.empty:
             if 'Sexo' in df_fam.columns and 'Identidad de género' not in df_fam.columns:
                 migration_map = {"M": "Masculino", "F": "Femenino", "G": "Gestación/Aborto"}
@@ -2336,27 +2341,7 @@ def main():
     st.markdown('<div style="color: #0f172a; font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">2. Composición Familiar</div>', unsafe_allow_html=True)
     
     with st.container(border=True):
-        # Ensure 'Pueblo Originario' column always exists for older records
-        if 'Pueblo Originario' not in st.session_state.family_members.columns:
-            if 'Identidad de género' in st.session_state.family_members.columns:
-                loc = st.session_state.family_members.columns.get_loc('Identidad de género') + 1
-            else:
-                loc = min(3, len(st.session_state.family_members.columns))
-            st.session_state.family_members.insert(loc, 'Pueblo Originario', "")
-            
-        # Ensure 'Parentesco' column exists
-        if 'Parentesco' not in st.session_state.family_members.columns:
-            loc = max(0, len(st.session_state.family_members.columns) - 1)
-            st.session_state.family_members.insert(loc, 'Parentesco', "")
-
-        if 'F. Nac' in st.session_state.family_members.columns:
-            def to_date_safe_fnac(x):
-                try:
-                    return pd.to_datetime(x, dayfirst=True).date() if pd.notnull(x) and str(x).strip() != "" else None
-                except:
-                    return None
-            st.session_state.family_members['F. Nac'] = st.session_state.family_members['F. Nac'].apply(to_date_safe_fnac)
-        
+        # Backfill y validaciones movidas a la etapa de carga
         edited_family = st.data_editor(
             st.session_state.family_members,
             num_rows="dynamic",
@@ -2673,10 +2658,7 @@ def main():
                 "F. Seguimiento": pd.Series(dtype='object'),
                 "Obs. Seguimiento": pd.Series(dtype='str'),
             })
-        # Ensure columns always exist
-        for _sc in ['Objetivo', 'Actividad', 'Estado', 'F. Seguimiento', 'Obs. Seguimiento']:
-            if _sc not in st.session_state.seguimiento_plan.columns:
-                st.session_state.seguimiento_plan[_sc] = ''
+        # Asegurar columnas movido a la etapa de carga
 
         edited_seg = st.data_editor(
             st.session_state.seguimiento_plan,
