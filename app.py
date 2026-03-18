@@ -2361,6 +2361,7 @@ def main():
             st.session_state.family_members,
             num_rows="dynamic",
             width='stretch',
+            key="family_editor",
             column_config={
                 "Nombre y Apellidos": st.column_config.TextColumn("Nombre y Apellidos", width="large"),
                 "RUT": st.column_config.TextColumn("RUT", width="medium"),
@@ -2623,6 +2624,7 @@ def main():
             st.session_state.intervention_plan,
             num_rows="dynamic",
             width='stretch',
+            key="intervention_editor",
             column_config={
                 "Objetivo": st.column_config.TextColumn("OBJETIVO"),
                 "Actividad": st.column_config.TextColumn("ACTIVIDAD"),
@@ -2704,6 +2706,7 @@ def main():
                 st.session_state.team_members,
                 num_rows="dynamic",
                 width='stretch',
+                key="team_editor",
                 column_config={
                     "Nombre y Profesión": st.column_config.TextColumn("Registrar Nombre Completo", width="large"),
                     "Firma": st.column_config.CheckboxColumn("Firma Digital", width="small"),
