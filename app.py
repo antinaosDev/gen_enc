@@ -1206,8 +1206,20 @@ def save_intervention_rows(id_eval, familia, fecha_eval, nivel, programa, parent
 
         # Insert new rows for each plan activity
         if df_plan is not None and not df_plan.empty:
-            df_plan_clean = df_plan.fillna('')
             new_rows = []
+            
+            date_cols = ['Fecha Prog', 'Fecha Real', 'F. Seguimiento']
+            df_plan_work = df_plan.copy()
+            
+            for col in date_cols:
+                if col in df_plan_work.columns:
+                    df_plan_work[col] = df_plan_work[col].apply(
+                        lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) and hasattr(x, 'strftime') 
+                        else (str(x) if x is not None else "")
+                    )
+            
+            df_plan_clean = df_plan_work.fillna('')
+            
             for _, plan_row in df_plan_clean.iterrows():
                 obj = str(plan_row.get("Objetivo", "")).strip()
                 act = str(plan_row.get("Actividad", "")).strip()
@@ -1215,28 +1227,9 @@ def save_intervention_rows(id_eval, familia, fecha_eval, nivel, programa, parent
                 if not obj and not act:
                     continue
                 
-                fecha_prog = ""
-                fecha_real = ""
-                fecha_seg = ""
-                try:
-                    fp = plan_row.get("Fecha Prog")
-                    if fp and pd.notnull(fp):
-                        fecha_prog = fp.strftime('%Y-%m-%d') if hasattr(fp, 'strftime') else str(fp)
-                except:
-                    pass
-                try:
-                    fr = plan_row.get("Fecha Real")
-                    if fr and pd.notnull(fr):
-                        fecha_real = fr.strftime('%Y-%m-%d') if hasattr(fr, 'strftime') else str(fr)
-                except:
-                    pass
-                    
-                try:
-                    fs = plan_row.get("F. Seguimiento")
-                    if fs and pd.notnull(fs):
-                        fecha_seg = fs.strftime('%Y-%m-%d') if hasattr(fs, 'strftime') else str(fs)
-                except:
-                    pass
+                fecha_prog = str(plan_row.get("Fecha Prog", ""))
+                fecha_real = str(plan_row.get("Fecha Real", ""))
+                fecha_seg = str(plan_row.get("F. Seguimiento", ""))
 
                 new_rows.append([
                     str(id_eval),
