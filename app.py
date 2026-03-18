@@ -2269,6 +2269,7 @@ def main():
         col_s1, col_s2 = st.columns([1, 4])
         with col_s1:
             if st.button("💾 Guardar Estudio Completo", type="primary", width='stretch'):
+                _es_registro_existente = True
                 with st.spinner("Persistiendo estudio en el historial..."):
                     # 1. Preparar datos para Hoja 1 (Evaluaciones)
                     # ---- EXTRAER RUTs DEL GRUPO FAMILIAR ----
