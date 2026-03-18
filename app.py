@@ -1181,11 +1181,11 @@ def save_intervention_rows(id_eval, familia, fecha_eval, nivel, programa, parent
         
         all_values = worksheet.get_all_values()
         
-        # Ensure headers
-        if not all_values:
-            worksheet.append_row(plan_headers)
+        # Ensure headers - force correct headers in first row
+        if not all_values or len(all_values[0]) != len(plan_headers):
+            worksheet.update('A1:P1', [plan_headers])
             all_values = [plan_headers]
-
+        
         # Find and delete existing rows with same ID Evaluación
         if len(all_values) > 1:
             headers_row = all_values[0]
@@ -1206,10 +1206,18 @@ def save_intervention_rows(id_eval, familia, fecha_eval, nivel, programa, parent
 
         # Insert new rows for each plan activity
         if df_plan is not None and not df_plan.empty:
+            df_plan_clean = df_plan.fillna('')
             new_rows = []
-            for _, plan_row in df_plan.iterrows():
+            for _, plan_row in df_plan_clean.iterrows():
+                obj = str(plan_row.get("Objetivo", "")).strip()
+                act = str(plan_row.get("Actividad", "")).strip()
+                
+                if not obj and not act:
+                    continue
+                
                 fecha_prog = ""
                 fecha_real = ""
+                fecha_seg = ""
                 try:
                     fp = plan_row.get("Fecha Prog")
                     if fp and pd.notnull(fp):
@@ -1223,7 +1231,6 @@ def save_intervention_rows(id_eval, familia, fecha_eval, nivel, programa, parent
                 except:
                     pass
                     
-                fecha_seg = ""
                 try:
                     fs = plan_row.get("F. Seguimiento")
                     if fs and pd.notnull(fs):
@@ -1238,19 +1245,22 @@ def save_intervention_rows(id_eval, familia, fecha_eval, nivel, programa, parent
                     str(nivel),
                     str(programa),
                     str(parentesco),
-                    str(plan_row.get("Objetivo", "")),
-                    str(plan_row.get("Actividad", "")),
+                    plan_row.get("Objetivo", ""),
+                    plan_row.get("Actividad", ""),
                     fecha_prog,
-                    str(plan_row.get("Responsable", "")),
+                    plan_row.get("Responsable", ""),
                     fecha_real,
-                    str(plan_row.get("Evaluación", "")),
-                    str(plan_row.get("Estado", "")),
+                    plan_row.get("Evaluación", ""),
+                    plan_row.get("Estado", ""),
                     fecha_seg,
-                    str(plan_row.get("Obs. Seguimiento", ""))
+                    plan_row.get("Obs. Seguimiento", "")
                 ])
             
             if new_rows:
-                worksheet.append_rows(new_rows, value_input_option='USER_ENTERED')
+                # Get the next available row
+                next_row = len(all_values) + 1
+                range_str = f"A{next_row}:P{next_row + len(new_rows) - 1}"
+                worksheet.update(range_str, new_rows, value_input_option='USER_ENTERED')
                 return True, f"{len(new_rows)} actividades guardadas en Hoja 'Planes de Intervención'."
             else:
                 return True, "Plan de intervención vacío, no se agregaron filas."
