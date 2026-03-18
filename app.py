@@ -2381,6 +2381,13 @@ def main():
                 "Resp": st.column_config.CheckboxColumn("Resp", width="small", default=False, help="Marque si es la Persona Índice (Doble Borde)."),
             }
         )
+        if edited_family is not None and 'F. Nac' in edited_family.columns:
+            def to_date_safe_fnac(x):
+                try:
+                    return pd.to_datetime(x, dayfirst=True).date() if pd.notnull(x) and str(x).strip() != "" else None
+                except:
+                    return None
+            edited_family['F. Nac'] = edited_family['F. Nac'].apply(to_date_safe_fnac)
         st.session_state.family_members = edited_family
         
         # --- VALIDACIÓN DE RUTS DUPLICADOS ---
