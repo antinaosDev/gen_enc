@@ -1623,6 +1623,32 @@ def render_login_page():
                 else:
                     st.error("Error de base de datos.")
 
+def apply_edits_df(df, key):
+    """Fusiona los deltas de st.data_editor (edits, adds, deletes) sobre un DataFrame base."""
+    edits = st.session_state.get(key, {})
+    if not edits or not isinstance(edits, dict):
+        return df
+    df_new = df.copy()
+    
+    # 1. Ediciones
+    for idx_str, cols in edits.get("edited_rows", {}).items():
+        try: idx = int(idx_str)
+        except: idx = idx_str
+        for col, val in cols.items():
+            df_new.at[idx, col] = val
+            
+    # 2. Adiciones
+    added = edits.get("added_rows", [])
+    if added:
+        df_new = pd.concat([df_new, pd.DataFrame(added)], ignore_index=True)
+        
+    # 3. Eliminaciones
+    deleted = edits.get("deleted_rows", [])
+    if deleted:
+        df_new = df_new.drop(deleted).reset_index(drop=True)
+        
+    return df_new
+
 # --- FUNCIONES DE FRAGMENTO PARA AISLAR TABLAS ---
 @st.fragment
 def render_family_fragment():
@@ -2271,7 +2297,7 @@ def main():
                     data_row.extend(risk_list)
 
                     # JSONs
-                    df_fam = st.session_state.get("family_edited_latest", st.session_state.family_members).fillna("")
+                    df_fam = apply_edits_df(st.session_state.family_members, "family_editor").fillna("")
                     if 'F. Nac' in df_fam.columns:
                         def to_date_safe_fnac(x):
                             try:
@@ -2280,20 +2306,20 @@ def main():
                         df_fam['F. Nac'] = df_fam['F. Nac'].apply(to_date_safe_fnac)
                     data_row.append(json.dumps(df_fam.to_dict('records'), ensure_ascii=False, default=str))
                     
-                    df_plan_save = st.session_state.get("plan_edited_latest", st.session_state.intervention_plan).copy()
+                    df_plan_save = apply_edits_df(st.session_state.intervention_plan, "intervention_editor").copy()
                     for c in ['Fecha Prog', 'Fecha Real', 'F. Seguimiento']:
                         if c in df_plan_save.columns:
                             df_plan_save[c] = df_plan_save[c].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) and hasattr(x, 'strftime') else "")
                     data_row.append(json.dumps(df_plan_save.fillna("").to_dict('records'), ensure_ascii=False, default=str))
                     
-                    df_team = st.session_state.get("team_edited_latest", st.session_state.team_members).fillna("")
+                    df_team = apply_edits_df(st.session_state.team_members, "team_editor").fillna("")
                     data_row.append(json.dumps(df_team.to_dict('records'), ensure_ascii=False, default=str))
 
                     rel_json = json.dumps(st.session_state.get('interpersonal_relations', []), ensure_ascii=False)
                     data_row.append(rel_json)
                     
                     # Seguimiento del Plan
-                    df_seg_save = st.session_state.get('seg_edited_latest', st.session_state.get('seguimiento_plan', pd.DataFrame())).copy()
+                    df_seg_save = apply_edits_df(st.session_state.get('seguimiento_plan', pd.DataFrame()), "seguimiento_editor").copy()
                     data_row.append(json.dumps(df_seg_save.fillna('').to_dict('records'), ensure_ascii=False, default=str))
                     
                     # Extra data (APGAR)
@@ -2798,7 +2824,7 @@ def main():
                     """Elimina puntos del RUT, conserva solo guión como separador."""
                     return rut_str.replace(".", "").strip()
 
-                df_fam_rut = st.session_state.get("family_edited_latest", st.session_state.family_members).fillna("")
+                df_fam_rut = apply_edits_df(st.session_state.family_members, "family_editor").fillna("")
                 if 'RUT' in df_fam_rut.columns:
                     ruts_list = [normalizar_rut(str(r)) for r in df_fam_rut['RUT'].tolist() if str(r).strip()]
                     ruts_concatenados = ",".join(ruts_list)
@@ -2826,7 +2852,7 @@ def main():
                 risk_list = [st.session_state.get(k, False) for k in risk_keys]
                 data_row.extend(risk_list)
 
-                df_fam = st.session_state.get("family_edited_latest", st.session_state.family_members).fillna("")
+                df_fam = apply_edits_df(st.session_state.family_members, "family_editor").fillna("")
                 if 'F. Nac' in df_fam.columns:
                     def to_date_safe_fnac(x):
                         try:
@@ -2835,19 +2861,19 @@ def main():
                     df_fam['F. Nac'] = df_fam['F. Nac'].apply(to_date_safe_fnac)
                 family_json = json.dumps(df_fam.to_dict('records'), ensure_ascii=False, default=str)
                 
-                df_plan_save = st.session_state.get("plan_edited_latest", st.session_state.intervention_plan).copy()
+                df_plan_save = apply_edits_df(st.session_state.intervention_plan, "intervention_editor").copy()
                 for c in ['Fecha Prog', 'Fecha Real', 'F. Seguimiento']:
                     if c in df_plan_save.columns:
                         df_plan_save[c] = df_plan_save[c].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) and hasattr(x, 'strftime') else "")
                 plan_json = json.dumps(df_plan_save.fillna("").to_dict('records'), ensure_ascii=False, default=str)
                 
-                df_team = st.session_state.get("team_edited_latest", st.session_state.team_members).fillna("")
+                df_team = apply_edits_df(st.session_state.team_members, "team_editor").fillna("")
                 team_json = json.dumps(df_team.to_dict('records'), ensure_ascii=False, default=str)
                 
                 rel_json = json.dumps(st.session_state.get('interpersonal_relations', []), ensure_ascii=False)
                 
                 # Seguimiento del Plan
-                df_seg_save = st.session_state.get('seg_edited_latest', st.session_state.get('seguimiento_plan', pd.DataFrame())).copy()
+                df_seg_save = apply_edits_df(st.session_state.get('seguimiento_plan', pd.DataFrame()), "seguimiento_editor").copy()
                 seg_json = json.dumps(df_seg_save.fillna('').to_dict('records'), ensure_ascii=False, default=str)
                 
                 # Extra data (APGAR)
