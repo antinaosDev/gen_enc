@@ -2347,6 +2347,7 @@ def main():
             num_rows="dynamic",
             width='stretch',
             key="family_editor",
+            hide_index=True,
             column_config={
                 "Nombre y Apellidos": st.column_config.TextColumn("Nombre y Apellidos", width="large"),
                 "RUT": st.column_config.TextColumn("RUT", width="medium"),
@@ -2617,6 +2618,7 @@ def main():
             num_rows="dynamic",
             width='stretch',
             key="intervention_editor",
+            hide_index=True,
             column_config={
                 "Objetivo": st.column_config.TextColumn("OBJETIVO"),
                 "Actividad": st.column_config.TextColumn("ACTIVIDAD"),
@@ -2672,6 +2674,7 @@ def main():
             num_rows="dynamic",
             width='stretch',
             key="seguimiento_editor",
+            hide_index=True,
             column_config={
                 "Objetivo": st.column_config.TextColumn("OBJETIVO", width="large"),
                 "Actividad": st.column_config.TextColumn("ACTIVIDAD", width="large"),
@@ -2696,6 +2699,7 @@ def main():
                 num_rows="dynamic",
                 width='stretch',
                 key="team_editor",
+                hide_index=True,
                 column_config={
                     "Nombre y Profesión": st.column_config.TextColumn("Registrar Nombre Completo", width="large"),
                     "Firma": st.column_config.CheckboxColumn("Firma Digital", width="small"),
