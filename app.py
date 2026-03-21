@@ -1909,7 +1909,7 @@ def main():
 
         with st.container(border=True):
             st.markdown('<div style="font-weight: 700; font-size: 0.9rem; color: #334155; margin-bottom: 8px;">Sincronización</div>', unsafe_allow_html=True)
-            st.markdown('<div style="font-size: 0.8rem; color: #64748b; margin-bottom: 10px;">Forzar recarga de datos desde Google Sheets.</div>', unsafe_allow_html=True)
+            st.markdown('<div style="font-size: 0.8rem; color: #64748b; margin-bottom: 10px;">Forzar recarga de datos desde la base de datos.</div>', unsafe_allow_html=True)
             if st.button("🔄 Sincronizar Datos", type="secondary", width='stretch'):
                 with st.spinner("Actualizando datos..."):
                     st.cache_data.clear()
