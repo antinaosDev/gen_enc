@@ -275,7 +275,7 @@ PARENTESCO_FAMILIA_OPTIONS = [
     "No familiar"
 ]
 
-TIPO_UNION_OPTIONS = ["Casados", "Convivencia", "Separados", "Divorciados"]
+TIPO_UNION_OPTIONS = ["Soltero/a", "Casados", "Convivencia", "Separados", "Divorciados", "Viudo/a"]
 
 # Opciones de Autoidentificación Étnica (INE Chile - Censo 2017)
 PUEBLO_ORIGINARIO_OPTIONS = [
