@@ -1908,6 +1908,20 @@ def main():
                 st.rerun()
 
         with st.container(border=True):
+            st.markdown('<div style="font-weight: 700; font-size: 0.9rem; color: #334155; margin-bottom: 8px;">Sincronización</div>', unsafe_allow_html=True)
+            st.markdown('<div style="font-size: 0.8rem; color: #64748b; margin-bottom: 10px;">Forzar recarga de datos desde Google Sheets.</div>', unsafe_allow_html=True)
+            if st.button("🔄 Sincronizar Datos", type="secondary", width='stretch'):
+                with st.spinner("Actualizando datos..."):
+                    st.cache_data.clear()
+                    if 'df_evaluaciones' in st.session_state:
+                        del st.session_state['df_evaluaciones']
+                    if 'raw_analytics_df' in st.session_state:
+                        del st.session_state['raw_analytics_df']
+                    if 'raw_df_ts' in st.session_state:
+                        del st.session_state['raw_df_ts']
+                    st.rerun()
+
+        with st.container(border=True):
             st.markdown('<div style="font-weight: 700; font-size: 0.9rem; color: #334155; margin-bottom: 8px;">Búsqueda Directa</div>', unsafe_allow_html=True)
             search_id = st.text_input("ID Evaluación", placeholder="Ej: FAM-0123...", label_visibility="collapsed")
             if st.button("🔍 Cargar Registro", type="primary", width='stretch'):
