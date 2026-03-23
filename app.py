@@ -2126,26 +2126,12 @@ def main():
         eval_id = st.session_state.get('idEvaluacion', 'N/A')
         
         # 2. CÁLCULO DE RIESGOS (Protocolo San Juan: 10, 4, 2 pts)
-        risk_keys_list = [
-            't1_vif','t1_drogas','t1_alcohol','t1_saludMentalDescomp','t1_abusoSexual',
-            't1_riesgoBiopsicoGrave','t1_epsaRiesgo','t1_vulnerabilidadExtrema','t1_trabajoInfantil',
-            't2_enfermedadGrave','t2_altoRiesgoHosp','t2_discapacidad','t2_saludMentalLeve',
-            't2_judicial','t2_rolesParentales','t2_adultosRiesgo',
-            't3_patologiaCronica','t3_discapacidadLeve','t3_rezago','t3_madreAdolescente',
-            't3_sinRedApoyo','t3_cesantia','t3_vulneNoExtrema','t3_precariedadLaboral',
-            't3_hacinamiento','t3_entornoInseguro','t3_adultoSolo','t3_desercionEscolar',
-            't3_analfabetismo','t3_escolaridadIncompleta','t3_dificultadAcceso',
-            't4_monoparental','t4_riesgoCardio','t4_contaminacion','t4_higiene',
-            't4_sinRecreacion','t4_sinEspaciosSeguros','t4_endeudamiento','t4_serviciosIncompletos',
-            't5_lactancia','t5_habitos','t5_redesSociales','t5_redFamiliar',
-            't5_comunicacion','t5_recursosSuficientes','t5_resiliencia','t5_viviendaAdecuada'
-        ]
-        active_risks = {k: bool(st.session_state.get(k, False)) for k in risk_keys_list}
+        active_risks = {k: bool(st.session_state.get(k, False)) for k in risk_keys}
         
-        _t1 = sum(1 for k in ['t1_vif','t1_drogas','t1_alcohol','t1_saludMentalDescomp'] if active_risks.get(k))
-        _t2 = sum(1 for k in ['t2_enfermedadGrave','t2_altoRiesgoHosp','t2_discapacidad'] if active_risks.get(k))
-        _pts = sum(4 for k in risk_keys_list if k.startswith('t3_') and active_risks.get(k)) + \
-               sum(3 for k in risk_keys_list if k.startswith('t4_') and active_risks.get(k))
+        _t1 = sum(1 for k in risk_keys if k.startswith('t1_') and active_risks.get(k))
+        _t2 = sum(1 for k in risk_keys if k.startswith('t2_') and active_risks.get(k))
+        _pts = sum(4 for k in risk_keys if k.startswith('t3_') and active_risks.get(k)) + \
+               sum(3 for k in risk_keys if k.startswith('t4_') and active_risks.get(k))
         
         nivel_val = "RIESGO ALTO" if (_t1 >= 1 or _t2 >= 2 or _pts >= 26) else \
                     "RIESGO MEDIO" if (_t2 == 1 or 17 <= _pts <= 25) else "RIESGO BAJO"
