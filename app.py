@@ -948,14 +948,17 @@ def load_record_into_state(record):
         st.session_state.family_members = df_fam
         
         df_plan = pd.DataFrame(json.loads(plan_json) if plan_json else [])
+        
+        # Ensure all columns exist, especially for empty dataframes or old records
+        expected_cols = ["Objetivo", "Actividad", "Fecha Prog", "Responsable", 
+                         "Fecha Real", "Evaluación", "Estado", "F. Seguimiento", "Obs. Seguimiento"]
+        for col in expected_cols:
+            if col not in df_plan.columns:
+                df_plan[col] = None if col in ['Fecha Prog', 'Fecha Real', 'F. Seguimiento'] else ''
+        
         cols_date = ['Fecha Prog', 'Fecha Real', 'F. Seguimiento']
         for c in cols_date:
-            if c in df_plan.columns:
-                df_plan[c] = pd.to_datetime(df_plan[c], errors='coerce').dt.date
-        # Backfill new tracking columns if missing (older records)
-        for tracking_col in ['Estado', 'F. Seguimiento', 'Obs. Seguimiento']:
-            if tracking_col not in df_plan.columns:
-                df_plan[tracking_col] = None if 'Fecha' in tracking_col else ''
+            df_plan[c] = pd.to_datetime(df_plan[c], errors='coerce').dt.date
         
         st.session_state.intervention_plan = df_plan
 
