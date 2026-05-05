@@ -934,17 +934,28 @@ def load_record_into_state(record):
         plan_json = record.get('Plan Intervención JSON', '[]')
         
         df_fam = pd.DataFrame(json.loads(fam_json) if fam_json else [])
-        # Backfill columns for older records
-        for _fc in ['Pueblo Originario', 'Parentesco']:
-            if _fc not in df_fam.columns:
-                df_fam[_fc] = ''
-                
+        
+        # Robust backfill for family members
+        expected_fam_cols = [
+            "Nombre y Apellidos", "RUT", "F. Nac", "Identidad de género", 
+            "Pueblo Originario", "Nacionalidad", "E. Civil", "Ocupación", 
+            "Parentesco", "Cronico", "Resp"
+        ]
+        for col in expected_fam_cols:
+            if col not in df_fam.columns:
+                if col == "F. Nac":
+                    df_fam[col] = None
+                elif col in ["Cronico", "Resp"]:
+                    df_fam[col] = False
+                else:
+                    df_fam[col] = ""
+                    
         if not df_fam.empty:
-            if 'Sexo' in df_fam.columns and 'Identidad de género' not in df_fam.columns:
+            if 'Sexo' in df_fam.columns and (df_fam['Identidad de género'] == '').all():
                 migration_map = {"M": "Masculino", "F": "Femenino", "G": "Gestación/Aborto"}
                 df_fam['Identidad de género'] = df_fam['Sexo'].map(lambda x: migration_map.get(str(x).upper(), str(x)))
-            if 'F. Nac' in df_fam.columns:
-                df_fam['F. Nac'] = pd.to_datetime(df_fam['F. Nac'], errors='coerce').dt.date
+            
+        df_fam['F. Nac'] = pd.to_datetime(df_fam['F. Nac'], errors='coerce').dt.date
         st.session_state.family_members = df_fam
         
         df_plan = pd.DataFrame(json.loads(plan_json) if plan_json else [])
@@ -966,13 +977,14 @@ def load_record_into_state(record):
         seg_json_load = record.get('Seguimiento Plan JSON', '[]')
         try:
             df_seg = pd.DataFrame(json.loads(seg_json_load) if seg_json_load else [])
-            for _sc in ['Objetivo', 'Actividad', 'Estado', 'F. Seguimiento', 'Obs. Seguimiento']:
-                if _sc not in df_seg.columns:
-                    df_seg[_sc] = ''
-            if 'F. Seguimiento' in df_seg.columns:
-                df_seg['F. Seguimiento'] = pd.to_datetime(df_seg['F. Seguimiento'], errors='coerce').dt.date
+            expected_seg_cols = ['Objetivo', 'Actividad', 'Estado', 'F. Seguimiento', 'Obs. Seguimiento']
+            for col in expected_seg_cols:
+                if col not in df_seg.columns:
+                    df_seg[col] = None if col == 'F. Seguimiento' else ''
+            
+            df_seg['F. Seguimiento'] = pd.to_datetime(df_seg['F. Seguimiento'], errors='coerce').dt.date
             st.session_state.seguimiento_plan = df_seg
-        except:
+        except Exception as seg_err:
             st.session_state.seguimiento_plan = pd.DataFrame(columns=['Objetivo', 'Actividad', 'Estado', 'F. Seguimiento', 'Obs. Seguimiento'])
     except Exception as e:
         st.warning(f"Error cargando tablas: {e}")
