@@ -955,7 +955,7 @@ def load_record_into_state(record):
                 migration_map = {"M": "Masculino", "F": "Femenino", "G": "Gestación/Aborto"}
                 df_fam['Identidad de género'] = df_fam['Sexo'].map(lambda x: migration_map.get(str(x).upper(), str(x)))
             
-        df_fam['F. Nac'] = pd.to_datetime(df_fam['F. Nac'], errors='coerce').dt.date
+        df_fam['F. Nac'] = pd.to_datetime(df_fam['F. Nac'], errors='coerce')
         st.session_state.family_members = df_fam
         
         df_plan = pd.DataFrame(json.loads(plan_json) if plan_json else [])
@@ -965,11 +965,11 @@ def load_record_into_state(record):
                          "Fecha Real", "Evaluación", "Estado", "F. Seguimiento", "Obs. Seguimiento"]
         for col in expected_cols:
             if col not in df_plan.columns:
-                df_plan[col] = None if col in ['Fecha Prog', 'Fecha Real', 'F. Seguimiento'] else ''
+                df_plan[col] = pd.NA if col in ['Fecha Prog', 'Fecha Real', 'F. Seguimiento'] else ''
         
         cols_date = ['Fecha Prog', 'Fecha Real', 'F. Seguimiento']
         for c in cols_date:
-            df_plan[c] = pd.to_datetime(df_plan[c], errors='coerce').dt.date
+            df_plan[c] = pd.to_datetime(df_plan[c], errors='coerce')
         
         st.session_state.intervention_plan = df_plan
 
@@ -980,9 +980,9 @@ def load_record_into_state(record):
             expected_seg_cols = ['Objetivo', 'Actividad', 'Estado', 'F. Seguimiento', 'Obs. Seguimiento']
             for col in expected_seg_cols:
                 if col not in df_seg.columns:
-                    df_seg[col] = None if col == 'F. Seguimiento' else ''
+                    df_seg[col] = pd.NA if col == 'F. Seguimiento' else ''
             
-            df_seg['F. Seguimiento'] = pd.to_datetime(df_seg['F. Seguimiento'], errors='coerce').dt.date
+            df_seg['F. Seguimiento'] = pd.to_datetime(df_seg['F. Seguimiento'], errors='coerce')
             st.session_state.seguimiento_plan = df_seg
         except Exception as seg_err:
             st.session_state.seguimiento_plan = pd.DataFrame(columns=['Objetivo', 'Actividad', 'Estado', 'F. Seguimiento', 'Obs. Seguimiento'])
@@ -2735,7 +2735,7 @@ def main():
                 "Objetivo": pd.Series(dtype='str'),
                 "Actividad": pd.Series(dtype='str'),
                 "Estado": pd.Series(dtype='str'),
-                "F. Seguimiento": pd.Series(dtype='object'),
+                "F. Seguimiento": pd.Series(dtype='datetime64[ns]'),
                 "Obs. Seguimiento": pd.Series(dtype='str'),
             })
         # Asegurar columnas movido a la etapa de carga
