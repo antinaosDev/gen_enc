@@ -399,6 +399,7 @@ PROGRAMA_OPTIONS = [
     "Calidad",
     "Capacitación",
     "Servicio de Urgencia Rural (SUR)",
+    "Programa Dependencia Severa",
 ]
 
 # --- ESQUEMA DE PERMISOS RBAC ---
@@ -418,6 +419,20 @@ def load_users():
     except Exception as e:
         st.error(f"Error cargando usuarios: {e}")
     return pd.DataFrame()
+
+def save_users(users_df):
+    """Guarda el DataFrame de usuarios completo en la hoja 'usuarios'."""
+    try:
+        client = get_google_sheet_client()
+        if not client: return False, "Error de conexión"
+        sh = client.open_by_url(SHEET_URL)
+        ws = sh.worksheet("usuarios")
+        ws.clear()
+        if not users_df.empty:
+            ws.update([users_df.columns.values.tolist()] + users_df.values.tolist())
+        return True, "Usuarios actualizados correctamente"
+    except Exception as e:
+        return False, f"Error guardando usuarios: {e}"
 
 def check_access(row_data, user_info):
     """
@@ -1802,8 +1817,38 @@ def main():
             </div>
         """, unsafe_allow_html=True)
         
+        with st.container(border=True):
+            st.markdown("🔑 **Cambiar Contraseña**")
+            with st.form("change_pwd_form", clear_on_submit=True, border=False):
+                current_pass = st.text_input("Contraseña actual", type="password", placeholder="Ingrese su contraseña actual")
+                new_pass = st.text_input("Nueva contraseña", type="password", placeholder="Nueva contraseña")
+                confirm_pass = st.text_input("Confirmar nueva contraseña", type="password", placeholder="Repita la nueva contraseña")
+                if st.form_submit_button("Actualizar Contraseña", use_container_width=True, type="primary"):
+                    if not current_pass or not new_pass or not confirm_pass:
+                        st.error("Todos los campos son obligatorios.")
+                    elif new_pass != confirm_pass:
+                        st.error("Las contraseñas nuevas no coinciden.")
+                    elif current_pass != str(st.session_state.user_info.get('pass', '')):
+                        st.error("La contraseña actual no es correcta.")
+                    else:
+                        users_df = load_users()
+                        if not users_df.empty:
+                            mask = users_df['usuario'].str.lower() == str(st.session_state.user_info.get('usuario', '')).lower()
+                            if mask.any():
+                                users_df.loc[mask, 'pass'] = new_pass
+                                ok, msg = save_users(users_df)
+                                if ok:
+                                    st.session_state.user_info['pass'] = new_pass
+                                    log_audit_event(st.session_state.user_info, "Cambio Contraseña", "Contraseña actualizada")
+                                    st.success("✅ Contraseña actualizada.")
+                                else:
+                                    st.error(f"❌ {msg}")
+                            else:
+                                st.error("Error al verificar el usuario.")
+                        else:
+                            st.error("Error al cargar usuarios.")
+
         if st.button("Cerrar Sesión", use_container_width=True):
-            # Limpieza atómica de toda la sesión para evitar fugas de datos RBAC
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
@@ -2086,6 +2131,69 @@ def main():
                             st.balloons()
                         else:
                             st.error(f"❌ {msg_m}")
+
+            with st.expander("👥 Gestión de Usuarios"):
+                st.caption("Administra los usuarios del sistema (crear, editar rol, eliminar).")
+                users_df = load_users()
+                if not users_df.empty:
+                    st.dataframe(users_df[['usuario', 'rol', 'cargo', 'Programa/Unidad']].drop_duplicates(),
+                                 use_container_width=True, hide_index=True)
+                    with st.form("add_user_form"):
+                        st.markdown("**➕ Nuevo Usuario**")
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            new_user = st.text_input("Usuario*", placeholder="nombre.apellido")
+                            new_pass = st.text_input("Contraseña*", type="password")
+                            new_rol = st.selectbox("Rol*", ["usuario", "jefe_sector", "equipo_sector", "encargado_mais", "programador"])
+                        with col2:
+                            new_cargo = st.selectbox("Cargo", [
+                                "", "Programador", "Encargado MAIS", "Encargado/a de Programa",
+                                "Jefe Sector Sol", "Jefe Sector Luna", "Encargado/a Postas",
+                                "Equipo de Sector Sol", "Equipo de Sector Luna",
+                                "Usuario"
+                            ])
+                            new_unidad = st.selectbox("Programa/Unidad", [""] + PROGRAMA_OPTIONS)
+                        submitted = st.form_submit_button("Crear Usuario", type="primary", use_container_width=True)
+                        if submitted:
+                            if not new_user or not new_pass:
+                                st.error("Usuario y contraseña son obligatorios.")
+                            else:
+                                users_df = load_users()
+                                if new_user.lower() in users_df['usuario'].str.lower().values:
+                                    st.error(f"El usuario '{new_user}' ya existe.")
+                                else:
+                                    new_row = pd.DataFrame([{
+                                        'usuario': new_user.strip(),
+                                        'pass': new_pass,
+                                        'rol': new_rol,
+                                        'cargo': new_cargo.strip() if new_cargo else '',
+                                        'Programa/Unidad': new_unidad.strip() if new_unidad else ''
+                                    }])
+                                    users_df = pd.concat([users_df, new_row], ignore_index=True)
+                                    ok, msg = save_users(users_df)
+                                    if ok:
+                                        log_audit_event(st.session_state.user_info, "Crear Usuario", f"Usuario {new_user} creado")
+                                        st.success(f"✅ Usuario '{new_user}' creado.")
+                                        st.rerun()
+                                    else:
+                                        st.error(f"❌ {msg}")
+
+                    st.markdown("---")
+                    st.markdown("**🗑️ Eliminar Usuario**")
+                    usuarios_list = users_df['usuario'].unique().tolist()
+                    sel_user_del = st.selectbox("Seleccionar usuario:", usuarios_list, key="del_user_sel")
+                    if st.button("Eliminar Usuario", type="secondary", use_container_width=True):
+                        if sel_user_del:
+                            users_df = users_df[users_df['usuario'] != sel_user_del]
+                            ok, msg = save_users(users_df)
+                            if ok:
+                                log_audit_event(st.session_state.user_info, "Eliminar Usuario", f"Usuario {sel_user_del} eliminado")
+                                st.success(f"✅ Usuario '{sel_user_del}' eliminado.")
+                                st.rerun()
+                            else:
+                                st.error(f"❌ {msg}")
+                else:
+                    st.info("No se pudieron cargar los usuarios.")
 
 
 

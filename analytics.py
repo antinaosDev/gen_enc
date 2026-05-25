@@ -1,5 +1,5 @@
 """
-analytics.py — Dashboard estadístico para encuesta_riesgo.
+analytics.py - Dashboard estadístico para encuesta_riesgo.
 Principios Storytelling with Data (SWD) de Cole Nussbaumer Knaflic:
   - Eliminar el clutter (sin gridlines, sin marcos, sin leyendas redundantes)
   - Color con propósito: rojo=alto, amarillo=medio, verde=bajo; azul institucional para contexto
@@ -220,7 +220,7 @@ def chart_risk_by_sector(df):
 
     fig = go.Figure()
     for nivel in niveles:
-        vals = [len(df[(df["Sector"]==s) & (df["Nivel"]==nivel)]) for s in sectores]
+        vals = [len(df[(df["Sector"].str.strip().str.lower()==s.lower()) & (df["Nivel"].str.strip().str.upper()==nivel)]) for s in sectores]
         fig.add_trace(go.Bar(
             name=nivel.replace("RIESGO ", ""),
             x=[sector_labels[s] for s in sectores],
@@ -234,13 +234,13 @@ def chart_risk_by_sector(df):
 
     fig.update_layout(
         barmode="stack",
-        title=dict(text="<b>Riesgo familiar por sector territorial</b><br><span style='font-size:11px;color:#666'>Sol=Urbano · Luna=Rural</span>",
-                   font=dict(size=14, color=AZUL_OSCURO), x=0, xanchor='left'),
+        title=dict(text="<b>Riesgo familiar por sector territorial</b><br><span style='font-size:10px;color:#94a3b8'>Sol=Urbano · Luna=Rural</span>",
+                   font=dict(size=13, color=AZUL_OSCURO), x=0, xanchor='left'),
         plot_bgcolor="white", paper_bgcolor="white",
-        margin=dict(l=10, r=10, t=70, b=10),
+        margin=dict(l=10, r=10, t=85, b=40),
         font=dict(family="Roboto, Arial"),
         showlegend=True,
-        legend=dict(orientation="h", y=1.12, x=1, xanchor="right", font_size=11),
+        legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center", font_size=10),
         xaxis=dict(showgrid=False, showline=False),
         yaxis=dict(showgrid=True, gridcolor="#F0F0F0", title="N° Familias"),
     )
@@ -292,7 +292,7 @@ def chart_risk_by_establishment(df):
 def chart_top_risk_factors(df, top_n=12):
     """
     BAR HORIZONTAL ordenado: Top N factores de riesgo más frecuentes.
-    SWD: "Show what matters" — resaltar los top 3, resto en gris. Etiquetas directas.
+    SWD: "Show what matters" - resaltar los top 3, resto en gris. Etiquetas directas.
     """
     if df.empty:
         return None
@@ -337,7 +337,7 @@ def chart_top_risk_factors(df, top_n=12):
 def chart_intervention_gap(df):
     """
     BAR APILADO: Familias con vs sin plan de intervención por nivel de riesgo.
-    SWD: Muestra la "brecha de intervención" — insight accionable.
+    SWD: Muestra la "brecha de intervención" - insight accionable.
     """
     if df.empty:
         return None
@@ -376,13 +376,13 @@ def chart_intervention_gap(df):
     ))
     fig.update_layout(
         barmode="stack",
-        title=dict(text="<b>Brecha de intervención por nivel de riesgo</b><br><span style='font-size:11px;color:#666'>Familias con plan vs. sin plan asignado</span>",
-                   font=dict(size=14, color=AZUL_OSCURO), x=0, xanchor='left'),
+        title=dict(text="<b>Brecha de intervención por nivel de riesgo</b><br><span style='font-size:10px;color:#94a3b8'>Familias con plan vs. sin plan asignado</span>",
+                   font=dict(size=13, color=AZUL_OSCURO), x=0, xanchor='left'),
         plot_bgcolor="white", paper_bgcolor="white",
-        margin=dict(l=10, r=10, t=70, b=10),
+        margin=dict(l=10, r=10, t=85, b=40),
         font=dict(family="Roboto, Arial"),
         showlegend=True,
-        legend=dict(orientation="h", y=1.12, x=1, xanchor="right", font_size=11),
+        legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center", font_size=10),
         xaxis=dict(showgrid=False, showline=False),
         yaxis=dict(showgrid=True, gridcolor="#F0F0F0", title="N° Familias"),
     )
@@ -543,57 +543,72 @@ def chart_egress_analysis(df):
     if not available:
         return None
     
-    sector_cols = []
-    if "Sector" in df.columns:
-        sector_cols = ["Sol", "Luna"]
-        sector_data = {}
-        for col in available:
-            sector_data[col] = {}
-            for s in sector_cols:
-                mask = (df["Sector"].str.strip().str.lower() == s.lower()) &                        (df[col].astype(str).str.strip().str.upper().isin(["TRUE","1","VERDADERO"]))
-                sector_data[col][s] = int(mask.sum())
-    
     colors_egress = {
         'egreso_alta': VERDE_OK,
         'egreso_traslado': AZUL_MED,
         'egreso_derivacion': NARANJA,
         'egreso_abandono': ROJO
     }
-    
+
+    labels_map = {"Sol": "Sol (Urbano)", "Luna": "Luna (Rural)"}
+
+    if "Sector" in df.columns:
+        sectores_posibles = ["Sol", "Luna"]
+        available_sectors = [s for s in sectores_posibles
+                             if df["Sector"].str.strip().str.lower().eq(s.lower()).any()]
+        if not available_sectors:
+            all_sectors = df["Sector"].dropna().unique()
+            available_sectors = [str(s).strip() for s in all_sectors if str(s).strip()]
+    else:
+        available_sectors = []
+
+    sector_data = {}
+    if available_sectors:
+        for col in available:
+            sector_data[col] = {}
+            for s in available_sectors:
+                mask = (df["Sector"].str.strip().str.lower() == s.lower()) & \
+                       (df[col].astype(str).str.strip().str.upper().isin(["TRUE", "1", "VERDADERO"]))
+                sector_data[col][s] = int(mask.sum())
+
     fig = go.Figure()
     for col in available:
-        if sector_cols:
-            vals = [sector_data[col].get(s, 0) for s in sector_cols]
+        if available_sectors:
+            vals = [sector_data[col].get(s, 0) for s in available_sectors]
+            x_labels = [labels_map.get(s, s) for s in available_sectors]
         else:
-            total_val = int((df[col].astype(str).str.strip().str.upper().isin(["TRUE","1","VERDADERO"])).sum())
+            total_val = int((df[col].astype(str).str.strip().str.upper().isin(["TRUE", "1", "VERDADERO"])).sum())
             vals = [total_val]
-        
+            x_labels = ["Total"]
+
         fig.add_trace(go.Bar(
             name=egreso_labels.get(col, col),
-            x=sector_cols if sector_cols else ["Total"],
+            x=x_labels,
             y=vals,
             marker_color=colors_egress.get(col, GRIS),
             text=vals,
-            textposition="inside",
-            textfont=dict(color="white", size=11, family="Roboto Bold"),
+            textposition="outside",
+            textfont=dict(size=10),
             hovertemplate=f"{egreso_labels.get(col, col)}: %{{y}} familias<extra></extra>",
         ))
-    
+
     fig.update_layout(
         barmode="group",
         title=dict(
             text="<b>Egresos de planes de intervencion por tipo y sector</b><br>"
-                 "<span style='font-size:11px;color:#64748b;font-weight:normal'>"
+                 "<span style='font-size:10px;color:#94a3b8;font-weight:normal'>"
                  "REM-P7: Causas de egreso (Alta, Traslado, Derivacion, Abandono)</span>",
-            font=dict(size=14, color=AZUL_OSCURO), x=0, xanchor='left'
+            font=dict(size=13, color=AZUL_OSCURO), x=0, xanchor='left'
         ),
         plot_bgcolor="white", paper_bgcolor="white",
-        margin=dict(l=10, r=10, t=75, b=10),
+        margin=dict(l=10, r=30, t=85, b=40),
         font=dict(family="Roboto, Arial"),
         showlegend=True,
-        legend=dict(orientation="h", y=1.15, x=0.5, xanchor="center", font_size=10),
-        xaxis=dict(showgrid=False, showline=False),
+        legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center", font_size=9),
+        xaxis=dict(showgrid=False, showline=False, tickfont_size=11),
         yaxis=dict(showgrid=True, gridcolor="#F0F0F0", title="N° Familias", rangemode="tozero"),
+        bargap=0.2,
+        bargroupgap=0.15,
     )
     return fig
 
@@ -622,7 +637,10 @@ def chart_intervention_coverage_by_sector(df):
     
     sectores = ["Sol", "Luna"]
     labels_map = {"Sol": "Sol (Urbano)", "Luna": "Luna (Rural)"}
-    available_sectors = [s for s in sectores if s in df["Sector"].unique()]
+    available_sectors = [s for s in sectores if df["Sector"].str.strip().str.lower().eq(s.lower()).any()]
+    if not available_sectors:
+        all_sect = df["Sector"].dropna().unique()
+        available_sectors = [str(s).strip() for s in all_sect if str(s).strip()]
     if not available_sectors:
         return None
     
@@ -669,16 +687,16 @@ def chart_intervention_coverage_by_sector(df):
         barmode="stack",
         title=dict(
             text="<b>Cobertura de intervencion por sector territorial</b><br>"
-                 "<span style='font-size:11px;color:#64748b;font-weight:normal'>"
+                 "<span style='font-size:10px;color:#94a3b8;font-weight:normal'>"
                  "REM-P7: Familias con y sin plan de intervencion por sector</span>",
-            font=dict(size=14, color=AZUL_OSCURO), x=0, xanchor='left'
+            font=dict(size=13, color=AZUL_OSCURO), x=0, xanchor='left'
         ),
         plot_bgcolor="white", paper_bgcolor="white",
-        margin=dict(l=10, r=30, t=75, b=10),
+        margin=dict(l=10, r=30, t=85, b=40),
         font=dict(family="Roboto, Arial"),
         showlegend=True,
-        legend=dict(orientation="h", y=1.12, x=1, xanchor="right", font_size=11),
-        xaxis=dict(showgrid=False, showline=False),
+        legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center", font_size=10),
+        xaxis=dict(showgrid=False, showline=False, tickfont_size=11),
         yaxis=dict(showgrid=True, gridcolor="#F0F0F0", title="N° Familias", rangemode="tozero"),
     )
     return fig
@@ -735,16 +753,16 @@ def chart_rem_ingresos_egresos_mensual(df):
     fig.update_layout(
         title=dict(
             text="<b>Evolución mensual: Ingresos vs. Egresos</b><br>"
-                 "<span style='font-size:11px;color:#64748b;font-weight:normal'>"
+                 "<span style='font-size:10px;color:#94a3b8;font-weight:normal'>"
                  "REM-P7: Flujo mensual de familias en programa MAIS</span>",
-            font=dict(size=14, color=AZUL_OSCURO), x=0, xanchor='left'
+            font=dict(size=13, color=AZUL_OSCURO), x=0, xanchor='left'
         ),
         plot_bgcolor="white", paper_bgcolor="white",
-        margin=dict(l=10, r=10, t=75, b=10),
+        margin=dict(l=10, r=30, t=85, b=50),
         font=dict(family="Roboto, Arial"),
         showlegend=True,
-        legend=dict(orientation="h", y=1.12, x=1, xanchor="right", font_size=11),
-        xaxis=dict(showgrid=False, showline=False, tickformat="%b %Y"),
+        legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center", font_size=10),
+        xaxis=dict(showgrid=False, showline=False, tickformat="%b %Y", tickangle=-45),
         yaxis=dict(showgrid=True, gridcolor="#F0F0F0", title="N° Familias", rangemode="tozero"),
     )
     return fig
@@ -783,16 +801,16 @@ def chart_rem_apgar_distribution(df):
     fig.update_layout(
         title=dict(
             text="<b>Funcionalidad familiar (APGAR)</b><br>"
-                 "<span style='font-size:11px;color:#64748b;font-weight:normal'>"
+                 "<span style='font-size:10px;color:#94a3b8;font-weight:normal'>"
                  "REM-P7: Distribución de familias por nivel APGAR</span>",
-            font=dict(size=14, color=AZUL_OSCURO), x=0, xanchor='left'
+            font=dict(size=13, color=AZUL_OSCURO), x=0, xanchor='left'
         ),
         plot_bgcolor="white", paper_bgcolor="white",
-        margin=dict(l=10, r=60, t=75, b=10),
+        margin=dict(l=10, r=80, t=85, b=40),
         font=dict(family="Roboto, Arial"),
         showlegend=False,
         xaxis=dict(showgrid=False, showline=False, zeroline=False, title="N° Familias"),
-        yaxis=dict(showgrid=False, showline=False, autorange="reversed"),
+        yaxis=dict(showgrid=False, showline=False, autorange="reversed", tickfont_size=12),
     )
     return fig
 
@@ -849,17 +867,17 @@ def chart_rem_coverage_by_program(df):
     fig.update_layout(
         title=dict(
             text="<b>Cobertura de intervención por programa</b><br>"
-                 "<span style='font-size:11px;color:#64748b;font-weight:normal'>"
+                 "<span style='font-size:10px;color:#94a3b8;font-weight:normal'>"
                  "REM-P7: % familias con plan activo por unidad CESFAM</span>",
-            font=dict(size=14, color=AZUL_OSCURO), x=0, xanchor='left'
+            font=dict(size=13, color=AZUL_OSCURO), x=0, xanchor='left'
         ),
         plot_bgcolor="white", paper_bgcolor="white",
-        margin=dict(l=10, r=90, t=75, b=10),
+        margin=dict(l=150, r=100, t=85, b=40),
         font=dict(family="Roboto, Arial"),
         showlegend=False,
         xaxis=dict(showgrid=False, showline=False, zeroline=False, title="% Cobertura", range=[0, 120]),
-        yaxis=dict(showgrid=False, showline=False, tickfont_size=10),
-        height=max(260, len(grp) * 38),
+        yaxis=dict(showgrid=False, showline=False, tickfont_size=9),
+        height=max(300, len(grp) * 40),
     )
     return fig
 
@@ -905,7 +923,10 @@ def chart_rem_egress_pie(df):
         hole=0.55,
         marker_colors=colors,
         textinfo="value+percent",
-        textfont_size=12,
+        textposition="outside",
+        textfont_size=11,
+        insidetextorientation="auto",
+        pull=[0.03] * len(values),
         hovertemplate="%{label}: %{value} (%{percent})<extra></extra>",
     ))
     fig.add_annotation(
@@ -915,15 +936,15 @@ def chart_rem_egress_pie(df):
     fig.update_layout(
         title=dict(
             text="<b>Distribución de tipos de egreso</b><br>"
-                 "<span style='font-size:11px;color:#64748b;font-weight:normal'>"
+                 "<span style='font-size:10px;color:#94a3b8;font-weight:normal'>"
                  "REM-P7: Causas de cierre del plan de intervención</span>",
-            font=dict(size=14, color=AZUL_OSCURO), x=0, xanchor='left'
+            font=dict(size=13, color=AZUL_OSCURO), x=0, xanchor='left'
         ),
         plot_bgcolor="white", paper_bgcolor="white",
-        margin=dict(l=10, r=10, t=75, b=10),
+        margin=dict(l=10, r=30, t=85, b=40),
         font=dict(family="Roboto, Arial"),
         showlegend=True,
-        legend=dict(orientation="h", y=-0.15, x=0.5, xanchor="center", font_size=10),
+        legend=dict(orientation="h", y=-0.15, x=0.5, xanchor="center", font_size=9),
     )
     return fig
 
@@ -1050,7 +1071,7 @@ def generate_dashboard_pdf(df):
             egresos_total += n
             egreso_breakdown[egreso_labels.get(col, col)] = n
 
-    fecha_desde, fecha_hasta = "—", "—"
+    fecha_desde, fecha_hasta = "-", "-"
     if "Fecha" in df.columns:
         fechas = pd.to_datetime(df["Fecha"], errors="coerce").dropna()
         if not fechas.empty:
@@ -1067,7 +1088,7 @@ def generate_dashboard_pdf(df):
             self.set_font('helvetica', 'I', 7)
             self.set_text_color(150, 150, 150)
             self.cell(0, 10,
-                f"Dashboard Analítico MAIS — CESFAM Cholchol  |  "
+                f"Dashboard Analítico MAIS - CESFAM Cholchol  |  "
                 f"Página {self.page_no()}/{{nb}}  |  Generado: {generado}",
                 align='C')
             self.set_text_color(0, 0, 0)
@@ -1099,7 +1120,7 @@ def generate_dashboard_pdf(df):
     pdf.set_fill_color(31, 56, 100)
     pdf.set_text_color(255, 255, 255)
     pdf.set_font('helvetica', 'B', 15)
-    pdf.cell(0, 13, "  DASHBOARD ANALÍTICO — RIESGO FAMILIAR", ln=True, fill=True)
+    pdf.cell(0, 13, "  DASHBOARD ANALÍTICO - RIESGO FAMILIAR", ln=True, fill=True)
     pdf.set_text_color(0, 0, 0)
     pdf.ln(3)
 
@@ -1107,9 +1128,9 @@ def generate_dashboard_pdf(df):
     pdf.set_font('helvetica', '', 9)
     pdf.set_fill_color(240, 245, 255)
     pdf.cell(95, 7, f"  Generado: {generado}", border=0, fill=True)
-    pdf.cell(95, 7, f"  Período: {fecha_desde} — {fecha_hasta}", border=0, fill=True, ln=True)
+    pdf.cell(95, 7, f"  Período: {fecha_desde} - {fecha_hasta}", border=0, fill=True, ln=True)
     pdf.cell(95, 7, f"  Total evaluaciones: {total}", border=0, fill=True)
-    pdf.cell(95, 7, f"  Kaleido (gráficos): {'✔ Disponible' if _kaleido_ok else '✘ No disponible (tablas)'}", border=0, fill=True, ln=True)
+    pdf.cell(95, 7, f"  Kaleido (graficos): {'SI' if _kaleido_ok else 'NO (usando tablas)'}", border=0, fill=True, ln=True)
     pdf.ln(6)
 
     # ═════════════════════════════════════════════════════════════════════════
@@ -1118,9 +1139,9 @@ def generate_dashboard_pdf(df):
     _pdf_section_title(pdf, "1. INDICADORES GENERALES DE RIESGO FAMILIAR")
     _pdf_kpi_row(pdf, [
         ("Total Evaluaciones",  str(total),                         (31, 56, 100)),
-        ("Riesgo Alto 🔴",       f"{alto} ({alto*100//total if total else 0}%)",   (192, 0, 0)),
-        ("Riesgo Medio 🟡",      f"{medio} ({medio*100//total if total else 0}%)", (163, 100, 0)),
-        ("Riesgo Bajo 🟢",       f"{bajo} ({bajo*100//total if total else 0}%)",   (55, 86, 35)),
+        ("Riesgo Alto",          f"{alto} ({alto*100//total if total else 0}%)",   (192, 0, 0)),
+        ("Riesgo Medio",         f"{medio} ({medio*100//total if total else 0}%)", (163, 100, 0)),
+        ("Riesgo Bajo",          f"{bajo} ({bajo*100//total if total else 0}%)",   (55, 86, 35)),
     ])
 
     # Top 10 factores de riesgo
@@ -1144,7 +1165,7 @@ def generate_dashboard_pdf(df):
             fill = i % 2 == 0
             pdf.set_fill_color(248, 250, 252) if fill else pdf.set_fill_color(255, 255, 255)
             label = FACTOR_LABELS.get(k, k)
-            pct = f"{n / total * 100:.1f}%" if total else "—"
+            pct = f"{n / total * 100:.1f}%" if total else "-"
             pdf.cell(115, 6, f"  {label[:62]}", border=1, fill=fill)
             pdf.cell(37, 6, str(n), border=1, fill=fill, align='C')
             pdf.cell(38, 6, pct, border=1, fill=fill, align='C', ln=True)
@@ -1164,7 +1185,7 @@ def generate_dashboard_pdf(df):
     # SECCIÓN 2 – MÉTRICAS REM-P7
     # ═════════════════════════════════════════════════════════════════════════
     pdf.add_page()
-    _pdf_section_title(pdf, "2. MÉTRICAS REM-P7 — REPORTE OFICIAL MINSAL")
+    _pdf_section_title(pdf, "2. MÉTRICAS REM-P7 - REPORTE OFICIAL MINSAL")
     _pdf_kpi_row(pdf, [
         ("Con Plan de Intervención", str(con_plan),    (46, 117, 182)),
         ("Sin Plan (Brecha)",        str(sin_plan),    (100, 140, 180)),
@@ -1184,7 +1205,7 @@ def generate_dashboard_pdf(df):
         for i, (label, n) in enumerate(egreso_breakdown.items()):
             fill = i % 2 == 0
             pdf.set_fill_color(248, 250, 252) if fill else pdf.set_fill_color(255, 255, 255)
-            pct = f"{n / egresos_total * 100:.1f}%" if egresos_total else "—"
+            pct = f"{n / egresos_total * 100:.1f}%" if egresos_total else "-"
             pdf.cell(95, 7, f"  {label}", border=1, fill=fill)
             pdf.cell(47, 7, str(n), border=1, fill=fill, align='C')
             pdf.cell(48, 7, pct, border=1, fill=fill, align='C', ln=True)
@@ -1208,7 +1229,7 @@ def generate_dashboard_pdf(df):
             cp_s = int(df_s["tiene_plan"].sum()) if "tiene_plan" in df2.columns else 0
             sp_s = len(df_s) - cp_s
             tt_s = len(df_s)
-            pct_s = f"{cp_s / tt_s * 100:.0f}%" if tt_s > 0 else "—"
+            pct_s = f"{cp_s / tt_s * 100:.0f}%" if tt_s > 0 else "-"
             fill = i % 2 == 0
             pdf.set_fill_color(248, 250, 252) if fill else pdf.set_fill_color(255, 255, 255)
             pdf.cell(70, 7, f"  {sector} ({'Urbano' if sector == 'Sol' else 'Rural'})", border=1, fill=fill)
@@ -1229,55 +1250,12 @@ def generate_dashboard_pdf(df):
             _os.unlink(img_p)
 
     # ═════════════════════════════════════════════════════════════════════════
-    # SECCIÓN 3 – FUNCIONALIDAD APGAR
-    # ═════════════════════════════════════════════════════════════════════════
-    if "APGAR Total" in df.columns:
-        if pdf.get_y() > 220:
-            pdf.add_page()
-        _pdf_section_title(pdf, "3. FUNCIONALIDAD FAMILIAR — APGAR")
-        df3 = df.copy()
-        df3["apgar_num"] = pd.to_numeric(df3["APGAR Total"], errors="coerce")
-        df3 = df3.dropna(subset=["apgar_num"])
-        if not df3.empty:
-            funcional = int((df3["apgar_num"] >= 7).sum())
-            leve      = int(((df3["apgar_num"] >= 4) & (df3["apgar_num"] <= 6)).sum())
-            severo    = int((df3["apgar_num"] <= 3).sum())
-            total_apgar = len(df3)
-
-            pdf.set_font('helvetica', 'B', 8)
-            pdf.set_fill_color(189, 215, 238)
-            pdf.cell(80, 6, "Nivel APGAR", border=1, fill=True, align='C')
-            pdf.cell(55, 6, "N° Familias", border=1, fill=True, align='C')
-            pdf.cell(55, 6, "% del Total", border=1, fill=True, align='C', ln=True)
-            pdf.set_font('helvetica', '', 9)
-            for label_a, n_a, color_a in [
-                ("Funcional (7-10 pts)",      funcional, (55, 86, 35)),
-                ("Disfunción Leve (4-6 pts)", leve,      (133, 100, 0)),
-                ("Disfunción Severa (0-3 pts)", severo,  (192, 0, 0)),
-            ]:
-                pct_a = f"{n_a / total_apgar * 100:.1f}%" if total_apgar else "—"
-                pdf.set_text_color(*color_a)
-                pdf.cell(80, 7, f"  {label_a}", border=1)
-                pdf.set_text_color(0, 0, 0)
-                pdf.cell(55, 7, str(n_a), border=1, align='C')
-                pdf.cell(55, 7, pct_a, border=1, align='C', ln=True)
-            pdf.ln(4)
-
-            img_apgar = _fig_to_png(chart_rem_apgar_distribution(df))
-            if img_apgar:
-                if pdf.get_y() > 210:
-                    pdf.add_page()
-                pdf.image(img_apgar, x=10, w=190)
-                pdf.ln(3)
-                _os.unlink(img_apgar)
-
-    # ═════════════════════════════════════════════════════════════════════════
     # SECCIÓN 4 – COBERTURA POR PROGRAMA
     # ═════════════════════════════════════════════════════════════════════════
     if "Programa/Unidad" in df.columns:
         if pdf.get_y() > 200:
             pdf.add_page()
-        _pdf_section_title(pdf, "4. COBERTURA DE INTERVENCIÓN POR PROGRAMA/UNIDAD")
+        _pdf_section_title(pdf, "3. COBERTURA DE INTERVENCIÓN POR PROGRAMA/UNIDAD")
         grp_prog = df2.groupby("Programa/Unidad").agg(
             total=("tiene_plan", "count"),
             con_plan=("tiene_plan", "sum")
@@ -1318,7 +1296,7 @@ def render_analytics():
     st.markdown("""
     <div style='background: linear-gradient(135deg,#1F3864,#2E75B6); padding:16px 20px;
                 border-radius:8px; margin-bottom:16px;'>
-        <h2 style='color:white !important;margin:0;font-size:1.4rem;'>📊 Dashboard Analítico — Riesgo Familiar</h2>
+        <h2 style='color:white !important;margin:0;font-size:1.4rem;'>📊 Dashboard Analítico - Riesgo Familiar</h2>
         <p style='color:#BDD7EE;margin:4px 0 0;font-size:0.85rem;'>
             Datos en tiempo real del Google Sheet · Actualizar con el botón del sidebar
         </p>
@@ -1403,7 +1381,7 @@ def render_analytics():
     <div style="margin-top: 8px; margin-bottom: 8px;">
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
             <span style="font-size:0.8rem; font-weight:700; color:#1F3864; text-transform:uppercase; letter-spacing:0.04em;">
-            📋 REM-P7 — Métricas del reporte oficial MINSAL
+            📋 REM-P7 - Métricas del reporte oficial MINSAL
             </span>
             <span style="flex:1; border-bottom:2px solid #BDD7EE;"></span>
         </div>
@@ -1485,7 +1463,7 @@ def render_analytics():
             fig = chart_by_program(df)
             if fig: st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
-    # Fila 5: REM-P7 — Egresos + Cobertura por sector
+    # Fila 5: REM-P7 - Egresos + Cobertura por sector
     st.markdown("### 📋 Análisis REM-P7")
     c7, c8 = st.columns(2)
     with c7:
@@ -1499,21 +1477,14 @@ def render_analytics():
             if fig: st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
             else: st.caption("No hay datos sectoriales disponibles")
 
-    # Fila 6: REM-P7 — Tendencia mensual + APGAR
-    st.markdown("### 📈 Tendencia y Funcionalidad Familiar")
-    c9, c10 = st.columns(2)
-    with c9:
-        with st.container(border=True):
-            fig = chart_rem_ingresos_egresos_mensual(df)
-            if fig: st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
-            else: st.caption("No hay datos temporales disponibles")
-    with c10:
-        with st.container(border=True):
-            fig = chart_rem_apgar_distribution(df)
-            if fig: st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
-            else: st.caption("No hay datos APGAR disponibles")
+    # Fila 6: REM-P7 - Tendencia mensual (ancho completo)
+    st.markdown("### 📈 Tendencia Mensual de Ingresos vs. Egresos")
+    with st.container(border=True):
+        fig = chart_rem_ingresos_egresos_mensual(df)
+        if fig: st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+        else: st.caption("No hay datos temporales disponibles")
 
-    # Fila 7: REM-P7 — Cobertura por programa + Donut tipos de egreso
+    # Fila 7: REM-P7 - Cobertura por programa + Donut tipos de egreso
     c11, c12 = st.columns(2)
     with c11:
         with st.container(border=True):
@@ -1563,7 +1534,7 @@ def render_analytics():
             st.caption(
                 "El PDF incluye: portada institucional · KPIs generales · "
                 "métricas REM-P7 · top factores de riesgo · cobertura por sector y programa · "
-                "funcionalidad APGAR. Si **kaleido** está instalado, incluye imágenes de los gráficos."
+                "tendencia mensual. Si **kaleido** está instalado, incluye imágenes de los gráficos."
             )
 
 
