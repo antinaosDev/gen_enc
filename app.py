@@ -469,10 +469,20 @@ def check_access(row_data, user_info):
     return False
 
 def can_download_rem(user_info):
-    """Verifica si el usuario puede descargar el reporte REM-P7."""
+    """Verifica si el usuario puede descargar el reporte REM-P7.
+    Acceso: programador, encargado_mais, jefe de sector, encargado de postas.
+    Excluye: encargado de programa."""
     role = str(user_info.get('rol', '')).lower()
     cargo = str(user_info.get('cargo', '')).lower()
-    return role in ['programador', 'encargado_mais'] or 'jefe' in cargo or 'mais' in cargo or 'encargado' in cargo
+    if role in ['programador', 'encargado_mais']:
+        return True
+    if 'jefe' in cargo:
+        return True
+    if 'mais' in cargo:
+        return True
+    if 'encargado' in cargo and 'programa' not in cargo:
+        return True
+    return False
 
 RISK_LABELS = {
     't1_vif': 'Familia con VIF (física, psicológica, sexual, económica)',
