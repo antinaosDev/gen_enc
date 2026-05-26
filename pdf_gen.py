@@ -105,20 +105,20 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
         # Table Rows
         pdf.set_font('helvetica', '', 7)
         for index, row in family_df.iterrows():
-            pdf.cell(w[0], 6, str(row.get("Nombre y Apellidos", ""))[:28], border=1)
+            pdf.cell(w[0], 6, str(row.get("Nombre y Apellidos", ""))[:40], border=1)
             pdf.cell(w[1], 6, str(row.get("RUT", "")), border=1)
             gender_val = str(row.get("Identidad de género", row.get("Sexo", "")))
             # Abbreviate for small column
             gen_abbr = {"Masculino": "M", "Femenino": "F", "No binario": "NB", "Transgénero": "Trans",
                         "Prefiero no decir": "N/D", "Gestación/Aborto": "G"}.get(gender_val, gender_val[:5])
             pdf.cell(w[2], 6, gen_abbr, border=1, align='C')
-            pdf.cell(w[3], 6, str(row.get("Parentesco", ""))[:12], border=1)
-            pdf.cell(w[4], 6, str(row.get("E. Civil", ""))[:5], border=1, align='C')
-            pdf.cell(w[5], 6, str(row.get("Nacionalidad", ""))[:10], border=1)
+            pdf.cell(w[3], 6, str(row.get("Parentesco", ""))[:16], border=1)
+            pdf.cell(w[4], 6, str(row.get("E. Civil", ""))[:6], border=1, align='C')
+            pdf.cell(w[5], 6, str(row.get("Nacionalidad", ""))[:12], border=1)
             etnia_val = str(row.get("Pueblo Originario", row.get("Etnia", "")))
             etnia_val = etnia_val if etnia_val not in ["Ninguno", "nan", ""] else "-"
-            pdf.cell(w[6], 6, etnia_val[:10], border=1)
-            pdf.cell(w[7], 6, str(row.get("Ocupación", row.get("Ocupacion", "")))[:16], border=1)
+            pdf.cell(w[6], 6, etnia_val[:12], border=1)
+            pdf.cell(w[7], 6, str(row.get("Ocupación", row.get("Ocupacion", "")))[:20], border=1)
             pdf.ln()
     else:
         pdf.set_font('helvetica', 'I', 8)
@@ -608,6 +608,33 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
     pdf.ln(95)
 
 
+    def _wrap_row(pdf, widths, texts, font_size=8, line_h=3.5):
+        """Dibuja una fila de tabla con texto envuelto. Retorna el alto usado."""
+        pdf.set_font('helvetica', '', font_size)
+        x0 = pdf.get_x()
+        y0 = pdf.get_y()
+        n = len(widths)
+        # Calcular el número máximo de líneas entre todas las celdas
+        max_lines = 1
+        for i in range(n):
+            txt = str(texts[i]) if texts[i] is not None else ''
+            txt_w = pdf.get_string_width(txt)
+            col_w = widths[i] - 2
+            if col_w > 0 and txt_w > col_w:
+                lines = int(txt_w / col_w) + 1
+                if lines > max_lines:
+                    max_lines = lines
+        row_h = max(6, max_lines * line_h + 1.5)
+        # Dibujar cada celda con multi_cell
+        for i in range(n):
+            x = x0 + sum(widths[:i])
+            txt = str(texts[i]) if texts[i] is not None else ''
+            pdf.rect(x, y0, widths[i], row_h)
+            pdf.set_xy(x + 1, y0 + 0.75)
+            pdf.multi_cell(widths[i] - 2, line_h, txt, align='L')
+        pdf.set_xy(x0, y0 + row_h)
+        return row_h
+
     # --- 4. PLAN INTERVENCIÓN (OTRA PÁGINA) ---
     pdf.add_page()
     draw_header(pdf, data, "PLAN DE TRABAJO", is_blank=is_blank)
@@ -626,7 +653,7 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
         pdf.set_draw_color(0, 0, 0)
         # Cols: Objetivo, Actividad, Fecha Prog, Responsable, Fecha Real, Evaluación
         cols = ["Objetivo", "Actividad", "Fecha P.", "Responsable", "Fecha R.", "Evaluación"]
-        w = [40, 45, 20, 30, 20, 35] # ~190
+        w = [50, 50, 20, 30, 18, 22] # ~190
         
         for i, c in enumerate(cols):
             pdf.cell(w[i], 6, c, border=1, align='C')
@@ -640,13 +667,14 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
             f_real = str(row.get("Fecha Real", ""))
             if " 00:00:00" in f_real: f_real = f_real.split(" ")[0]
 
-            pdf.cell(w[0], 6, str(row.get("Objetivo", "")), border=1)
-            pdf.cell(w[1], 6, str(row.get("Actividad", "")), border=1)
-            pdf.cell(w[2], 6, f_prog, border=1)
-            pdf.cell(w[3], 6, str(row.get("Responsable", "")), border=1)
-            pdf.cell(w[4], 6, f_real, border=1)
-            pdf.cell(w[5], 6, str(row.get("Evaluación", "")), border=1)
-            pdf.ln()
+            _wrap_row(pdf, w, [
+                str(row.get("Objetivo", "")),
+                str(row.get("Actividad", "")),
+                f_prog,
+                str(row.get("Responsable", "")),
+                f_real,
+                str(row.get("Evaluación", "")),
+            ])
     else:
         pdf.set_font('helvetica', 'I', 8)
         pdf.set_text_color(0, 0, 0)
@@ -691,10 +719,22 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
     if plan_df is not None and len(plan_df) > 0:
         pdf.set_font('helvetica', 'B', 7)
         seg_cols = ["Objetivo", "Actividad", "Estado", "F. Seguimiento", "Obs. Seguimiento"]
-        seg_w    = [52, 48, 28, 24, 38]  # 190 total
+        seg_w    = [48, 44, 24, 22, 52]  # 190 total
         for i, c in enumerate(seg_cols):
             pdf.cell(seg_w[i], 8, c, border=1, align='C')
         pdf.ln()
+
+        pdf.set_font('helvetica', '', 7)
+        for _, row in plan_df.iterrows():
+            f_seg = str(row.get("F. Seguimiento", ""))
+            if " 00:00:00" in f_seg: f_seg = f_seg.split(" ")[0]
+            _wrap_row(pdf, seg_w, [
+                str(row.get("Objetivo", "")),
+                str(row.get("Actividad", "")),
+                str(row.get("Estado", "")),
+                f_seg,
+                str(row.get("Obs. Seguimiento", "")),
+            ], font_size=7, line_h=3)
 
         pdf.set_font('helvetica', '', 7)
         for _, row in plan_df.iterrows():
@@ -774,7 +814,9 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
     pdf.ln(10)
 
     # Jefe Equipo (Separate)
-    if pdf.get_y() > 250: pdf.add_page()
+    # Verificar espacio suficiente para Jefe + Sección 5 + Beneficiario + FECHA EGRESO (~145 unidades)
+    if pdf.get_y() > 145:
+        pdf.add_page()
     
     pdf.ln(15)
     
