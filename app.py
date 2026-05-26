@@ -1694,10 +1694,18 @@ def apply_edits_df(df, key):
     return df_new
 
 # --- FUNCIONES DE FRAGMENTO PARA AISLAR TABLAS ---
+def _clean_date_cols(df, cols):
+    """Convierte columnas a datetime64[ns] para evitar errores de parseo en data_editor."""
+    for c in cols:
+        if c in df.columns:
+            df[c] = pd.to_datetime(df[c], errors='coerce')
+    return df
+
 @st.fragment
 def render_family_fragment():
+    _df = _clean_date_cols(st.session_state.family_members.copy(), ["F. Nac"])
     edited_family = st.data_editor(
-        st.session_state.family_members,
+        _df,
         num_rows="dynamic",
         width='stretch',
         key="family_editor",
@@ -1748,8 +1756,9 @@ def render_family_fragment():
 
 @st.fragment
 def render_plan_fragment():
+    _df_plan = _clean_date_cols(st.session_state.intervention_plan.copy(), ["Fecha Prog", "Fecha Real", "F. Seguimiento"])
     edited_plan = st.data_editor(
-        st.session_state.intervention_plan,
+        _df_plan,
         num_rows="dynamic",
         width='stretch',
         key="intervention_editor",
@@ -1774,8 +1783,9 @@ def render_plan_fragment():
 
 @st.fragment
 def render_seg_fragment():
+    _df_seg = _clean_date_cols(st.session_state.seguimiento_plan.copy(), ["F. Seguimiento"])
     edited_seg = st.data_editor(
-        st.session_state.seguimiento_plan,
+        _df_seg,
         num_rows="dynamic",
         width='stretch',
         key="seguimiento_editor",
