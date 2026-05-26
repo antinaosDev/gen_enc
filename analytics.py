@@ -199,10 +199,10 @@ def chart_risk_distribution(df):
         title=dict(text="<b>Distribución de riesgo familiar</b><br><span style='font-size:11px;color:#666'>¿Cuántas familias están en cada nivel de riesgo?</span>",
                    font=dict(size=14, color=AZUL_OSCURO), x=0, xanchor='left'),
         plot_bgcolor="white", paper_bgcolor="white",
-        margin=dict(l=10, r=10, t=70, b=10),
+        margin=dict(l=80, r=30, t=70, b=60),
         font=dict(family="Roboto, Arial"),
         showlegend=True,
-        legend=dict(orientation="h", y=-0.1, x=0.5, xanchor="center", font_size=11),
+        legend=dict(orientation="h", y=-0.15, x=0.5, xanchor="center", font_size=11),
     )
     return fig
 
@@ -237,12 +237,12 @@ def chart_risk_by_sector(df):
         title=dict(text="<b>Riesgo familiar por sector territorial</b><br><span style='font-size:10px;color:#94a3b8'>Sol=Urbano · Luna=Rural</span>",
                    font=dict(size=13, color=AZUL_OSCURO), x=0, xanchor='left'),
         plot_bgcolor="white", paper_bgcolor="white",
-        margin=dict(l=10, r=10, t=85, b=40),
+        margin=dict(l=80, r=30, t=85, b=60),
         font=dict(family="Roboto, Arial"),
         showlegend=True,
-        legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center", font_size=10),
-        xaxis=dict(showgrid=False, showline=False),
-        yaxis=dict(showgrid=True, gridcolor="#F0F0F0", title="N° Familias"),
+        legend=dict(orientation="h", y=-0.25, x=0.5, xanchor="center", font_size=10),
+        xaxis=dict(showgrid=False, showline=False, automargin=True),
+        yaxis=dict(showgrid=True, gridcolor="#F0F0F0", title="N° Familias", automargin=True),
     )
     return fig
 
@@ -279,12 +279,12 @@ def chart_risk_by_establishment(df):
         title=dict(text="<b>Riesgo familiar por Establecimiento</b><br><span style='font-size:11px;color:#666'>Distribución en Postas y EMR</span>",
                    font=dict(size=14, color=AZUL_OSCURO), x=0, xanchor='left'),
         plot_bgcolor="white", paper_bgcolor="white",
-        margin=dict(l=10, r=10, t=70, b=10),
+        margin=dict(l=120, r=30, t=70, b=80),
         font=dict(family="Inter, Roboto, Arial"),
         showlegend=True,
-        legend=dict(orientation="h", y=1.1, x=1, xanchor="right", font_size=10),
-        xaxis=dict(showgrid=True, gridcolor="#F0F0F0"),
-        yaxis=dict(showgrid=False, showline=False, autorange="reversed"),
+        legend=dict(orientation="h", y=-0.15, x=0.5, xanchor="center", font_size=10),
+        xaxis=dict(showgrid=True, gridcolor="#F0F0F0", automargin=True),
+        yaxis=dict(showgrid=False, showline=False, autorange="reversed", automargin=True),
     )
     return fig
 
@@ -324,11 +324,11 @@ def chart_top_risk_factors(df, top_n=12):
         title=dict(text=f"<b>Top {top_n} factores de riesgo más frecuentes</b><br><span style='font-size:11px;color:#666'>Los 3 primeros representan las mayores urgencias de intervención</span>",
                    font=dict(size=14, color=AZUL_OSCURO), x=0, xanchor='left'),
         plot_bgcolor="white", paper_bgcolor="white",
-        margin=dict(l=10, r=80, t=70, b=10),
+        margin=dict(l=130, r=80, t=70, b=40),
         font=dict(family="Roboto, Arial"),
         showlegend=False,
-        xaxis=dict(showgrid=False, showline=False, zeroline=False, tickfont_size=10),
-        yaxis=dict(showgrid=False, showline=False, autorange="reversed", tickfont_size=10),
+        xaxis=dict(showgrid=False, showline=False, zeroline=False, tickfont_size=10, automargin=True),
+        yaxis=dict(showgrid=False, showline=False, autorange="reversed", tickfont_size=10, automargin=True),
         height=max(300, top_n * 32),
     )
     return fig
@@ -379,12 +379,12 @@ def chart_intervention_gap(df):
         title=dict(text="<b>Brecha de intervención por nivel de riesgo</b><br><span style='font-size:10px;color:#94a3b8'>Familias con plan vs. sin plan asignado</span>",
                    font=dict(size=13, color=AZUL_OSCURO), x=0, xanchor='left'),
         plot_bgcolor="white", paper_bgcolor="white",
-        margin=dict(l=10, r=10, t=85, b=40),
+        margin=dict(l=80, r=30, t=85, b=60),
         font=dict(family="Roboto, Arial"),
         showlegend=True,
-        legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center", font_size=10),
-        xaxis=dict(showgrid=False, showline=False),
-        yaxis=dict(showgrid=True, gridcolor="#F0F0F0", title="N° Familias"),
+        legend=dict(orientation="h", y=-0.25, x=0.5, xanchor="center", font_size=10),
+        xaxis=dict(showgrid=False, showline=False, automargin=True),
+        yaxis=dict(showgrid=True, gridcolor="#F0F0F0", title="N° Familias", automargin=True),
     )
     return fig
 
@@ -425,11 +425,11 @@ def chart_evaluations_over_time(df):
         title=dict(text="<b>Evolución de evaluaciones familiares</b><br><span style='font-size:11px;color:#666'>Número de evaluaciones realizadas por mes</span>",
                    font=dict(size=14, color=AZUL_OSCURO), x=0, xanchor='left'),
         plot_bgcolor="white", paper_bgcolor="white",
-        margin=dict(l=10, r=10, t=70, b=10),
+        margin=dict(l=80, r=30, t=70, b=60),
         font=dict(family="Roboto, Arial"),
         showlegend=False,
-        xaxis=dict(showgrid=False, showline=False, tickformat="%b %Y"),
-        yaxis=dict(showgrid=True, gridcolor="#F0F0F0", title="Evaluaciones", rangemode="tozero"),
+        xaxis=dict(showgrid=False, showline=False, tickformat="%b %Y", automargin=True),
+        yaxis=dict(showgrid=True, gridcolor="#F0F0F0", title="Evaluaciones", rangemode="tozero", automargin=True),
     )
     return fig
 
@@ -467,11 +467,11 @@ def chart_score_distribution(df):
         title=dict(text="<b>Distribución de puntajes de riesgo</b><br><span style='font-size:11px;color:#666'>Bajo: 0-16 pts · Medio: 17-25 pts · Alto: ≥26 pts</span>",
                    font=dict(size=14, color=AZUL_OSCURO), x=0, xanchor='left'),
         plot_bgcolor="white", paper_bgcolor="white",
-        margin=dict(l=10, r=10, t=70, b=10),
+        margin=dict(l=80, r=30, t=70, b=60),
         font=dict(family="Roboto, Arial"),
         showlegend=False,
-        xaxis=dict(title="Puntaje", showgrid=False, showline=False, range=[0, 60]),
-        yaxis=dict(title="N° Familias", showgrid=True, gridcolor="#F0F0F0"),
+        xaxis=dict(title="Puntaje", showgrid=False, showline=False, range=[0, 60], automargin=True),
+        yaxis=dict(title="N° Familias", showgrid=True, gridcolor="#F0F0F0", automargin=True),
         bargap=0.05,
     )
     return fig
@@ -511,11 +511,11 @@ def chart_by_program(df):
         title=dict(text="<b>Puntaje promedio de riesgo por programa CESFAM</b><br><span style='font-size:11px;color:#666'>Etiqueta: promedio (n familias)</span>",
                    font=dict(size=14, color=AZUL_OSCURO), x=0, xanchor='left'),
         plot_bgcolor="white", paper_bgcolor="white",
-        margin=dict(l=10, r=80, t=70, b=10),
+        margin=dict(l=130, r=80, t=70, b=40),
         font=dict(family="Roboto, Arial"),
         showlegend=False,
-        xaxis=dict(showgrid=False, showline=False, zeroline=False, title="Puntaje promedio"),
-        yaxis=dict(showgrid=False, showline=False, tickfont_size=10),
+        xaxis=dict(showgrid=False, showline=False, zeroline=False, title="Puntaje promedio", automargin=True),
+        yaxis=dict(showgrid=False, showline=False, tickfont_size=10, automargin=True),
         height=max(250, len(grp) * 35),
     )
     return fig
@@ -601,12 +601,12 @@ def chart_egress_analysis(df):
             font=dict(size=13, color=AZUL_OSCURO), x=0, xanchor='left'
         ),
         plot_bgcolor="white", paper_bgcolor="white",
-        margin=dict(l=10, r=30, t=85, b=40),
+        margin=dict(l=80, r=30, t=85, b=60),
         font=dict(family="Roboto, Arial"),
         showlegend=True,
-        legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center", font_size=9),
-        xaxis=dict(showgrid=False, showline=False, tickfont_size=11),
-        yaxis=dict(showgrid=True, gridcolor="#F0F0F0", title="N° Familias", rangemode="tozero"),
+        legend=dict(orientation="h", y=-0.25, x=0.5, xanchor="center", font_size=9),
+        xaxis=dict(showgrid=False, showline=False, tickfont_size=11, automargin=True),
+        yaxis=dict(showgrid=True, gridcolor="#F0F0F0", title="N° Familias", rangemode="tozero", automargin=True),
         bargap=0.2,
         bargroupgap=0.15,
     )
@@ -692,12 +692,12 @@ def chart_intervention_coverage_by_sector(df):
             font=dict(size=13, color=AZUL_OSCURO), x=0, xanchor='left'
         ),
         plot_bgcolor="white", paper_bgcolor="white",
-        margin=dict(l=10, r=30, t=85, b=40),
+        margin=dict(l=80, r=30, t=85, b=60),
         font=dict(family="Roboto, Arial"),
         showlegend=True,
-        legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center", font_size=10),
-        xaxis=dict(showgrid=False, showline=False, tickfont_size=11),
-        yaxis=dict(showgrid=True, gridcolor="#F0F0F0", title="N° Familias", rangemode="tozero"),
+        legend=dict(orientation="h", y=-0.25, x=0.5, xanchor="center", font_size=10),
+        xaxis=dict(showgrid=False, showline=False, tickfont_size=11, automargin=True),
+        yaxis=dict(showgrid=True, gridcolor="#F0F0F0", title="N° Familias", rangemode="tozero", automargin=True),
     )
     return fig
 
@@ -758,12 +758,12 @@ def chart_rem_ingresos_egresos_mensual(df):
             font=dict(size=13, color=AZUL_OSCURO), x=0, xanchor='left'
         ),
         plot_bgcolor="white", paper_bgcolor="white",
-        margin=dict(l=10, r=30, t=85, b=50),
+        margin=dict(l=80, r=30, t=85, b=60),
         font=dict(family="Roboto, Arial"),
         showlegend=True,
-        legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center", font_size=10),
-        xaxis=dict(showgrid=False, showline=False, tickformat="%b %Y", tickangle=-45),
-        yaxis=dict(showgrid=True, gridcolor="#F0F0F0", title="N° Familias", rangemode="tozero"),
+        legend=dict(orientation="h", y=-0.25, x=0.5, xanchor="center", font_size=10),
+        xaxis=dict(showgrid=False, showline=False, tickformat="%b %Y", tickangle=-45, automargin=True),
+        yaxis=dict(showgrid=True, gridcolor="#F0F0F0", title="N° Familias", rangemode="tozero", automargin=True),
     )
     return fig
 
@@ -806,11 +806,11 @@ def chart_rem_apgar_distribution(df):
             font=dict(size=13, color=AZUL_OSCURO), x=0, xanchor='left'
         ),
         plot_bgcolor="white", paper_bgcolor="white",
-        margin=dict(l=10, r=80, t=85, b=40),
+        margin=dict(l=110, r=80, t=85, b=40),
         font=dict(family="Roboto, Arial"),
         showlegend=False,
-        xaxis=dict(showgrid=False, showline=False, zeroline=False, title="N° Familias"),
-        yaxis=dict(showgrid=False, showline=False, autorange="reversed", tickfont_size=12),
+        xaxis=dict(showgrid=False, showline=False, zeroline=False, title="N° Familias", automargin=True),
+        yaxis=dict(showgrid=False, showline=False, autorange="reversed", tickfont_size=12, automargin=True),
     )
     return fig
 
@@ -876,7 +876,7 @@ def chart_rem_coverage_by_program(df):
         font=dict(family="Roboto, Arial"),
         showlegend=False,
         xaxis=dict(showgrid=False, showline=False, zeroline=False, title="% Cobertura", range=[0, 120]),
-        yaxis=dict(showgrid=False, showline=False, tickfont_size=9),
+        yaxis=dict(showgrid=False, showline=False, tickfont_size=9, automargin=True),
         height=max(300, len(grp) * 40),
     )
     return fig
@@ -941,10 +941,10 @@ def chart_rem_egress_pie(df):
             font=dict(size=13, color=AZUL_OSCURO), x=0, xanchor='left'
         ),
         plot_bgcolor="white", paper_bgcolor="white",
-        margin=dict(l=10, r=30, t=85, b=40),
+        margin=dict(l=80, r=30, t=85, b=60),
         font=dict(family="Roboto, Arial"),
         showlegend=True,
-        legend=dict(orientation="h", y=-0.15, x=0.5, xanchor="center", font_size=9),
+        legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center", font_size=9),
     )
     return fig
 
@@ -1007,14 +1007,13 @@ def generate_dashboard_pdf(df):
         bytes: contenido del PDF listo para st.download_button.
     """
     from fpdf import FPDF
-    import tempfile
     import os as _os
+    import tempfile
 
     # ── Detectar kaleido ──────────────────────────────────────────────────────
     _kaleido_ok = False
     try:
         import plotly.io as _pio
-        # Test rápido: intentar importar el scope
         _ = _pio.kaleido.scope
         _kaleido_ok = True
     except Exception:
@@ -1088,8 +1087,10 @@ def generate_dashboard_pdf(df):
             self.set_font('helvetica', 'I', 7)
             self.set_text_color(150, 150, 150)
             self.cell(0, 10,
-                f"Dashboard Analítico MAIS - CESFAM Cholchol  |  "
-                f"Página {self.page_no()}/{{nb}}  |  Generado: {generado}",
+                f"Dashboard Analítico ERBI - CESFAM Cholchol  |  "
+                f"Página {self.page_no()}/{{nb}}  |  "
+                f"Generado: {generado}  |  "
+                f"Jefatura Técnica - CESFAM Cholchol",
                 align='C')
             self.set_text_color(0, 0, 0)
 
@@ -1113,7 +1114,7 @@ def generate_dashboard_pdf(df):
     pdf.cell(0, 6, "ILUSTRE MUNICIPALIDAD DE CHOLCHOL", ln=True, align='C')
     pdf.set_xy(38, 19)
     pdf.set_font('helvetica', '', 9)
-    pdf.cell(0, 5, "Departamento de Salud  |  CESFAM Cholchol  |  Sistema MAIS", ln=True, align='C')
+    pdf.cell(0, 5, "Departamento de Salud  |  CESFAM Cholchol  |  Sistema ERBI Analytics", ln=True, align='C')
     pdf.ln(6)
 
     # Título
@@ -1130,7 +1131,7 @@ def generate_dashboard_pdf(df):
     pdf.cell(95, 7, f"  Generado: {generado}", border=0, fill=True)
     pdf.cell(95, 7, f"  Período: {fecha_desde} - {fecha_hasta}", border=0, fill=True, ln=True)
     pdf.cell(95, 7, f"  Total evaluaciones: {total}", border=0, fill=True)
-    pdf.cell(95, 7, f"  Kaleido (graficos): {'SI' if _kaleido_ok else 'NO (usando tablas)'}", border=0, fill=True, ln=True)
+    pdf.cell(95, 7, "", border=0, fill=True, ln=True)
     pdf.ln(6)
 
     # ═════════════════════════════════════════════════════════════════════════
@@ -1155,31 +1156,71 @@ def generate_dashboard_pdf(df):
     top_factors = sorted(factor_counts.items(), key=lambda x: x[1], reverse=True)[:10]
 
     if top_factors:
-        pdf.set_font('helvetica', 'B', 8)
+        pdf.set_font('helvetica', 'B', 7)
         pdf.set_fill_color(189, 215, 238)
-        pdf.cell(115, 6, "Factor de Riesgo", border=1, fill=True, align='C')
-        pdf.cell(37, 6, "N° Familias", border=1, fill=True, align='C')
-        pdf.cell(38, 6, "% del Total", border=1, fill=True, align='C', ln=True)
-        pdf.set_font('helvetica', '', 8)
+        pdf.cell(125, 6, "Factor de Riesgo", border=1, fill=True, align='C')
+        pdf.cell(35, 6, "N° Familias", border=1, fill=True, align='C')
+        pdf.cell(30, 6, "% Total", border=1, fill=True, align='C', ln=True)
+        pdf.set_font('helvetica', '', 7)
         for i, (k, n) in enumerate(top_factors):
             fill = i % 2 == 0
             pdf.set_fill_color(248, 250, 252) if fill else pdf.set_fill_color(255, 255, 255)
             label = FACTOR_LABELS.get(k, k)
             pct = f"{n / total * 100:.1f}%" if total else "-"
-            pdf.cell(115, 6, f"  {label[:62]}", border=1, fill=fill)
-            pdf.cell(37, 6, str(n), border=1, fill=fill, align='C')
-            pdf.cell(38, 6, pct, border=1, fill=fill, align='C', ln=True)
-    pdf.ln(4)
+            pdf.cell(125, 5, f"  {label[:80]}", border=1, fill=fill)
+            pdf.cell(35, 5, str(n), border=1, fill=fill, align='C')
+            pdf.cell(30, 5, pct, border=1, fill=fill, align='C', ln=True)
+    pdf.ln(2)
 
-    # Gráficos sección 1 (si kaleido)
-    for fn in [chart_risk_distribution, chart_risk_by_sector]:
-        img_p = _fig_to_png(fn(df))
-        if img_p:
-            if pdf.get_y() > 200:
-                pdf.add_page()
-            pdf.image(img_p, x=10, w=190)
-            pdf.ln(3)
-            _os.unlink(img_p)
+    # ── Gráficos de riesgo (solo con kaleido) ────────────────────────────────
+    _pdf_section_title(pdf, "Distribución del Riesgo Familiar")
+    for _fn in [chart_risk_distribution, chart_risk_by_sector, chart_risk_by_establishment]:
+        _img_p = _fig_to_png(_fn(df))
+        if _img_p:
+            pdf.add_page()
+            pdf.image(_img_p, x=15, w=180)
+            pdf.ln(5)
+            _os.unlink(_img_p)
+
+    # ── Gráficos adicionales del dashboard (solo con kaleido) ─────────────────
+    for _fn in [chart_intervention_gap, chart_score_distribution,
+                chart_evaluations_over_time, chart_by_program]:
+        _img_p = _fig_to_png(_fn(df))
+        if _img_p:
+            pdf.add_page()
+            pdf.image(_img_p, x=15, w=180)
+            pdf.ln(5)
+            _os.unlink(_img_p)
+
+    # ── Evaluaciones por Establecimiento ──────────────────────────────────────
+    _pdf_section_title(pdf, "Evaluaciones por Establecimiento")
+    if "Establecimiento" in df.columns:
+        _est_counts = df["Establecimiento"].value_counts().sort_values(ascending=False)
+        pdf.set_font('helvetica', 'B', 8)
+        pdf.set_fill_color(189, 215, 238)
+        pdf.cell(90, 6, "Establecimiento", border=1, fill=True, align='C')
+        pdf.cell(30, 6, "Evaluaciones", border=1, fill=True, align='C')
+        pdf.cell(30, 6, "% del Total", border=1, fill=True, align='C')
+        pdf.cell(40, 6, "Estratificación", border=1, fill=True, align='C', ln=True)
+        pdf.set_font('helvetica', '', 7.5)
+        for _i, (_est, _cnt) in enumerate(_est_counts.items()):
+            _fill = _i % 2 == 0
+            pdf.set_fill_color(248, 250, 252) if _fill else pdf.set_fill_color(255, 255, 255)
+            _pct_est = f"{_cnt / total * 100:.1f}%" if total else "-"
+            # Estratificación: contar niveles dentro del establecimiento
+            _est_df = df[df["Establecimiento"] == _est]
+            _a = int((_est_df["Nivel"] == "RIESGO ALTO").sum()) if "Nivel" in _est_df.columns else 0
+            _m = int((_est_df["Nivel"] == "RIESGO MEDIO").sum()) if "Nivel" in _est_df.columns else 0
+            _b = int((_est_df["Nivel"] == "RIESGO BAJO").sum()) if "Nivel" in _est_df.columns else 0
+            _estrat = f"Alto:{_a}  Medio:{_m}  Bajo:{_b}"
+            pdf.cell(90, 5, f"  {_est[:50]}", border=1, fill=_fill)
+            pdf.cell(30, 5, str(_cnt), border=1, fill=_fill, align='C')
+            pdf.cell(30, 5, _pct_est, border=1, fill=_fill, align='C')
+            pdf.cell(40, 5, _estrat, border=1, fill=_fill, align='C', ln=True)
+    else:
+        pdf.set_font('helvetica', 'I', 9)
+        pdf.cell(0, 6, "No hay datos de establecimiento disponibles.", ln=True)
+    pdf.ln(4)
 
     # ═════════════════════════════════════════════════════════════════════════
     # SECCIÓN 2 – MÉTRICAS REM-P7
@@ -1236,21 +1277,20 @@ def generate_dashboard_pdf(df):
             pdf.cell(40, 7, str(cp_s), border=1, fill=fill, align='C')
             pdf.cell(40, 7, str(sp_s), border=1, fill=fill, align='C')
             pdf.cell(40, 7, pct_s, border=1, fill=fill, align='C', ln=True)
-    pdf.ln(4)
+    pdf.ln(2)
 
-    # Gráficos REM-P7
-    for fn in [chart_egress_analysis, chart_intervention_coverage_by_sector,
-               chart_rem_egress_pie, chart_rem_ingresos_egresos_mensual]:
-        img_p = _fig_to_png(fn(df))
-        if img_p:
-            if pdf.get_y() > 210:
-                pdf.add_page()
-            pdf.image(img_p, x=10, w=190)
-            pdf.ln(3)
-            _os.unlink(img_p)
+    # ── Gráficos REM-P7 (solo con kaleido) ────────────────────────────────────
+    for _fn in [chart_egress_analysis, chart_intervention_coverage_by_sector,
+                chart_rem_egress_pie, chart_rem_ingresos_egresos_mensual]:
+        _img_p = _fig_to_png(_fn(df))
+        if _img_p:
+            pdf.add_page()
+            pdf.image(_img_p, x=15, w=180)
+            pdf.ln(5)
+            _os.unlink(_img_p)
 
     # ═════════════════════════════════════════════════════════════════════════
-    # SECCIÓN 4 – COBERTURA POR PROGRAMA
+    # SECCIÓN 3 – COBERTURA POR PROGRAMA
     # ═════════════════════════════════════════════════════════════════════════
     if "Programa/Unidad" in df.columns:
         if pdf.get_y() > 200:
@@ -1265,28 +1305,29 @@ def generate_dashboard_pdf(df):
         grp_prog = grp_prog.sort_values("pct", ascending=False)
 
         if not grp_prog.empty:
-            pdf.set_font('helvetica', 'B', 8)
+            pdf.set_font('helvetica', 'B', 7)
             pdf.set_fill_color(189, 215, 238)
-            pdf.cell(80, 6, "Programa / Unidad", border=1, fill=True, align='C')
-            pdf.cell(37, 6, "Total", border=1, fill=True, align='C')
-            pdf.cell(37, 6, "Con Plan", border=1, fill=True, align='C')
-            pdf.cell(36, 6, "Cobertura %", border=1, fill=True, align='C', ln=True)
-            pdf.set_font('helvetica', '', 8)
+            pdf.cell(100, 6, "Programa / Unidad", border=1, fill=True, align='C')
+            pdf.cell(32, 6, "Total", border=1, fill=True, align='C')
+            pdf.cell(32, 6, "Con Plan", border=1, fill=True, align='C')
+            pdf.cell(26, 6, "Cobertura %", border=1, fill=True, align='C', ln=True)
+            pdf.set_font('helvetica', '', 7)
             for i, row_p in grp_prog.iterrows():
                 fill = int(i) % 2 == 0
                 pdf.set_fill_color(248, 250, 252) if fill else pdf.set_fill_color(255, 255, 255)
-                pdf.cell(80, 6, f"  {str(row_p['Programa/Unidad'])[:40]}", border=1, fill=fill)
-                pdf.cell(37, 6, str(int(row_p['total'])), border=1, fill=fill, align='C')
-                pdf.cell(37, 6, str(int(row_p['con_plan'])), border=1, fill=fill, align='C')
-                pdf.cell(36, 6, f"{row_p['pct']:.1f}%", border=1, fill=fill, align='C', ln=True)
-            pdf.ln(4)
+                pdf.cell(100, 5, f"  {str(row_p['Programa/Unidad'])[:60]}", border=1, fill=fill)
+                pdf.cell(32, 5, str(int(row_p['total'])), border=1, fill=fill, align='C')
+                pdf.cell(32, 5, str(int(row_p['con_plan'])), border=1, fill=fill, align='C')
+                pdf.cell(26, 5, f"{row_p['pct']:.1f}%", border=1, fill=fill, align='C', ln=True)
+            pdf.ln(2)
 
-            img_prog = _fig_to_png(chart_rem_coverage_by_program(df))
-            if img_prog:
-                if pdf.get_y() > 200:
-                    pdf.add_page()
-                pdf.image(img_prog, x=10, w=190)
-                _os.unlink(img_prog)
+            # ── Gráfico cobertura por programa (solo con kaleido) ────────
+            _img_prog = _fig_to_png(chart_rem_coverage_by_program(df))
+            if _img_prog:
+                pdf.add_page()
+                pdf.image(_img_prog, x=15, w=180)
+                pdf.ln(5)
+                _os.unlink(_img_prog)
 
     return bytes(pdf.output())
 
@@ -1409,12 +1450,7 @@ def render_analytics():
 
     st.markdown("---")
 
-    # Identificar rol para segmentación
-    user_info = st.session_state.get('user_info', {})
-    cargo = str(user_info.get('cargo', '')).lower()
-    is_posta = 'encargado' in cargo and 'postas' in cargo
-
-    # Fila 1: Donut + Barras sector o Establecimiento
+    # Fila 1: Donut + Barras por sector
     c1, c2 = st.columns(2)
     with c1:
         with st.container(border=True):
@@ -1422,18 +1458,14 @@ def render_analytics():
             if fig: st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
     with c2:
         with st.container(border=True):
-            if is_posta:
-                # Prioridad Postas para este cargo
-                fig = chart_risk_by_establishment(df)
-            else:
-                fig = chart_risk_by_sector(df)
+            fig = chart_risk_by_sector(df)
             if fig: st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
-            
-    # Si es encargado de postas y no se mostró el de sector arriba, mostrarlo más abajo o mostrar ambos
-    if is_posta:
-         with st.container(border=True):
-             fig_sector = chart_risk_by_sector(df)
-             if fig_sector: st.plotly_chart(fig_sector, use_container_width=True, config={"displayModeBar": False})
+
+    # Fila 1b: Estratificación por establecimiento
+    with st.container(border=True):
+        fig = chart_risk_by_establishment(df)
+        if fig:
+            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
     # Fila 2: Top factores de riesgo (ancho completo)
     with st.container(border=True):
@@ -1522,7 +1554,7 @@ def render_analytics():
         with col_dl:
             if st.session_state.get('_dashboard_pdf'):
                 from datetime import datetime as _dt2
-                _fname = f"Dashboard_MAIS_{_dt2.now().strftime('%Y%m%d_%H%M')}.pdf"
+                _fname = f"Dashboard_ERBI_Analitycs_{_dt2.now().strftime('%Y%m%d_%H%M')}.pdf"
                 st.download_button(
                     label="⬇️ Descargar PDF",
                     data=st.session_state['_dashboard_pdf'],
@@ -1534,7 +1566,7 @@ def render_analytics():
             st.caption(
                 "El PDF incluye: portada institucional · KPIs generales · "
                 "métricas REM-P7 · top factores de riesgo · cobertura por sector y programa · "
-                "tendencia mensual. Si **kaleido** está instalado, incluye imágenes de los gráficos."
+                "tendencia mensual · gráficos del dashboard."
             )
 
 

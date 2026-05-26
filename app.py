@@ -9,6 +9,7 @@ import os
 import uuid
 import io
 from pdf_gen import generate_pdf_report, generate_blank_pdf
+from sector_detector import buscar_por_rut
 
 # Módulos de visualización (carga lazy para no bloquear inicio)
 # Módulos de visualización (carga lazy para no bloquear inicio)
@@ -1828,35 +1829,35 @@ def main():
         """, unsafe_allow_html=True)
         
         with st.container(border=True):
-            st.markdown("🔑 **Cambiar Contraseña**")
-            with st.form("change_pwd_form", clear_on_submit=True, border=False):
-                current_pass = st.text_input("Contraseña actual", type="password", placeholder="Ingrese su contraseña actual")
-                new_pass = st.text_input("Nueva contraseña", type="password", placeholder="Nueva contraseña")
-                confirm_pass = st.text_input("Confirmar nueva contraseña", type="password", placeholder="Repita la nueva contraseña")
-                if st.form_submit_button("Actualizar Contraseña", use_container_width=True, type="primary"):
-                    if not current_pass or not new_pass or not confirm_pass:
-                        st.error("Todos los campos son obligatorios.")
-                    elif new_pass != confirm_pass:
-                        st.error("Las contraseñas nuevas no coinciden.")
-                    elif current_pass != str(st.session_state.user_info.get('pass', '')):
-                        st.error("La contraseña actual no es correcta.")
-                    else:
-                        users_df = load_users()
-                        if not users_df.empty:
-                            mask = users_df['usuario'].str.lower() == str(st.session_state.user_info.get('usuario', '')).lower()
-                            if mask.any():
-                                users_df.loc[mask, 'pass'] = new_pass
-                                ok, msg = save_users(users_df)
-                                if ok:
-                                    st.session_state.user_info['pass'] = new_pass
-                                    log_audit_event(st.session_state.user_info, "Cambio Contraseña", "Contraseña actualizada")
-                                    st.success("✅ Contraseña actualizada.")
-                                else:
-                                    st.error(f"❌ {msg}")
-                            else:
-                                st.error("Error al verificar el usuario.")
+            with st.expander("🔑 **Cambiar Contraseña**", expanded=False):
+                with st.form("change_pwd_form", clear_on_submit=True, border=False):
+                    current_pass = st.text_input("Contraseña actual", type="password", placeholder="Ingrese su contraseña actual")
+                    new_pass = st.text_input("Nueva contraseña", type="password", placeholder="Nueva contraseña")
+                    confirm_pass = st.text_input("Confirmar nueva contraseña", type="password", placeholder="Repita la nueva contraseña")
+                    if st.form_submit_button("Actualizar Contraseña", use_container_width=True, type="primary"):
+                        if not current_pass or not new_pass or not confirm_pass:
+                            st.error("Todos los campos son obligatorios.")
+                        elif new_pass != confirm_pass:
+                            st.error("Las contraseñas nuevas no coinciden.")
+                        elif current_pass != str(st.session_state.user_info.get('pass', '')):
+                            st.error("La contraseña actual no es correcta.")
                         else:
-                            st.error("Error al cargar usuarios.")
+                            users_df = load_users()
+                            if not users_df.empty:
+                                mask = users_df['usuario'].str.lower() == str(st.session_state.user_info.get('usuario', '')).lower()
+                                if mask.any():
+                                    users_df.loc[mask, 'pass'] = new_pass
+                                    ok, msg = save_users(users_df)
+                                    if ok:
+                                        st.session_state.user_info['pass'] = new_pass
+                                        log_audit_event(st.session_state.user_info, "Cambio Contraseña", "Contraseña actualizada")
+                                        st.success("✅ Contraseña actualizada.")
+                                    else:
+                                        st.error(f"❌ {msg}")
+                                else:
+                                    st.error("Error al verificar el usuario.")
+                            else:
+                                st.error("Error al cargar usuarios.")
 
         if st.button("Cerrar Sesión", use_container_width=True):
             for key in list(st.session_state.keys()):
@@ -2233,6 +2234,16 @@ def main():
             
             # Nota: analytics.py tiene su propia función de carga. Vamos a modificar analytics.py para que respete el session_state
             render_analytics()
+
+            st.markdown("---")
+            st.markdown(
+                "<div style='text-align:center;font-size:0.75rem;color:#999;padding:1rem 0;'>"
+                "<strong>🏥 Jefatura Técnica — CESFAM Cholchol</strong><br>"
+                "💼 Desarrollado por Alain Antinao Sepúlveda<br>"
+                "📧 alain.antinao.s@gmail.com  ·  🌐 Página personal"
+                "</div>",
+                unsafe_allow_html=True
+            )
         else:
             st.warning("⚠️ plotly no instalado. Reinicia la app después de instalar.")
         st.stop()
@@ -2571,6 +2582,70 @@ def main():
                 )
             fecha_input = st.date_input("Fecha", key="fechaEvaluacion")
 
+
+        st.markdown("<hr style='border-top: 1px solid #e2e8f0; margin: 16px 0;'>", unsafe_allow_html=True)
+
+        # Búsqueda por RUT (hoja maestra)
+        with st.expander("🔍 Buscar Sector por RUT", expanded=False):
+            cr1, cr2 = st.columns([3, 1])
+            with cr1:
+                rut_busqueda = st.text_input("RUT del usuario:", placeholder="Ej: 1111111-1", key="rut_busqueda")
+            with cr2:
+                st.markdown("<div style='margin-top:22px;'></div>", unsafe_allow_html=True)
+                if st.button("Buscar", use_container_width=True, key="btn_buscar_rut"):
+                    if rut_busqueda and rut_busqueda.strip():
+                        resultado = buscar_por_rut(rut_busqueda)
+                        if resultado:
+                            if resultado.get("SECTOR") and resultado["SECTOR"] not in ("NO_ESPECIFICADO", ""):
+                                st.session_state["sector"] = resultado["SECTOR"]
+                            st.session_state["resultado_rut"] = resultado
+                            st.rerun()
+                        else:
+                            st.warning("RUT no encontrado en la hoja maestra.", icon="⚠️")
+                    else:
+                        st.warning("Ingrese un RUT primero", icon="⚠️")
+
+            if st.session_state.get("resultado_rut"):
+                res = st.session_state["resultado_rut"]
+                label = lambda v: v if v and v not in ("NO_ESPECIFICADO", "") else "—"
+                html = f"""
+                <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:10px 14px; font-size:0.8rem; line-height:1.6; margin-top:8px;">
+                    <div style="font-weight:600; color:#166534; margin-bottom:6px; font-size:0.85rem;">
+                        📋 Datos de agenda médica (periodo 2020 - mayo 2026)
+                    </div>
+                    <table style="width:100%; border-collapse:collapse;">
+                        <tr>
+                            <td style="padding:2px 6px; color:#475569; width:110px;">Género</td>
+                            <td style="padding:2px 6px; font-weight:500;">{label(res.get("GENERO"))}</td>
+                            <td style="padding:2px 6px; color:#475569; width:110px;">Comuna</td>
+                            <td style="padding:2px 6px; font-weight:500;">{label(res.get("COMUNA"))}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:2px 6px; color:#475569;">Procedencia</td>
+                            <td style="padding:2px 6px; font-weight:500;">{label(res.get("PROCEDENCIA"))}</td>
+                            <td style="padding:2px 6px; color:#475569;">País</td>
+                            <td style="padding:2px 6px; font-weight:500;">{label(res.get("PAIS DE PROCEDENCIA"))}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:2px 6px; color:#475569;">Etnia</td>
+                            <td style="padding:2px 6px; font-weight:500;">{label(res.get("ETNIA PERCEPCION"))}</td>
+                            <td style="padding:2px 6px; color:#475569;">Distrito</td>
+                            <td style="padding:2px 6px; font-weight:500;">{label(res.get("DISTRITO"))}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:2px 6px; color:#475569;">Comunidad</td>
+                            <td style="padding:2px 6px; font-weight:500;">{label(res.get("COMUNIDAD"))}</td>
+                            <td style="padding:2px 6px; color:#475569;">Sector</td>
+                            <td style="padding:2px 6px; font-weight:500;">{label(res.get("SECTOR"))}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:2px 6px; color:#475569;">Dirección</td>
+                            <td style="padding:2px 6px; font-weight:500;" colspan="3">{label(res.get("DIRECCION_NORM"))}</td>
+                        </tr>
+                    </table>
+                </div>
+                """
+                st.markdown(html, unsafe_allow_html=True)
 
         st.markdown("<hr style='border-top: 1px solid #e2e8f0; margin: 16px 0;'>", unsafe_allow_html=True)
 

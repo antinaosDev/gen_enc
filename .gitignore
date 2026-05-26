@@ -1,5 +1,6 @@
 # Streamlit
 .streamlit/secrets.toml
+**/.streamlit/secrets.toml
 # .streamlit/config.toml  <-- No ignorar para mantener el tema visual
 
 # Python
