@@ -1078,7 +1078,7 @@ def generate_dashboard_pdf(df):
             fecha_hasta = fechas.max().strftime("%d/%m/%Y")
 
     from datetime import datetime as _dt
-    generado = _dt.now().strftime("%d/%m/%Y %H:%M")
+    generado = _dt.now().strftime("%d/%m/%Y")
 
     # ── Clase PDF con footer ──────────────────────────────────────────────────
     class DashPDF(FPDF):
