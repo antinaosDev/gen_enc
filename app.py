@@ -1628,7 +1628,7 @@ def render_login_page():
             if os.path.exists(LOGO_PATH):
                 c_img1, c_img2, c_img3 = st.columns([1, 2, 1])
                 with c_img2:
-                    st.image(LOGO_PATH, use_container_width=True)
+                    st.image(LOGO_PATH, width='stretch')
             else:
                 st.markdown('<div class="login-brand-wrapper"><div class="login-brand">SISTEMA MAIS</div></div>', unsafe_allow_html=True)
                 
@@ -1640,7 +1640,7 @@ def render_login_page():
             user = st.text_input("Profesional", placeholder="Usuario registrado")
             password = st.text_input("Contraseña", type="password", placeholder="Su contraseña")
             st.markdown("<br>", unsafe_allow_html=True)
-            submitted = st.form_submit_button("Ingresar a la Plataforma", use_container_width=True, type="primary")
+            submitted = st.form_submit_button("Ingresar a la Plataforma", width='stretch', type="primary")
             
             if submitted:
                 users_df = load_users()
@@ -1699,7 +1699,7 @@ def render_family_fragment():
     edited_family = st.data_editor(
         st.session_state.family_members,
         num_rows="dynamic",
-        use_container_width=True,
+        width='stretch',
         key="family_editor",
         hide_index=True,
         column_config={
@@ -1751,7 +1751,7 @@ def render_plan_fragment():
     edited_plan = st.data_editor(
         st.session_state.intervention_plan,
         num_rows="dynamic",
-        use_container_width=True,
+        width='stretch',
         key="intervention_editor",
         hide_index=True,
         column_config={
@@ -1777,7 +1777,7 @@ def render_seg_fragment():
     edited_seg = st.data_editor(
         st.session_state.seguimiento_plan,
         num_rows="dynamic",
-        use_container_width=True,
+        width='stretch',
         key="seguimiento_editor",
         hide_index=True,
         column_config={
@@ -1799,7 +1799,7 @@ def render_team_fragment():
     edited_team = st.data_editor(
         st.session_state.team_members,
         num_rows="dynamic",
-        use_container_width=True,
+        width='stretch',
         key="team_editor",
         hide_index=True,
         column_config={
@@ -1834,7 +1834,7 @@ def main():
                     current_pass = st.text_input("Contraseña actual", type="password", placeholder="Ingrese su contraseña actual")
                     new_pass = st.text_input("Nueva contraseña", type="password", placeholder="Nueva contraseña")
                     confirm_pass = st.text_input("Confirmar nueva contraseña", type="password", placeholder="Repita la nueva contraseña")
-                    if st.form_submit_button("Actualizar Contraseña", use_container_width=True, type="primary"):
+                    if st.form_submit_button("Actualizar Contraseña", width='stretch', type="primary"):
                         if not current_pass or not new_pass or not confirm_pass:
                             st.error("Todos los campos son obligatorios.")
                         elif new_pass != confirm_pass:
@@ -1859,7 +1859,7 @@ def main():
                             else:
                                 st.error("Error al cargar usuarios.")
 
-        if st.button("Cerrar Sesión", use_container_width=True):
+        if st.button("Cerrar Sesión", width='stretch'):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
@@ -1941,7 +1941,7 @@ def main():
         st.markdown('<div style="color: #475569; font-size: 0.85rem; line-height: 1.5; margin-bottom: 20px;">Gestione y busque los registros consolidados en la base médica centralizada.</div>', unsafe_allow_html=True)
         
         with st.container(border=True):
-            if st.button("➕ Nueva Ficha", use_container_width=True):
+            if st.button("➕ Nueva Ficha", width='stretch'):
                 keys_to_clear = [
                     'idEvaluacion', 'familia', 'direccion', 'establecimiento',
                     'sector', 'parentesco', 'programa_unidad', 'tipo_union',
@@ -1981,7 +1981,7 @@ def main():
         with st.container(border=True):
             st.markdown('<div style="font-weight: 700; font-size: 0.9rem; color: #334155; margin-bottom: 8px;">Sincronización</div>', unsafe_allow_html=True)
             st.markdown('<div style="font-size: 0.8rem; color: #64748b; margin-bottom: 10px;">Forzar recarga de datos desde la base de datos.</div>', unsafe_allow_html=True)
-            if st.button("🔄 Sincronizar Datos", type="secondary", use_container_width=True):
+            if st.button("🔄 Sincronizar Datos", type="secondary", width='stretch'):
                 with st.spinner("Actualizando datos..."):
                     st.cache_data.clear()
                     if 'df_evaluaciones' in st.session_state:
@@ -1995,7 +1995,7 @@ def main():
         with st.container(border=True):
             st.markdown('<div style="font-weight: 700; font-size: 0.9rem; color: #334155; margin-bottom: 8px;">Búsqueda Directa</div>', unsafe_allow_html=True)
             search_id = st.text_input("ID Evaluación", placeholder="Ej: FAM-0123...", label_visibility="collapsed")
-            if st.button("🔍 Cargar Registro", type="primary", use_container_width=True):
+            if st.button("🔍 Cargar Registro", type="primary", width='stretch'):
                 with st.spinner("Conectando con base de datos segura..."):
                     record = search_record(search_id)
                     if record:
@@ -2041,7 +2041,7 @@ def main():
                 data=blank_pdf,
                 file_name=f"Pauta_Blank_{date.today()}_{uuid.uuid4().hex[:6]}.pdf",
                 mime="application/pdf",
-                use_container_width=True
+                width='stretch'
             )
 
         col_busq, col_est = st.columns([2, 1])
@@ -2083,7 +2083,7 @@ def main():
                 # Mostrar columnas clave
                 cols_show = ["ID Evaluación", "Familia", "Sector", "Nivel", "Establecimiento"]
                 cols_exist = [c for c in cols_show if c in df_display.columns]
-                st.dataframe(df_display[cols_exist], use_container_width=True, hide_index=True)
+                st.dataframe(df_display[cols_exist], width='stretch', hide_index=True)
                 st.info("💡 Copie el ID y búsquelo arriba para cargar los datos.")
             else:
                 st.write("No se encontraron registros para los filtros seleccionados.")
@@ -2094,7 +2094,7 @@ def main():
             st.markdown("*Familias inscritas por sector (para el informe REM-P7):*")
             n_inscritas_sol  = st.number_input("Inscritas Sector Sol",  min_value=0, value=st.session_state.get('n_inscritas_sol', 0),  step=1, key="n_inscritas_sol")
             n_inscritas_luna = st.number_input("Inscritas Sector Luna", min_value=0, value=st.session_state.get('n_inscritas_luna', 0), step=1, key="n_inscritas_luna")
-            if st.button("🔄 Actualizar REM-P7 (Sheets)", use_container_width=True):
+            if st.button("🔄 Actualizar REM-P7 (Sheets)", width='stretch'):
                 with st.spinner("Generando REM-P7..."):
                     ok, msg = update_rem_p7(n_inscritas_sol, n_inscritas_luna)
                     if ok:
@@ -2105,7 +2105,7 @@ def main():
                         st.error(f"❌ {msg}")
 
             st.markdown("**Exportar Excel:**")
-            if st.button("📥 Descargar REM-P7 Excel", use_container_width=True):
+            if st.button("📥 Descargar REM-P7 Excel", width='stretch'):
                 with st.spinner("Generando Excel..."):
                     buf, err = export_rem_p7_excel(n_inscritas_sol, n_inscritas_luna)
                     if err:
@@ -2121,7 +2121,7 @@ def main():
                     data=st.session_state['rem_p7_excel'],
                     file_name=fname,
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    use_container_width=True
+                    width='stretch'
                 )
         else:
             st.info("ℹ️ Su cargo no tiene permisos para descargar el REM-P7.")
@@ -2132,7 +2132,7 @@ def main():
             with st.expander("🔄 Migrar IDs al nuevo formato"):
                 st.caption("Reescribe todos los IDs de evaluación existentes al formato **EVA-NNN-FAM-XXX**.")
                 st.warning("⚠️ Esta operación modifica los IDs de todos los registros en Google Sheets. Ejecutar solo una vez.")
-                if st.button("🚀 Ejecutar Migración de IDs", type="primary", use_container_width=True):
+                if st.button("🚀 Ejecutar Migración de IDs", type="primary", width='stretch'):
                     with st.spinner("Migrando IDs... puede tomar unos segundos por cada registro..."):
                         ok_m, msg_m, n_m = migrate_eval_ids_to_new_format()
                         if ok_m:
@@ -2148,7 +2148,7 @@ def main():
                 users_df = load_users()
                 if not users_df.empty:
                     st.dataframe(users_df[['usuario', 'rol', 'cargo', 'Programa/Unidad']].drop_duplicates(),
-                                 use_container_width=True, hide_index=True)
+                                 width='stretch', hide_index=True)
                     with st.form("add_user_form"):
                         st.markdown("**➕ Nuevo Usuario**")
                         col1, col2 = st.columns(2)
@@ -2164,7 +2164,7 @@ def main():
                                 "Usuario"
                             ])
                             new_unidad = st.selectbox("Programa/Unidad", [""] + PROGRAMA_OPTIONS)
-                        submitted = st.form_submit_button("Crear Usuario", type="primary", use_container_width=True)
+                        submitted = st.form_submit_button("Crear Usuario", type="primary", width='stretch')
                         if submitted:
                             if not new_user or not new_pass:
                                 st.error("Usuario y contraseña son obligatorios.")
@@ -2193,7 +2193,7 @@ def main():
                     st.markdown("**🗑️ Eliminar Usuario**")
                     usuarios_list = users_df['usuario'].unique().tolist()
                     sel_user_del = st.selectbox("Seleccionar usuario:", usuarios_list, key="del_user_sel")
-                    if st.button("Eliminar Usuario", type="secondary", use_container_width=True):
+                    if st.button("Eliminar Usuario", type="secondary", width='stretch'):
                         if sel_user_del:
                             users_df = users_df[users_df['usuario'] != sel_user_del]
                             ok, msg = save_users(users_df)
@@ -2375,7 +2375,7 @@ def main():
                         tipo_union=st.session_state.get('tipo_union', 'Casados'),
                         interpersonal_relations=st.session_state.get('interpersonal_relations', [])
                     )
-                    st.graphviz_chart(dot_geno, use_container_width=True)
+                    st.graphviz_chart(dot_geno, width='stretch')
                 else:
                     st.info("💡 Agregue integrantes en la pestaña 'Ficha Familiar'.")
                     
@@ -2384,7 +2384,7 @@ def main():
                 if generate_ecomap_dot:
                     # Pasamos los sistemas seleccionados y sus flujos
                     dot_eco = generate_ecomap_dot(familia_val, members_list, active_risks, prog_val, nivel_val, selected_systems, system_flows)
-                    st.graphviz_chart(dot_eco, use_container_width=True)
+                    st.graphviz_chart(dot_eco, width='stretch')
                 else:
                     st.error("Error modular en Ecomapa.")
             
@@ -2407,7 +2407,7 @@ def main():
         with tab_plan:
             st.markdown("#### 📅 Plan de Intervención Familiar Actual")
             if not st.session_state.intervention_plan.empty:
-                st.dataframe(st.session_state.intervention_plan, use_container_width=True, hide_index=True)
+                st.dataframe(st.session_state.intervention_plan, width='stretch', hide_index=True)
             else:
                 st.info("💡 No se ha definido un plan de intervención para esta familia.")
 
@@ -2415,7 +2415,7 @@ def main():
         # Barra de acciones de estudio
         col_s1, col_s2 = st.columns([1, 4])
         with col_s1:
-            if st.button("💾 Guardar Estudio Completo", type="primary", use_container_width=True):
+            if st.button("💾 Guardar Estudio Completo", type="primary", width='stretch'):
                 _es_registro_existente = True
                 with st.spinner("Persistiendo estudio en el historial..."):
                     # 1. Preparar datos para Hoja 1 (Evaluaciones)
@@ -2592,7 +2592,7 @@ def main():
                 rut_busqueda = st.text_input("RUT del usuario:", placeholder="Ej: 1111111-1", key="rut_busqueda")
             with cr2:
                 st.markdown("<div style='margin-top:22px;'></div>", unsafe_allow_html=True)
-                if st.button("Buscar", use_container_width=True, key="btn_buscar_rut"):
+                if st.button("Buscar", width='stretch', key="btn_buscar_rut"):
                     if rut_busqueda and rut_busqueda.strip():
                         resultado = buscar_por_rut(rut_busqueda)
                         if resultado:
@@ -3020,7 +3020,7 @@ def main():
         id_evaluacion = st.session_state.get('idEvaluacion', '')
         _es_registro_existente = bool(id_evaluacion)
         btn_label = "🔄 ACTUALIZAR REGISTRO" if _es_registro_existente else "💾 GUARDAR REGISTRO DIGITAL"
-        if st.button(btn_label, use_container_width=True, type="primary"):
+        if st.button(btn_label, width='stretch', type="primary"):
             with st.spinner("Guardando en la nube..."):
                 # Si es registro nuevo, generar el ID ahora con el apellido ingresado
                 if not id_evaluacion:
@@ -3174,7 +3174,7 @@ def main():
                     st.error(f"❌ Error al guardar evaluación: {msg1}")
 
     with col_down:
-        if st.button("📄 Preparar PDF Evaluación", use_container_width=True):
+        if st.button("📄 Preparar PDF Evaluación", width='stretch'):
             try:
                 id_evaluacion = st.session_state.get('idEvaluacion', 'sin_id')
                 with st.spinner("Preparando archivo PDF..."):
@@ -3202,7 +3202,7 @@ def main():
                 data=st.session_state['temp_pdf_report'],
                 file_name=f"ficha_oficial_{id_eval_filename}.pdf",
                 mime="application/pdf",
-                use_container_width=True,
+                width='stretch',
             )
 
     # --- FOOTER PROFESIONAL (dentro de main - sólo usuarios autenticados ven la app) ---

@@ -1455,45 +1455,45 @@ def render_analytics():
     with c1:
         with st.container(border=True):
             fig = chart_risk_distribution(df)
-            if fig: st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+            if fig: st.plotly_chart(fig, width='stretch', config={"displayModeBar": False})
     with c2:
         with st.container(border=True):
             fig = chart_risk_by_sector(df)
-            if fig: st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+            if fig: st.plotly_chart(fig, width='stretch', config={"displayModeBar": False})
 
     # Fila 1b: Estratificación por establecimiento
     with st.container(border=True):
         fig = chart_risk_by_establishment(df)
         if fig:
-            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(fig, width='stretch', config={"displayModeBar": False})
 
     # Fila 2: Top factores de riesgo (ancho completo)
     with st.container(border=True):
         fig = chart_top_risk_factors(df, top_n=12)
         if fig:
-            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(fig, width='stretch', config={"displayModeBar": False})
 
     # Fila 3: Brecha intervención + Histograma puntajes
     c3, c4 = st.columns(2)
     with c3:
         with st.container(border=True):
             fig = chart_intervention_gap(df)
-            if fig: st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+            if fig: st.plotly_chart(fig, width='stretch', config={"displayModeBar": False})
     with c4:
         with st.container(border=True):
             fig = chart_score_distribution(df)
-            if fig: st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+            if fig: st.plotly_chart(fig, width='stretch', config={"displayModeBar": False})
 
     # Fila 4: Temporal + Por programa
     c5, c6 = st.columns(2)
     with c5:
         with st.container(border=True):
             fig = chart_evaluations_over_time(df)
-            if fig: st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+            if fig: st.plotly_chart(fig, width='stretch', config={"displayModeBar": False})
     with c6:
         with st.container(border=True):
             fig = chart_by_program(df)
-            if fig: st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+            if fig: st.plotly_chart(fig, width='stretch', config={"displayModeBar": False})
 
     # Fila 5: REM-P7 - Egresos + Cobertura por sector
     st.markdown("### 📋 Análisis REM-P7")
@@ -1501,19 +1501,19 @@ def render_analytics():
     with c7:
         with st.container(border=True):
             fig = chart_egress_analysis(df)
-            if fig: st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+            if fig: st.plotly_chart(fig, width='stretch', config={"displayModeBar": False})
             else: st.caption("No hay datos de egresos disponibles")
     with c8:
         with st.container(border=True):
             fig = chart_intervention_coverage_by_sector(df)
-            if fig: st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+            if fig: st.plotly_chart(fig, width='stretch', config={"displayModeBar": False})
             else: st.caption("No hay datos sectoriales disponibles")
 
     # Fila 6: REM-P7 - Tendencia mensual (ancho completo)
     st.markdown("### 📈 Tendencia Mensual de Ingresos vs. Egresos")
     with st.container(border=True):
         fig = chart_rem_ingresos_egresos_mensual(df)
-        if fig: st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+        if fig: st.plotly_chart(fig, width='stretch', config={"displayModeBar": False})
         else: st.caption("No hay datos temporales disponibles")
 
     # Fila 7: REM-P7 - Cobertura por programa + Donut tipos de egreso
@@ -1521,12 +1521,12 @@ def render_analytics():
     with c11:
         with st.container(border=True):
             fig = chart_rem_coverage_by_program(df)
-            if fig: st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+            if fig: st.plotly_chart(fig, width='stretch', config={"displayModeBar": False})
             else: st.caption("No hay datos de programas disponibles")
     with c12:
         with st.container(border=True):
             fig = chart_rem_egress_pie(df)
-            if fig: st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+            if fig: st.plotly_chart(fig, width='stretch', config={"displayModeBar": False})
             else: st.caption("No hay tipos de egreso registrados")
 
     # ── EXPORTAR PDF (Exclusivo Programador) ─────────────────────────────────
@@ -1543,7 +1543,7 @@ def render_analytics():
         )
         col_btn, col_dl, col_info = st.columns([1, 1, 2])
         with col_btn:
-            if st.button("🔄 Generar PDF del Dashboard", type="primary", use_container_width=True):
+            if st.button("🔄 Generar PDF del Dashboard", type="primary", width='stretch'):
                 with st.spinner("Generando reporte PDF completo..."):
                     try:
                         pdf_bytes = generate_dashboard_pdf(df)
@@ -1560,7 +1560,7 @@ def render_analytics():
                     data=st.session_state['_dashboard_pdf'],
                     file_name=_fname,
                     mime="application/pdf",
-                    use_container_width=True,
+                    width='stretch',
                 )
         with col_info:
             st.caption(
