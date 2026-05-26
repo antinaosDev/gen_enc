@@ -1694,17 +1694,27 @@ def apply_edits_df(df, key):
     return df_new
 
 # --- FUNCIONES DE FRAGMENTO PARA AISLAR TABLAS ---
-def _clean_date_cols(df, cols):
-    """Convierte columnas a datetime64[ns] para evitar errores de parseo en data_editor."""
+def _fmt_date_cols(df, cols):
+    """Convierte columnas datetime a string DD/MM/YYYY para evitar bugs de DateColumn en Streamlit."""
     for c in cols:
         if c in df.columns:
-            df[c] = pd.to_datetime(df[c], errors='coerce')
-            df[c] = df[c].where(df[c].notna(), None)
+            converted = pd.to_datetime(df[c], errors='coerce')
+            mask = converted.notna()
+            df[c] = df[c].astype(object)
+            df.loc[mask, c] = converted[mask].dt.strftime('%d/%m/%Y')
+            df.loc[~mask, c] = ''
+    return df
+
+def _parse_date_cols(df, cols):
+    """Convierte columnas string DD/MM/YYYY de vuelta a datetime."""
+    for c in cols:
+        if c in df.columns:
+            df[c] = pd.to_datetime(df[c], format='%d/%m/%Y', errors='coerce')
     return df
 
 @st.fragment
 def render_family_fragment():
-    _df = _clean_date_cols(st.session_state.family_members.copy(), ["F. Nac"])
+    _df = _fmt_date_cols(st.session_state.family_members.copy(), ["F. Nac"])
     edited_family = st.data_editor(
         _df,
         num_rows="dynamic",
@@ -1714,7 +1724,7 @@ def render_family_fragment():
         column_config={
             "Nombre y Apellidos": st.column_config.TextColumn("Nombre y Apellidos", width="large"),
             "RUT": st.column_config.TextColumn("RUT", width="medium"),
-            "F. Nac": st.column_config.DateColumn("F. Nac", width="small", format="DD/MM/YYYY"),
+            "F. Nac": st.column_config.TextColumn("F. Nac", width="small"),
             "Identidad de género": st.column_config.SelectboxColumn(
                 "Identidad de género", 
                 options=["Masculino", "Femenino", "No binario", "Transgénero", "Prefiero no decir", "Gestación/Aborto"], 
@@ -1757,7 +1767,7 @@ def render_family_fragment():
 
 @st.fragment
 def render_plan_fragment():
-    _df_plan = _clean_date_cols(st.session_state.intervention_plan.copy(), ["Fecha Prog", "Fecha Real", "F. Seguimiento"])
+    _df_plan = _fmt_date_cols(st.session_state.intervention_plan.copy(), ["Fecha Prog", "Fecha Real", "F. Seguimiento"])
     edited_plan = st.data_editor(
         _df_plan,
         num_rows="dynamic",
@@ -1767,16 +1777,16 @@ def render_plan_fragment():
         column_config={
             "Objetivo": st.column_config.TextColumn("OBJETIVO"),
             "Actividad": st.column_config.TextColumn("ACTIVIDAD"),
-            "Fecha Prog": st.column_config.DateColumn("FECHA PROG."),
+            "Fecha Prog": st.column_config.TextColumn("FECHA PROG."),
             "Responsable": st.column_config.TextColumn("RESPONSABLE"),
-            "Fecha Real": st.column_config.DateColumn("FECHA REAL."),
+            "Fecha Real": st.column_config.TextColumn("FECHA REAL."),
             "Evaluación": st.column_config.TextColumn("EVALUACIÓN"),
             "Estado": st.column_config.SelectboxColumn(
                 "ESTADO",
                 options=["Pendiente", "En progreso", "Completado", "Cancelado"],
                 width="medium"
             ),
-            "F. Seguimiento": st.column_config.DateColumn("F. SEGUIMIENTO"),
+            "F. Seguimiento": st.column_config.TextColumn("F. SEGUIMIENTO"),
             "Obs. Seguimiento": st.column_config.TextColumn("OBS. SEGUIMIENTO"),
         }
     )
@@ -1784,7 +1794,7 @@ def render_plan_fragment():
 
 @st.fragment
 def render_seg_fragment():
-    _df_seg = _clean_date_cols(st.session_state.seguimiento_plan.copy(), ["F. Seguimiento"])
+    _df_seg = _fmt_date_cols(st.session_state.seguimiento_plan.copy(), ["F. Seguimiento"])
     edited_seg = st.data_editor(
         _df_seg,
         num_rows="dynamic",
@@ -1799,7 +1809,7 @@ def render_seg_fragment():
                 options=["Pendiente", "En progreso", "Completado", "Cancelado"],
                 width="medium",
             ),
-            "F. Seguimiento": st.column_config.DateColumn("FECHA SEGUIMIENTO", width="medium"),
+            "F. Seguimiento": st.column_config.TextColumn("FECHA SEGUIMIENTO", width="medium"),
             "Obs. Seguimiento": st.column_config.TextColumn("OBSERVACIONES", width="large"),
         }
     )
@@ -2465,7 +2475,7 @@ def main():
                         df_fam['F. Nac'] = df_fam['F. Nac'].apply(to_date_safe_fnac)
                     data_row.append(json.dumps(df_fam.to_dict('records'), ensure_ascii=False, default=str))
                     
-                    df_plan_save = apply_edits_df(st.session_state.intervention_plan, "intervention_editor").copy()
+                    df_plan_save = _parse_date_cols(apply_edits_df(st.session_state.intervention_plan, "intervention_editor").copy(), ["Fecha Prog", "Fecha Real", "F. Seguimiento"])
                     for c in ['Fecha Prog', 'Fecha Real', 'F. Seguimiento']:
                         if c in df_plan_save.columns:
                             df_plan_save[c] = df_plan_save[c].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) and hasattr(x, 'strftime') else "")
@@ -3085,7 +3095,7 @@ def main():
                     df_fam['F. Nac'] = df_fam['F. Nac'].apply(to_date_safe_fnac)
                 family_json = json.dumps(df_fam.to_dict('records'), ensure_ascii=False, default=str)
                 
-                df_plan_save = apply_edits_df(st.session_state.intervention_plan, "intervention_editor").copy()
+                df_plan_save = _parse_date_cols(apply_edits_df(st.session_state.intervention_plan, "intervention_editor").copy(), ["Fecha Prog", "Fecha Real", "F. Seguimiento"])
                 for c in ['Fecha Prog', 'Fecha Real', 'F. Seguimiento']:
                     if c in df_plan_save.columns:
                         df_plan_save[c] = df_plan_save[c].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) and hasattr(x, 'strftime') else "")
