@@ -1699,6 +1699,7 @@ def _clean_date_cols(df, cols):
     for c in cols:
         if c in df.columns:
             df[c] = pd.to_datetime(df[c], errors='coerce')
+            df[c] = df[c].where(df[c].notna(), None)
     return df
 
 @st.fragment
