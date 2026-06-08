@@ -3005,9 +3005,10 @@ def main():
             rut_rep = st.text_input("RUT Rep", label_visibility="collapsed", key="comp_rut")
         
         st.markdown('<div style="margin-top:16px; margin-bottom:8px; font-size: 0.9rem; line-height: 1.5;">Mediante el presente documento manifiestan el acuerdo de ejecutar el Plan de Trabajo elaborado en conjunto con el equipo de salud, con fecha de entrada en vigencia:</div>', unsafe_allow_html=True)
-        if "comp_fecha" not in st.session_state:
-            st.session_state["comp_fecha"] = date.today()
-        fecha_comp = st.date_input("Fecha Comp", key="comp_fecha")
+        if "comp_fecha" in st.session_state:
+            fecha_comp = st.date_input("Fecha Comp", key="comp_fecha")
+        else:
+            fecha_comp = st.date_input("Fecha Comp", value=date.today(), key="comp_fecha")
 
         st.markdown("<br><br>", unsafe_allow_html=True)
         c_cf1, c_cf2 = st.columns(2, gap="large")
@@ -3023,9 +3024,10 @@ def main():
         st.markdown("<hr style='border-top: 1px solid #e2e8f0; margin: 24px 0;'>", unsafe_allow_html=True)
         col_ft1, col_ft2 = st.columns([1, 2])
         with col_ft1:
-            if "fechaEgreso" not in st.session_state:
-                st.session_state["fechaEgreso"] = None
-            fecha_egreso = st.date_input("FECHA EGRESO PLAN:", key="fechaEgreso")
+            if "fechaEgreso" in st.session_state:
+                fecha_egreso = st.date_input("FECHA EGRESO PLAN:", key="fechaEgreso")
+            else:
+                fecha_egreso = st.date_input("FECHA EGRESO PLAN:", value=None, key="fechaEgreso")
         with col_ft2:
             st.markdown("**Estado Egreso Validado:**")
             cf1, cf2, cf3, cf4 = st.columns(4)
