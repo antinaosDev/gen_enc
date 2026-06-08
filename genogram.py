@@ -194,9 +194,9 @@ def generate_genogram_dot(members: list,
         status = str(m.get("E. Civil", "")).upper()
         if sex == "G":
             if "ESPONT" in status:
-                label = "X" # Aborto espontáneo
+                label = "●" # Aborto espontáneo (círculo relleno según norma)
             elif "PROVOC" in status or "INDUC" in status:
-                label = "●" # Aborto provocado (punto negro)
+                label = "X" # Aborto provocado (cruz según norma)
             else:
                 label = ""  # Embarazo normal
 
@@ -214,6 +214,7 @@ def generate_genogram_dot(members: list,
             "is_index": is_index,
             "sex": sex,
             "is_deceased": is_deceased,
+            "edad": int(edad_val) if str(edad_val).isdigit() else -1,
         }
 
     # ── 2. FORZAR NIVELES (rank=same) ─────────────────────────────────────────
@@ -278,6 +279,9 @@ def generate_genogram_dot(members: list,
     target_for_hijos = union_id or jefe_id
     if target_for_hijos:
         hijo_nids = levels[4]
+        
+        # Sort children by age (descending: oldest to youngest, left to right)
+        hijo_nids.sort(key=lambda nid: nodes_info[nid].get("edad", -1), reverse=True)
         
         # Agrupar gemelos por proximidad en la lista (generalmente vienen juntos)
         # o simplemente detectar si son del mismo tipo correlativos
@@ -421,7 +425,7 @@ def generate_genogram_dot(members: list,
 <TR><TD>✝</TD><TD colspan="2"> Fallecido/a</TD>
     <TD>┄</TD><TD colspan="2"> Hijo Adoptivo</TD></TR>
 <TR><TD>△</TD><TD> Gestación</TD>
-    <TD>▲</TD><TD> Aborto</TD>
+    <TD>● / X</TD><TD> Aborto (Esp/Prov)</TD>
     <TD>○ (Rojo)</TD><TD> Enf. Crónica</TD></TR>
 <TR><TD>—</TD><TD> Casados</TD>
     <TD>···</TD><TD> Convivencia</TD>

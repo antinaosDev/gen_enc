@@ -2732,7 +2732,7 @@ def main():
 <b>ETNIA (INE):</b> Ninguno | Mapuche | Aymara | Rapa Nui | Atacameño (Lickanantay) | Quechua | Colla | Diaguita | Kawésqar | Yagán | Changos | Afrodescendiente | Otro<br>
 <b>PARENTESCO:</b> Jefe/a de Hogar | Cónyuge/Pareja | Hijo/a | Gemelo Fraterno/Idéntico | Padre/Madre | Hermano/a | Abuelo/a | Nieto/a | Tío/a | Sobrino/a | Adoptivo/a | Otro familiar | No familiar<br>
 <b>E. CIVIL:</b> S=Soltero/a &nbsp; C=Casado/a &nbsp; Co=Conviviente &nbsp; D=Divorciado/a &nbsp; Sep=Separado/a &nbsp; V=Viudo/a &nbsp; F=Fallecido/a<br>
-<b>GESTACIÓN:</b> Identidad='Gestación/Aborto' + E.Civil vacío (en curso) | E.Civil='Espontáneo' (▵ con X) | E.Civil='Provocado' (▵ relleno)<br>
+<b>GESTACIÓN:</b> Identidad='Gestación/Aborto' + E.Civil vacío (en curso) | E.Civil='Espontáneo' (▵ relleno ●) | E.Civil='Provocado' (▵ con X)<br>
 <b>GÉNEROS INCLUSIVOS</b> (No binario / Transgénero / Prefiero no decir): dibujan <b>Rombo (◇)</b> en el Genograma.
 </div>""", unsafe_allow_html=True)
 
