@@ -1033,7 +1033,15 @@ def load_record_into_state(record):
             if "Firma" not in df_team.columns: df_team["Firma"] = False
             df_team = df_team[["Nombre y Profesión", "Firma"]]
             
-        st.session_state.team_members = df_team if not df_team.empty else pd.DataFrame(columns=["Nombre y Profesión", "Firma"])
+        if not df_team.empty:
+            if 'Firma' in df_team.columns:
+                df_team['Firma'] = df_team['Firma'].astype(bool)
+            st.session_state.team_members = df_team
+        else:
+            st.session_state.team_members = pd.DataFrame({
+                "Nombre y Profesión": pd.Series(dtype='str'),
+                "Firma": pd.Series(dtype='bool')
+            })
     except:
         pass
 
@@ -1541,7 +1549,10 @@ if 'intervention_plan' not in st.session_state:
     })
 
 if 'team_members' not in st.session_state:
-    st.session_state.team_members = pd.DataFrame(columns=["Nombre y Profesión", "Firma"])
+    st.session_state.team_members = pd.DataFrame({
+        "Nombre y Profesión": pd.Series(dtype='str'),
+        "Firma": pd.Series(dtype='bool')
+    })
     
 # Riesgos (Tablas 1-5)
 risk_keys = [
@@ -1996,7 +2007,10 @@ def main():
                     "Estado": pd.Series(dtype='str'), "F. Seguimiento": pd.Series(dtype='datetime64[ns]'),
                     "Obs. Seguimiento": pd.Series(dtype='str')
                 })
-                st.session_state.team_members = pd.DataFrame(columns=["Nombre y Profesión", "Firma"])
+                st.session_state.team_members = pd.DataFrame({
+                    "Nombre y Profesión": pd.Series(dtype='str'),
+                    "Firma": pd.Series(dtype='bool')
+                })
                 st.rerun()
 
         with st.container(border=True):
