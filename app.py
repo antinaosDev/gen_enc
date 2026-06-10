@@ -1533,7 +1533,8 @@ if 'family_members' not in st.session_state:
         "E. Civil": pd.Series(dtype='str'),
         "Ocupación": pd.Series(dtype='str'),
         "Parentesco": pd.Series(dtype='str'),
-        "Resp": pd.Series(dtype='bool')
+        "Resp": pd.Series(dtype='bool'),
+        "Cronico": pd.Series(dtype='bool')
     })
 if 'intervention_plan' not in st.session_state:
     st.session_state.intervention_plan = pd.DataFrame({
@@ -1858,7 +1859,6 @@ def render_seg_fragment():
     )
     st.session_state["seg_edited_latest"] = edited_seg
 
-@st.fragment
 def render_team_fragment():
     edited_team = st.data_editor(
         st.session_state.team_members,
@@ -2030,7 +2030,8 @@ def main():
                     "E. Civil": pd.Series(dtype='str'),
                     "Ocupación": pd.Series(dtype='str'),
                     "Parentesco": pd.Series(dtype='str'),
-                    "Resp": pd.Series(dtype='bool')
+                    "Resp": pd.Series(dtype='bool'),
+                    "Cronico": pd.Series(dtype='bool')
                 })
                 st.session_state.intervention_plan = pd.DataFrame({
                     "Objetivo": pd.Series(dtype='str'), "Actividad": pd.Series(dtype='str'),
@@ -2777,6 +2778,7 @@ def main():
 <b>GÉNERO:</b> Masculino | Femenino | No binario | Transgénero | Prefiero no decir | Gestación/Aborto<br>
 <b>ETNIA (INE):</b> Ninguno | Mapuche | Aymara | Rapa Nui | Atacameño (Lickanantay) | Quechua | Colla | Diaguita | Kawésqar | Yagán | Changos | Afrodescendiente | Otro<br>
 <b>PARENTESCO:</b> Jefe/a de Hogar | Cónyuge/Pareja | Hijo/a | Gemelo Fraterno/Idéntico | Padre/Madre | Hermano/a | Abuelo/a | Nieto/a | Tío/a | Sobrino/a | Adoptivo/a | Otro familiar | No familiar<br>
+<b>SALUD/ROL:</b> <b>RESP:</b> Responsable (Paciente Índice) | <b>CRON:</b> Condición/Enfermedad Crónica<br>
 <b>E. CIVIL:</b> S=Soltero/a &nbsp; C=Casado/a &nbsp; Co=Conviviente &nbsp; D=Divorciado/a &nbsp; Sep=Separado/a &nbsp; V=Viudo/a &nbsp; F=Fallecido/a<br>
 <b>GESTACIÓN:</b> Identidad='Gestación/Aborto' + E.Civil vacío (en curso) | E.Civil='Espontáneo' (▵ relleno ●) | E.Civil='Provocado' (▵ con X)<br>
 <b>GÉNEROS INCLUSIVOS</b> (No binario / Transgénero / Prefiero no decir): dibujan <b>Rombo (◇)</b> en el Genograma.

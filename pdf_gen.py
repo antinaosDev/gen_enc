@@ -95,8 +95,8 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
         pdf.set_font('helvetica', 'B', 7)
         pdf.set_text_color(0, 0, 0)
         pdf.set_draw_color(0, 0, 0)
-        cols = ["Nombre y Apellidos", "RUT", "Género", "Parentesco", "E. Civil", "Nacionalidad", "Etnia", "Ocupacion"]
-        w    = [50,                   23,    12,       22,           12,          20,              18,      33]  # 190 total
+        cols = ["Nombre y Apellidos", "RUT", "Género", "Parentesco", "E. Civil", "Nacion.", "Etnia", "Ocup.", "Resp", "Cron"]
+        w    = [48,                   23,    10,       20,           12,          17,       17,      29,     7,      7]  # 190 total
         
         for i, c in enumerate(cols):
             pdf.cell(w[i], 6, c, border=1, align='C')
@@ -118,7 +118,9 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
             etnia_val = str(row.get("Pueblo Originario", row.get("Etnia", "")))
             etnia_val = etnia_val if etnia_val not in ["Ninguno", "nan", ""] else "-"
             pdf.cell(w[6], 6, etnia_val[:12], border=1)
-            pdf.cell(w[7], 6, str(row.get("Ocupación", row.get("Ocupacion", "")))[:20], border=1)
+            pdf.cell(w[7], 6, str(row.get("Ocupación", row.get("Ocupacion", "")))[:15], border=1)
+            pdf.cell(w[8], 6, "X" if str(row.get("Resp", "")) == "True" or row.get("Resp") is True else " ", border=1, align='C')
+            pdf.cell(w[9], 6, "X" if str(row.get("Cronico", "")) == "True" or row.get("Cronico") is True else " ", border=1, align='C')
             pdf.ln()
     else:
         pdf.set_font('helvetica', 'I', 8)
@@ -154,6 +156,10 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
             "Jefe/a de Hogar  /  Conyuge/Pareja  /  Hijo/a  /  Hijo/a Gemelo Fraterno  /  "
             "Hijo/a Gemelo Identico  /  Padre/Madre  /  Hermano/a  /  Abuelo/a  /  Nieto/a  /  "
             "Tio/a  /  Sobrino/a  /  Hijo/a Adoptivo/a  /  Otro familiar  /  No familiar")
+
+        pdf.ln(1)
+        leyenda_fila("SALUD / ROL:",
+            "Resp = Responsable (Paciente Indice)     Cron = Condicion o Enfermedad Cronica")
 
         pdf.ln(1)
         leyenda_fila("E. CIVIL:",
@@ -968,7 +974,7 @@ def generate_blank_pdf():
     
     # Dataframes vacíos con filas en blanco para que se vean las tablas
     import pandas as pd
-    blank_family = pd.DataFrame([{"Nombre y Apellidos": "", "RUT": "", "Identidad de género": "", "Pueblo Originario": "", "Nacionalidad": "", "Parentesco": "", "E. Civil": "", "Ocupacion": ""}] * 10)
+    blank_family = pd.DataFrame([{"Nombre y Apellidos": "", "RUT": "", "Identidad de género": "", "Pueblo Originario": "", "Nacionalidad": "", "Parentesco": "", "E. Civil": "", "Ocupacion": "", "Resp": False, "Cronico": False}] * 10)
     blank_plan = pd.DataFrame([{"Objetivo": "", "Actividad": "", "Fecha Prog": "", "Responsable": "", "Fecha Real": "", "Evaluación": "", "Estado": "", "F. Seguimiento": "", "Obs. Seguimiento": ""}] * 5)
     
     # Equipo salud en blanco
