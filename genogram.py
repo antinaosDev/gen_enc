@@ -69,12 +69,6 @@ def _detect_sex(sexo_raw: str) -> str:
     if s in ("NO BINARIO", "TRANSGÉNERO", "TRANSGENERO", "OTRO", "NB"):
         return "NB"
     return "?"
-        return "G"
-    if s in ("F", "FEM", "FEMENINO", "MUJER"):
-        return "F"
-    if s in ("M", "MAS", "MASCULINO", "HOMBRE", "H"):
-        return "M"
-    return "?"
 
 
 def _build_node_label(nombre: str, edad: str, parentesco: str,
