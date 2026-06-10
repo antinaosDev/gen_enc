@@ -58,10 +58,17 @@ def get_generation_level(parentesco: str) -> int:
 
 
 def _detect_sex(sexo_raw: str) -> str:
-    """Retorna 'M', 'F', 'G' o '?' según el campo Sexo/Identidad de género."""
+    """Retorna 'M', 'F', 'G', 'NB' o '?' según el campo Sexo/Identidad de género."""
     s = str(sexo_raw).strip().upper()
-    # Orden importante: "G" para gestación primero, luego "F", luego "M"
     if s in ("G", "GESTACION", "GESTACIÓN", "EMBARAZO", "GESTACIÓN/ABORTO"):
+        return "G"
+    if s in ("F", "FEM", "FEMENINO", "MUJER"):
+        return "F"
+    if s in ("M", "MAS", "MASCULINO", "HOMBRE", "H"):
+        return "M"
+    if s in ("NO BINARIO", "TRANSGÉNERO", "TRANSGENERO", "OTRO", "NB"):
+        return "NB"
+    return "?"
         return "G"
     if s in ("F", "FEM", "FEMENINO", "MUJER"):
         return "F"
@@ -160,6 +167,12 @@ def generate_genogram_dot(members: list,
         elif sex == "G":
             shape     = "triangle"     # Gestación (Embarazo/Aborto)
             fillcolor = "white"
+            # Si es mortinato, reducir tamaño
+            if "MORTINATO" in str(m.get("E. Civil", "")).upper() or "MORTINATO" in str(m.get("Estado", "")).upper():
+                shape = "square" # Puede ser cuadrado o círculo pequeño
+        elif sex == "NB":
+            shape     = "diamond"      # No binario → Rombo
+            fillcolor = "#E9D8FD"      # Morado suave
         else:
             shape     = "diamond"      # Sexo desconocido
             fillcolor = "white"
@@ -197,8 +210,22 @@ def generate_genogram_dot(members: list,
                 label = "●" # Aborto espontáneo (círculo relleno según norma)
             elif "PROVOC" in status or "INDUC" in status:
                 label = "X" # Aborto provocado (cruz según norma)
+            elif "MORTINATO" in status:
+                label = "X"
             else:
                 label = ""  # Embarazo normal
+        
+        # Etiquetas temporales (xlabel)
+        xlabel = ""
+        fnac = str(m.get("F. Nac", ""))
+        y_nac = fnac.split("/")[-1] if "/" in fnac else fnac[:4]
+        if y_nac and y_nac.isdigit():
+            xlabel = f"n. {y_nac}"
+            if is_deceased:
+                fdef = str(m.get("F. Def", m.get("Fecha Defunción", "")))
+                y_def = fdef.split("/")[-1] if "/" in fdef else fdef[:4]
+                if y_def and y_def.isdigit():
+                    xlabel += f" - d. {y_def}"
 
         dot.node(nid,
                  label=label,
@@ -206,7 +233,11 @@ def generate_genogram_dot(members: list,
                  fillcolor=fillcolor,
                  color=color,
                  penwidth=penwidth,
-                 peripheries=peripheries)
+                 peripheries=peripheries,
+                 xlabel=xlabel,
+                 fontsize="10" if sex == "G" else "14",
+                 width="0.3" if "MORTINATO" in status else "0.75",
+                 height="0.3" if "MORTINATO" in status else "0.75")
 
         nodes_info[nid] = {
             "level": level,
@@ -263,15 +294,58 @@ def generate_genogram_dot(members: list,
             edge_style = "solid"
             edge_label = ""
 
-        dot.edge(jefe_id,   union_id, arrowhead="none",
+        # Forzar Hombre a la izquierda y Mujer a la derecha
+        sex_j = nodes_info[jefe_id]["sex"]
+        sex_p = nodes_info[pareja_id]["sex"]
+        
+        left_node = jefe_id
+        right_node = pareja_id
+        if sex_j == "F" and sex_p == "M":
+            left_node = pareja_id
+            right_node = jefe_id
+            
+        # Añadir un enlace invisible para forzar el ordenamiento
+        with dot.subgraph() as s:
+            s.attr(rank="same")
+            s.edge(left_node, right_node, style="invis", weight="100")
+
+        dot.edge(left_node, union_id, arrowhead="none",
                  color=EDGE_UNION, penwidth="2", style=edge_style)
-        dot.edge(pareja_id, union_id, arrowhead="none",
+        dot.edge(right_node, union_id, arrowhead="none",
                  color=EDGE_UNION, penwidth="2", style=edge_style,
                  label=edge_label, fontsize="12", fontcolor="#C53030")
 
     elif jefe_id:
-        # Monoparental: el jefe es el punto de descendencia
-        union_id = jefe_id
+        # Check if Viudo/a to add ghost node
+        is_viudo = False
+        for m in members:
+            p = str(m.get("Parentesco", "")).upper()
+            if "JEFE" in p and "VIUD" in str(m.get("E. Civil", "")).upper():
+                is_viudo = True
+                break
+                
+        if is_viudo:
+            ghost_id = "ghost_viudo"
+            dot.node(ghost_id, label="X", shape="ellipse" if nodes_info[jefe_id]["sex"] == "M" else "box", 
+                     style="dashed", color=EDGE_COLOR, fillcolor=FILL_DECEASED)
+            union_id = "union_central"
+            dot.node(union_id, label="", shape="point", width="0.08", height="0.08", style="filled", fillcolor=UNION_COLOR)
+            
+            left_n = jefe_id
+            right_n = ghost_id
+            if nodes_info[jefe_id]["sex"] == "F":
+                left_n = ghost_id
+                right_n = jefe_id
+                
+            with dot.subgraph() as s:
+                s.attr(rank="same")
+                s.edge(left_n, right_n, style="invis", weight="100")
+                
+            dot.edge(left_n, union_id, arrowhead="none", color=EDGE_UNION, penwidth="2", style="solid")
+            dot.edge(right_n, union_id, arrowhead="none", color=EDGE_UNION, penwidth="2", style="solid")
+        else:
+            # Monoparental: el jefe es el punto de descendencia
+            union_id = jefe_id
 
     # ── 5. HIJOS (nivel 4) ────────────────────────────────────────────────────
     # Guía: "Los hijos se sitúan de izquierda a derecha desde el mayor al más joven."
@@ -317,8 +391,13 @@ def generate_genogram_dot(members: list,
                         continue
             
             # Hijo estándar
-            relacion = nodes_info[nid1]["parentesco"]
-            estilo = "dashed" if "ADOP" in relacion else "solid"
+            relacion = nodes_info[nid1]["parentesco"].upper()
+            estilo = "solid"
+            if "ADOP" in relacion:
+                estilo = "dashed"
+            elif "ACOGIDA" in relacion or "FOSTER" in relacion:
+                estilo = "dotted"
+                
             dot.edge(target_for_hijos, nid1,
                      arrowhead="none", color=EDGE_COLOR,
                      penwidth="1.5", style=estilo)
@@ -335,8 +414,8 @@ def generate_genogram_dot(members: list,
     # ── 7. ASCENDENCIA Y COLATERALES: Abuelos → Padres → Generación central ───
     abuelos_ids = levels[1]
     padres_ids  = levels[2]
-    # Colaterales (hermanos, otros en nivel 3 que no son el tronco)
-    colaterales_ids = [nid for nid in levels[3] if nid != jefe_id and nid != pareja_id]
+    # Colaterales (Solo hermanos, evitamos conectar a "Otros familiares")
+    colaterales_ids = [nid for nid in levels[3] if nid != jefe_id and nid != pareja_id and "HERMAN" in nodes_info[nid]["parentesco"]]
 
     # Abuelos → apuntan a los padres o al jefe si no hay padres
     if abuelos_ids:
@@ -362,6 +441,16 @@ def generate_genogram_dot(members: list,
             # constraint="false" evita que rompan el nivel horizontal
             dot.edge(jefe_id, c, arrowhead="none", color=EDGE_COLOR,
                      penwidth="1.5", style="dotted", constraint="false")
+
+    # ── 7.5 DELIMITACIÓN DE HOGAR (CLUSTER) ───────────────────────────────────
+    # Todos los miembros de members se asumen bajo el mismo techo.
+    # Graphviz dibujará un recuadro punteado agrupándolos (cluster_hogar).
+    with dot.subgraph(name="cluster_hogar") as hogar:
+        hogar.attr(style="dotted", color="#4A5568", penwidth="2", 
+                   label="Límite del Hogar", fontcolor="#4A5568", fontsize="12",
+                   margin="20")
+        for nid in nodes_info.keys():
+            hogar.node(nid)
 
     # ── 8. CADENA DE NIVEL INVISIBLE (evita que Graphviz colapse los ranks) ───
     last_anchor = None

@@ -1776,6 +1776,38 @@ def render_family_fragment():
     if dupe_list:
         st.warning("⚠️ **Alerta de Duplicidad detectada:**\n\n" + "\n".join(dupe_list))
 
+    # --- Validaciones Clínicas Genograma ---
+    jefe_row = None
+    pareja_row = None
+    
+    for idx, row in edited_family.iterrows():
+        p = str(row.get("Parentesco", "")).upper()
+        if "JEFE" in p:
+            jefe_row = row
+        elif any(x in p for x in ["CÓNYUGE", "CONYUGUE", "PAREJA", "CONVIV"]):
+            pareja_row = row
+            
+    if jefe_row is not None and pareja_row is not None:
+        # Validación de E. Civil
+        ec_jefe = str(jefe_row.get("E. Civil", "")).strip()
+        ec_pareja = str(pareja_row.get("E. Civil", "")).strip()
+        # Considerar diferencias significativas
+        if ec_jefe and ec_pareja and ec_jefe != ec_pareja:
+            st.warning(f"⚠️ **Inconsistencia de Estado Civil:** El Jefe de Hogar está como '{ec_jefe}' y la Pareja como '{ec_pareja}'. Se sugiere unificar este dato para evitar cruces en el genograma. Por defecto se graficará como convivencia (línea punteada).")
+            
+        # Validación de Diferencia de Edad
+        try:
+            fn_jefe = str(jefe_row.get("F. Nac", "")).strip()
+            fn_pareja = str(pareja_row.get("F. Nac", "")).strip()
+            if fn_jefe and fn_pareja:
+                y_jefe = int(fn_jefe.split("/")[-1]) if "/" in fn_jefe else int(fn_jefe[:4])
+                y_pareja = int(fn_pareja.split("/")[-1]) if "/" in fn_pareja else int(fn_pareja[:4])
+                diff = abs(y_jefe - y_pareja)
+                if diff > 25:
+                    st.warning(f"⚠️ **Alerta Generacional:** Existe una diferencia de {diff} años entre el Jefe de Hogar y su Cónyuge/Pareja. Verifique si el parentesco de esta persona no debería ser 'Padre/Madre' para mantener los niveles generacionales correctos.")
+        except Exception:
+            pass
+
 @st.fragment
 def render_plan_fragment():
     _df_plan = _fmt_date_cols(st.session_state.intervention_plan.copy(), ["Fecha Prog", "Fecha Real", "F. Seguimiento"])
