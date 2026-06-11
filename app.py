@@ -1937,40 +1937,41 @@ def main():
         with st.sidebar:
             st.markdown("---")
             st.markdown("🛠️ **Zona de Pruebas (Simulación)**")
-            perfiles_base = ["Original", "Jefe Sector Sol", "Jefe Sector Luna", "Encargado/a Postas", "Equipo Sector Sol", "Equipo Sector Luna"]
+            opciones_simulacion = [
+                "Original",
+                "MAIS",
+                "Programa Cardiovascular",
+                "Jefatura Sector Sol",
+                "Jefatura Sector Luna",
+                "Equipo de Sector Sol",
+                "Equipo de Sector Luna",
+                "Postas Salud Rural",
+                "Programa Dependencia Severa",
+                "ECICEP"
+            ]
             sim_profile = st.selectbox(
-                "Simular Perfil:",
-                perfiles_base + ["Encargado/a de Programa"],
+                "Simular Perfil (Programa/Unidad):",
+                opciones_simulacion,
                 index=0,
                 key="sim_profile_selector"
             )
             
-            sim_program = None
-            if sim_profile == "Encargado/a de Programa":
-                sim_program = st.selectbox("Seleccionar Programa:", PROGRAMA_OPTIONS, key="sim_program_selector")
-            
             if sim_profile != "Original":
                 # Al simular, degradamos el 'rol' para que los filtros RBAC se activen
                 st.session_state.user_info['rol'] = "usuario" 
+                st.session_state.user_info['Programa/Unidad'] = sim_profile
                 
-                if sim_profile == "Jefe Sector Sol":
-                    st.session_state.user_info['cargo'] = "Jefe Sector Sol"
-                    st.session_state.user_info['Programa/Unidad'] = "Sector Sol"
-                elif sim_profile == "Jefe Sector Luna":
-                    st.session_state.user_info['cargo'] = "Jefe Sector Luna"
-                    st.session_state.user_info['Programa/Unidad'] = "Sector Luna"
-                elif sim_profile == "Encargado/a Postas":
-                    st.session_state.user_info['cargo'] = "Encargado/a Postas"
-                    st.session_state.user_info['Programa/Unidad'] = "Postas Salud Rural"
-                elif sim_profile == "Equipo Sector Sol":
+                # Asignamos el 'cargo' en función del perfil para que pasen las validaciones
+                if "Jefatura" in sim_profile:
+                    st.session_state.user_info['cargo'] = "Jefe de Sector"
+                elif "Equipo" in sim_profile:
                     st.session_state.user_info['cargo'] = "Equipo de Sector"
-                    st.session_state.user_info['Programa/Unidad'] = "Equipo de Sector Sol"
-                elif sim_profile == "Equipo Sector Luna":
-                    st.session_state.user_info['cargo'] = "Equipo de Sector"
-                    st.session_state.user_info['Programa/Unidad'] = "Equipo de Sector Luna"
-                elif sim_profile == "Encargado/a de Programa" and sim_program:
-                    st.session_state.user_info['cargo'] = f"Encargado/a {sim_program}"
-                    st.session_state.user_info['Programa/Unidad'] = sim_program
+                elif "Postas" in sim_profile:
+                    st.session_state.user_info['cargo'] = "Encargado de Postas"
+                elif "MAIS" in sim_profile:
+                    st.session_state.user_info['cargo'] = "Encargado MAIS"
+                else:
+                    st.session_state.user_info['cargo'] = "Encargado de Programa"
                 
                 st.warning(f"Simulando: **{sim_profile}** (Privilegios restringidos)")
                 # Forzar recarga de datos con el nuevo filtro RBAC
