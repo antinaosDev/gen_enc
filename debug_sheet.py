@@ -4,10 +4,9 @@ import toml
 import os
 
 # --- CONFIG ---
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1JjYw2W6c-N2swGPuIHbz0CU7aDhh1pA-6VH1WuXV41w/edit"
-
 # Leer credenciales
 secrets = toml.load("d:/PROYECTOS PROGRAMACIÓN/ANTIGRAVITY_PROJECTS/encuesta_riesgo/.streamlit/secrets.toml")
+SHEET_URL = secrets["SHEET_URL"]
 creds_dict = secrets["gcp_service_account"]
 
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]

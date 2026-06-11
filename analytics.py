@@ -117,7 +117,7 @@ def load_evaluaciones_df(est_filter=None):
             scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
             creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
             client = gspread.authorize(creds)
-            SHEET_URL = "https://docs.google.com/spreadsheets/d/1JjYw2W6c-N2swGPuIHbz0CU7aDhh1pA-6VH1WuXV41w/edit"
+            SHEET_URL = st.secrets["SHEET_URL"]
             sh = client.open_by_url(SHEET_URL)
             data = sh.worksheet("Evaluaciones").get_all_values()
             if len(data) > 1:

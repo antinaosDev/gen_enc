@@ -6,7 +6,8 @@ import toml
 from datetime import date
 
 # Cargar secretos directamente del archivo de la app
-secrets = toml.load("d:/PROYECTOS PROGRAMACIÓN/ANTIGRAVITY_PROJECTS/encuesta_riesgo/.streamlit/secrets.toml")["gcp_service_account"]
+all_secrets = toml.load("d:/PROYECTOS PROGRAMACIÓN/ANTIGRAVITY_PROJECTS/encuesta_riesgo/.streamlit/secrets.toml")
+secrets = all_secrets["gcp_service_account"]
 
 creds_dict = {
     "type": secrets["type"],
@@ -25,7 +26,7 @@ creds_dict = {
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
-sh = client.open_by_url("https://docs.google.com/spreadsheets/d/1JjYw2W6c-N2swGPuIHbz0CU7aDhh1pA-6VH1WuXV41w/edit")
+sh = client.open_by_url(all_secrets["SHEET_URL"])
 ws = sh.worksheet("Evaluaciones")
 
 # Definir risk_keys exactas de app.py

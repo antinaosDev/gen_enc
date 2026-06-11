@@ -245,7 +245,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- CONSTANTES ---
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1JjYw2W6c-N2swGPuIHbz0CU7aDhh1pA-6VH1WuXV41w/edit"
+SHEET_URL = st.secrets["SHEET_URL"]
 
 PARENTESCO_OPTIONS = [
     "Jefe/a de Hogar",
