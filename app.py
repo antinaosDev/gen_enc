@@ -2616,31 +2616,79 @@ def main():
         st.stop()
 
     if vista == "📖 Guía de Usuario":
-        st.markdown("## 📖 Guía de Usuario y Criterios Clínicos")
-        try:
-            with open("MANUAL_USUARIO_COMPLETO.md", "r", encoding="utf-8") as f:
-                st.markdown(f.read())
-        except Exception as e:
-            st.info(f"No se pudo cargar el manual: {e}")
-            
-        st.markdown("---")
-        st.markdown("### 🧬 Criterios para el Genograma y Ecomapa")
         st.markdown("""
-        **Reglas para estructurar correctamente a las familias:**
-        1. **Jefe/a de Hogar y Pareja**: Se debe registrar claramente al Jefe de Hogar. Si tiene pareja, se selecciona el tipo de unión correcta en el campo 'Tipo de Unión (Pareja Principal)' (Casados = línea continua, Convivencia = punteada, Separados = con barra, etc.).
-        2. **Identidad de Género**: El género seleccionado determina la figura (Masculino = Cuadrado, Femenino = Círculo, Géneros Inclusivos = Rombo ◇, Gestación/Aborto = Triángulo △).
-        3. **Estado Civil Especial**: Si en Identidad de género se selecciona 'Gestación/Aborto', el Estado Civil permite definir: vacío (en curso), 'Espontáneo' (Triángulo relleno), 'Provocado' (Triángulo con X).
-        4. **Relaciones Familiares (Ecomapa)**: En la pestaña de Análisis se pueden trazar los flujos de energía (Fuerte, Débil, Estresante) hacia los diferentes sistemas externos (CESFAM, Trabajo, etc.).
-        """)
+            <div style="background: #1F3864; padding: 20px; border-radius: 12px; margin-bottom: 24px;">
+                <h2 style="color: white; margin: 0; font-family: 'Inter', sans-serif;">📖 Centro de Ayuda y Criterios Clínicos</h2>
+                <p style="color: #cbd5e1; margin: 5px 0 0 0; font-size: 14px;">Documentación oficial de la Plataforma ERBI Analitycs</p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        tab_manual, tab_criterios = st.tabs(["📘 Manual de Usuario", "🧬 Criterios Genograma y Ecomapa"])
+        
+        with tab_manual:
+            try:
+                with open("MANUAL_USUARIO_COMPLETO.md", "r", encoding="utf-8") as f:
+                    st.markdown(f.read())
+            except Exception as e:
+                st.info(f"No se pudo cargar el manual: {e}")
+                
+        with tab_criterios:
+            st.markdown("""
+            <div style="background: white; padding: 25px; border-radius: 10px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                <h3 style="color: #0f172a; margin-top: 0; border-bottom: 2px solid #2563eb; padding-bottom: 10px;">Reglas para estructurar correctamente a las familias</h3>
+                
+                <div style="margin-top: 20px;">
+                    <h4 style="color: #1e3a8a;">1. Jefe/a de Hogar y Pareja</h4>
+                    <p style="color: #475569;">Se debe registrar claramente al Jefe de Hogar. Si tiene pareja, se selecciona el tipo de unión correcta en el campo 'Tipo de Unión (Pareja Principal)' (Casados = línea continua, Convivencia = punteada, Separados = con barra, etc.).</p>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <h4 style="color: #1e3a8a;">2. Identidad de Género</h4>
+                    <p style="color: #475569;">El género seleccionado determina la figura geométrica dibujada:</p>
+                    <ul style="color: #475569;">
+                        <li><strong>Masculino</strong> = Cuadrado</li>
+                        <li><strong>Femenino</strong> = Círculo</li>
+                        <li><strong>Géneros Inclusivos</strong> (No binario, Transgénero, etc.) = Rombo ◇</li>
+                        <li><strong>Gestación/Aborto</strong> = Triángulo △</li>
+                    </ul>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <h4 style="color: #1e3a8a;">3. Estado Civil Especial</h4>
+                    <p style="color: #475569;">Si en Identidad de género se selecciona 'Gestación/Aborto', el Estado Civil permite definir:</p>
+                    <ul style="color: #475569;">
+                        <li><em>(Vacío o en curso)</em> = Triángulo normal</li>
+                        <li><strong>Espontáneo</strong> = Triángulo con X en el interior</li>
+                        <li><strong>Provocado</strong> = Triángulo completamente relleno</li>
+                    </ul>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <h4 style="color: #1e3a8a;">4. Relaciones Familiares (Ecomapa)</h4>
+                    <p style="color: #475569;">En la pestaña de <em>Análisis Familiar</em> se pueden trazar los flujos de energía hacia los diferentes sistemas externos (CESFAM, Trabajo, etc.). Las opciones son: <strong>Fuerte</strong>, <strong>Débil</strong> o <strong>Estresante</strong>.</p>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
         st.stop()
 
     if vista == "🛠️ Herramientas":
-        st.markdown("## 🛠️ Herramientas Auxiliares")
-        st.markdown("---")
+        st.markdown("""
+            <div style="background: #1F3864; padding: 20px; border-radius: 12px; margin-bottom: 24px;">
+                <h2 style="color: white; margin: 0; font-family: 'Inter', sans-serif;">🛠️ Herramientas Auxiliares</h2>
+                <p style="color: #cbd5e1; margin: 5px 0 0 0; font-size: 14px;">Utilidades de apoyo para el trabajo clínico y territorial</p>
+            </div>
+        """, unsafe_allow_html=True)
         
-        col1, col2 = st.columns(2)
+        col1, col2 = st.columns([1, 1.5])
         with col1:
-            st.markdown("### 🧮 Calculadora de Edad Exacta")
+            st.markdown("""
+                <div style="background: white; padding: 15px; border-radius: 10px; border-top: 4px solid #2563eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                    <h3 style="color: #1e293b; margin-top: 0; font-size: 1.1rem;">🧮 Calculadora de Edad Exacta</h3>
+                </div>
+            """, unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            
             fecha_nac = st.date_input("Ingrese la Fecha de Nacimiento:", min_value=date(1900, 1, 1), max_value=date.today())
             if fecha_nac:
                 hoy = date.today()
@@ -2657,23 +2705,32 @@ def main():
                     anos -= 1
                     meses += 12
                 
-                st.success(f"**Edad calculada:** {anos} años, {meses} meses, {dias} días.")
+                st.markdown(f"""
+                <div style="background-color: #dcfce7; border-left: 5px solid #22c55e; padding: 16px; border-radius: 8px; margin-top: 15px;">
+                    <span style="color: #166534; font-weight: bold; font-size: 1.1rem;">✅ Edad calculada:</span><br>
+                    <span style="color: #15803d; font-size: 1.2rem;">{anos} años, {meses} meses, {dias} días</span>
+                </div>
+                """, unsafe_allow_html=True)
                 
         with col2:
-            st.markdown("### 🗺️ Mapas de Sectorización")
-            st.info("Visualiza los mapas a continuación. Puedes hacer clic en las flechas de la esquina superior derecha de la imagen para ver a pantalla completa.")
+            st.markdown("""
+                <div style="background: white; padding: 15px; border-radius: 10px; border-top: 4px solid #0f172a; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 20px;">
+                    <h3 style="color: #1e293b; margin-top: 0; font-size: 1.1rem;">🗺️ Mapas de Sectorización</h3>
+                    <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 0;">Puede ampliar los mapas haciendo clic en las flechas de la esquina superior derecha.</p>
+                </div>
+            """, unsafe_allow_html=True)
             
-        st.markdown("#### Cartografía Salud Cholchol Ampliada")
-        try:
-            st.image("Cartografia_salud_cholchol_ampliada.png", use_container_width=True)
-        except Exception as e:
-            st.error(f"No se pudo cargar Cartografia_salud_cholchol_ampliada.png: {e}")
+            with st.expander("📍 Cartografía Salud Cholchol Ampliada", expanded=True):
+                try:
+                    st.image("Cartografia_salud_cholchol_ampliada.png", use_container_width=True)
+                except Exception as e:
+                    st.error(f"No se pudo cargar Cartografia_salud_cholchol_ampliada.png: {e}")
             
-        st.markdown("#### Mapa Densidad Población")
-        try:
-            st.image("mapa_dens_pob_salud_cholchol.png", use_container_width=True)
-        except Exception as e:
-            st.error(f"No se pudo cargar mapa_dens_pob_salud_cholchol.png: {e}")
+            with st.expander("📊 Mapa Densidad de Población", expanded=False):
+                try:
+                    st.image("mapa_dens_pob_salud_cholchol.png", use_container_width=True)
+                except Exception as e:
+                    st.error(f"No se pudo cargar mapa_dens_pob_salud_cholchol.png: {e}")
             
         st.stop()
 

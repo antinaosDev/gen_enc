@@ -1,5 +1,4 @@
-# 📘 MANUAL DE USUARIO
-# Plataforma Integral de Salud Familiar MAIS
+# Plataforma Integral de Salud Familiar ERBI Analitycs
 ### Sistema de Evaluación de Riesgo Biopsicosocial Familiar — CESFAM Cholchol
 
 > **Versión:** 3.0 | **Fecha:** Marzo 2026  
@@ -33,7 +32,7 @@
 
 ## 1. Introducción y Propósito
 
-La **Plataforma MAIS** (Modelo de Atención Integral de Salud) es una herramienta digital centralizada diseñada para apoyar a los equipos de Atención Primaria en Salud (APS) en la gestión sistemática del riesgo familiar biopsicosocial. Permite:
+La **Plataforma ERBI Analitycs** (Evaluación de Riesgo Biopsicosocial Familiar) es una herramienta digital centralizada diseñada para apoyar a los equipos de Atención Primaria en Salud (APS) en la gestión sistemática del riesgo familiar biopsicosocial. Permite:
 
 - **Registrar y evaluar** el riesgo de familias bajo control en su sector territorial (Sol o Luna).
 - **Calcular automáticamente** el nivel de riesgo (Alto, Medio, Bajo) sin necesidad de sumar puntajes a mano.
@@ -497,7 +496,7 @@ Cuando una familia completa su ciclo de intervención y debe ser dada de baja de
 
 | Tipo de Egreso | Descripción |
 |----------------|-------------|
-| **Alta** | La familia superó el riesgo y累cumplió sus objetivos |
+| **Alta** | La familia superó el riesgo y cumplió sus objetivos |
 | **Traslado** | La familia se trasladó a otro sector o establecimiento |
 | **Derivación** | La familia fue derivada a un nivel de mayor complejidad |
 | **Abandono** | La familia abandonó el programa sin completarlo |
@@ -640,10 +639,7 @@ PDF con los campos vacíos para llenar a mano en visitas domiciliarias sin inter
 El **REM-P7** es el Resumen Estadístico Mensual oficial del MINSAL para el componente "Familias en Control Salud Familiar". Reporta el estado de las familias evaluadas según nivel de riesgo, sector e intervención.
 
 ### 15.2 ¿Quién puede generar el REM-P7?
-Solo tienen acceso los siguientes roles:
-- Programador/Desarrollador
-- Encargado/a MAIS
-- Jefe/a de Sector
+Solo tienen acceso los roles autorizados en la configuración de la plataforma.
 
 ### 15.3 Cómo generar el REM-P7
 
@@ -740,7 +736,7 @@ R: Sí. Cargue la evaluación usando su ID en la búsqueda directa y modifique l
 R: El sistema aplica control de acceso por sector (RBAC). Usted solo puede ver las evaluaciones de su sector o unidad asignada. Esto es intencional para proteger la confidencialidad de la información.
 
 **P: ¿Qué pasa si el internet se cae mientras guardo?**
-R: Si la conexión falla durante el guardado, el sistema mostrará un mensaje de error. Los datos en pantalla NO se pierden, permanecen visibles. Reinténtelo cuando se restablezca la conexión.
+R: Al ser una aplicación online, si se cae el internet puede caerse la página y perderse todo lo que no haya sido guardado. Procure guardar constantemente y asegurarse de tener una conexión estable antes de guardar el estudio.
 
 **P: ¿El genograma se actualiza automáticamente?**
 R: Sí. Cada vez que modifica datos en la tabla del Grupo Familiar, el genograma se regenera automáticamente en tiempo real.
@@ -771,5 +767,4 @@ Para problemas técnicos, dudas o solicitudes de nuevas funcionalidades:
 
 ---
 
-*Manual de Usuario v3.0 — Plataforma MAIS — CESFAM Cholchol*  
-*Generado con la asistencia tecnológica del ecosistema Antigravity*
+*Manual de Usuario v3.0 — Plataforma ERBI Analitycs — CESFAM Cholchol*
