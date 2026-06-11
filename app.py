@@ -2288,7 +2288,7 @@ def main():
     # --- SELECTOR DE VISTA ---
     vista = st.radio(
         "Vista:",
-        ["📋 Ficha Familiar", "📊 Dashboard Analítico", "🔍 Análisis Familiar"],
+        ["📋 Ficha Familiar", "📊 Dashboard Analítico", "🔍 Análisis Familiar", "📖 Guía de Usuario", "🛠️ Herramientas"],
         horizontal=True,
         label_visibility="collapsed",
         key="vista_selector"
@@ -2613,6 +2613,68 @@ def main():
         with col_s2:
             st.info(f"Estudio consolidado de la Familia **{familia_val}** | ID: {eval_id}")
 
+        st.stop()
+
+    if vista == "📖 Guía de Usuario":
+        st.markdown("## 📖 Guía de Usuario y Criterios Clínicos")
+        try:
+            with open("MANUAL_USUARIO_COMPLETO.md", "r", encoding="utf-8") as f:
+                st.markdown(f.read())
+        except Exception as e:
+            st.info(f"No se pudo cargar el manual: {e}")
+            
+        st.markdown("---")
+        st.markdown("### 🧬 Criterios para el Genograma y Ecomapa")
+        st.markdown("""
+        **Reglas para estructurar correctamente a las familias:**
+        1. **Jefe/a de Hogar y Pareja**: Se debe registrar claramente al Jefe de Hogar. Si tiene pareja, se selecciona el tipo de unión correcta en el campo 'Tipo de Unión (Pareja Principal)' (Casados = línea continua, Convivencia = punteada, Separados = con barra, etc.).
+        2. **Identidad de Género**: El género seleccionado determina la figura (Masculino = Cuadrado, Femenino = Círculo, Géneros Inclusivos = Rombo ◇, Gestación/Aborto = Triángulo △).
+        3. **Estado Civil Especial**: Si en Identidad de género se selecciona 'Gestación/Aborto', el Estado Civil permite definir: vacío (en curso), 'Espontáneo' (Triángulo relleno), 'Provocado' (Triángulo con X).
+        4. **Relaciones Familiares (Ecomapa)**: En la pestaña de Análisis se pueden trazar los flujos de energía (Fuerte, Débil, Estresante) hacia los diferentes sistemas externos (CESFAM, Trabajo, etc.).
+        """)
+        st.stop()
+
+    if vista == "🛠️ Herramientas":
+        st.markdown("## 🛠️ Herramientas Auxiliares")
+        st.markdown("---")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("### 🧮 Calculadora de Edad Exacta")
+            fecha_nac = st.date_input("Ingrese la Fecha de Nacimiento:", min_value=date(1900, 1, 1), max_value=date.today())
+            if fecha_nac:
+                hoy = date.today()
+                anos = hoy.year - fecha_nac.year
+                meses = hoy.month - fecha_nac.month
+                dias = hoy.day - fecha_nac.day
+                if dias < 0:
+                    meses -= 1
+                    import calendar
+                    mes_ant = hoy.month - 1 if hoy.month > 1 else 12
+                    ano_ant = hoy.year if hoy.month > 1 else hoy.year - 1
+                    dias += calendar.monthrange(ano_ant, mes_ant)[1]
+                if meses < 0:
+                    anos -= 1
+                    meses += 12
+                
+                st.success(f"**Edad calculada:** {anos} años, {meses} meses, {dias} días.")
+                
+        with col2:
+            st.markdown("### 🗺️ Mapas de Sectorización")
+            st.info("Visualiza los mapas a continuación. Puedes hacer clic en las flechas de la esquina superior derecha de la imagen para ver a pantalla completa.")
+            
+        st.markdown("#### Cartografía Salud Cholchol Ampliada")
+        try:
+            st.image("Cartografia_salud_cholchol_ampliada.png", use_container_width=True)
+        except Exception as e:
+            st.error(f"No se pudo cargar Cartografia_salud_cholchol_ampliada.png: {e}")
+            
+        st.markdown("#### Mapa Densidad Población")
+        try:
+            st.image("mapa_dens_pob_salud_cholchol.png", use_container_width=True)
+        except Exception as e:
+            st.error(f"No se pudo cargar mapa_dens_pob_salud_cholchol.png: {e}")
+            
         st.stop()
 
     st.markdown("<br>", unsafe_allow_html=True)
