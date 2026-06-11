@@ -148,7 +148,10 @@ def load_evaluaciones_df(est_filter=None):
             full_context = f"{user_unit_clean} {user_cargo_clean}"
             
             if 'encargado' in user_cargo_clean and 'postas' in user_cargo_clean:
-                df = df[df['Sector'].str.strip().str.lower() == 'luna']
+                if 'Establecimiento' in df.columns:
+                    df = df[df['Establecimiento'].str.strip().str.lower() != 'cesfam cholchol']
+                else:
+                    df = df[df['Sector'].str.strip().str.lower() == 'luna']
             elif re.search(r'\bsol\b', full_context):
                 df = df[df['Sector'].str.strip().str.lower() == 'sol']
             elif re.search(r'\bluna\b', full_context) or 'postas' in full_context:
@@ -1530,8 +1533,8 @@ def render_analytics():
             else: st.caption("No hay tipos de egreso registrados")
 
     # ── EXPORTAR PDF (Exclusivo Programador) ─────────────────────────────────
-    real_role = st.session_state.get('real_role', '')
-    if real_role == 'programador':
+    current_role = str(st.session_state.get('user_info', {}).get('rol', '')).lower()
+    if current_role == 'programador':
         st.markdown("---")
         st.markdown(
             "<div style='background:linear-gradient(90deg,#1F3864,#2E75B6);padding:12px 18px;"

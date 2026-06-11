@@ -1937,12 +1937,17 @@ def main():
         with st.sidebar:
             st.markdown("---")
             st.markdown("🛠️ **Zona de Pruebas (Simulación)**")
+            perfiles_base = ["Original", "Jefe Sector Sol", "Jefe Sector Luna", "Encargado/a Postas", "Equipo Sector Sol", "Equipo Sector Luna"]
             sim_profile = st.selectbox(
                 "Simular Perfil:",
-                ["Original", "Jefe Sector Sol", "Jefe Sector Luna", "Encargado/a Postas", "Equipo Sector Sol", "Equipo Sector Luna"],
+                perfiles_base + ["Encargado/a de Programa"],
                 index=0,
                 key="sim_profile_selector"
             )
+            
+            sim_program = None
+            if sim_profile == "Encargado/a de Programa":
+                sim_program = st.selectbox("Seleccionar Programa:", PROGRAMA_OPTIONS, key="sim_program_selector")
             
             if sim_profile != "Original":
                 # Al simular, degradamos el 'rol' para que los filtros RBAC se activen
@@ -1963,6 +1968,9 @@ def main():
                 elif sim_profile == "Equipo Sector Luna":
                     st.session_state.user_info['cargo'] = "Equipo de Sector"
                     st.session_state.user_info['Programa/Unidad'] = "Equipo de Sector Luna"
+                elif sim_profile == "Encargado/a de Programa" and sim_program:
+                    st.session_state.user_info['cargo'] = f"Encargado/a {sim_program}"
+                    st.session_state.user_info['Programa/Unidad'] = sim_program
                 
                 st.warning(f"Simulando: **{sim_profile}** (Privilegios restringidos)")
                 # Forzar recarga de datos con el nuevo filtro RBAC
