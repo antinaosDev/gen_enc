@@ -2618,8 +2618,8 @@ def main():
     if vista == "📖 Guía de Usuario":
         st.markdown("""
             <div style="background: #1F3864; padding: 20px; border-radius: 12px; margin-bottom: 24px;">
-                <h2 style="color: white; margin: 0; font-family: 'Inter', sans-serif;">📖 Centro de Ayuda y Criterios Clínicos</h2>
-                <p style="color: #cbd5e1; margin: 5px 0 0 0; font-size: 14px;">Documentación oficial de la Plataforma ERBI Analitycs</p>
+                <h2 style="color: white !important; margin: 0; font-family: 'Inter', sans-serif;">📖 Centro de Ayuda y Criterios Clínicos</h2>
+                <p style="color: #cbd5e1 !important; margin: 5px 0 0 0; font-size: 14px;">Documentación oficial de la Plataforma ERBI Analitycs</p>
             </div>
         """, unsafe_allow_html=True)
         
@@ -2675,8 +2675,8 @@ def main():
     if vista == "🛠️ Herramientas":
         st.markdown("""
             <div style="background: #1F3864; padding: 20px; border-radius: 12px; margin-bottom: 24px;">
-                <h2 style="color: white; margin: 0; font-family: 'Inter', sans-serif;">🛠️ Herramientas Auxiliares</h2>
-                <p style="color: #cbd5e1; margin: 5px 0 0 0; font-size: 14px;">Utilidades de apoyo para el trabajo clínico y territorial</p>
+                <h2 style="color: white !important; margin: 0; font-family: 'Inter', sans-serif;">🛠️ Herramientas Auxiliares</h2>
+                <p style="color: #cbd5e1 !important; margin: 5px 0 0 0; font-size: 14px;">Utilidades de apoyo para el trabajo clínico y territorial</p>
             </div>
         """, unsafe_allow_html=True)
         
