@@ -1337,15 +1337,15 @@ def generate_dashboard_pdf(df):
 
 def render_analytics():
     """Renderiza el dashboard analítico completo en Streamlit."""
-    st.markdown("""
+    st.html("""
     <div style='background: linear-gradient(135deg,#1F3864,#2E75B6); padding:16px 20px;
                 border-radius:8px; margin-bottom:16px;'>
         <h2 style='color:white !important;margin:0;font-size:1.4rem;'>📊 Dashboard Analítico - Riesgo Familiar</h2>
-        <p style='color:#BDD7EE;margin:4px 0 0;font-size:0.85rem;'>
+        <p style='color:#BDD7EE !important;margin:4px 0 0;font-size:0.85rem;'>
             Datos en tiempo real del Google Sheet · Actualizar con el botón del sidebar
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     with st.spinner("Cargando datos del servidor..."):
         # Sincronizar con el filtro global de la app si existe

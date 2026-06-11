@@ -2616,12 +2616,12 @@ def main():
         st.stop()
 
     if vista == "📖 Guía de Usuario":
-        st.markdown("""
+        st.html("""
 <div style="background: #1F3864; padding: 20px; border-radius: 12px; margin-bottom: 24px;">
     <h2 style="color: white !important; margin: 0; font-family: 'Inter', sans-serif;">📖 Centro de Ayuda y Criterios Clínicos</h2>
     <p style="color: #cbd5e1 !important; margin: 5px 0 0 0; font-size: 14px;">Documentación oficial de la Plataforma ERBI Analitycs</p>
 </div>
-""", unsafe_allow_html=True)
+""")
         
         tab_manual, tab_criterios = st.tabs(["📘 Manual de Usuario", "🧬 Criterios Genograma y Ecomapa"])
         
@@ -2633,7 +2633,7 @@ def main():
                 st.info(f"No se pudo cargar el manual: {e}")
                 
         with tab_criterios:
-            st.markdown("""
+            st.html("""
 <div style="background: white; padding: 25px; border-radius: 10px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
     <h3 style="color: #0f172a; margin-top: 0; border-bottom: 2px solid #2563eb; padding-bottom: 10px;">Reglas para estructurar correctamente a las familias</h3>
     
@@ -2668,25 +2668,25 @@ def main():
         <p style="color: #475569;">En la pestaña de <em>Análisis Familiar</em> se pueden trazar los flujos de energía hacia los diferentes sistemas externos (CESFAM, Trabajo, etc.). Las opciones son: <strong>Fuerte</strong>, <strong>Débil</strong> o <strong>Estresante</strong>.</p>
     </div>
 </div>
-""", unsafe_allow_html=True)
+""")
             
         st.stop()
 
     if vista == "🛠️ Herramientas":
-        st.markdown("""
+        st.html("""
 <div style="background: #1F3864; padding: 20px; border-radius: 12px; margin-bottom: 24px;">
     <h2 style="color: white !important; margin: 0; font-family: 'Inter', sans-serif;">🛠️ Herramientas Auxiliares</h2>
     <p style="color: #cbd5e1 !important; margin: 5px 0 0 0; font-size: 14px;">Utilidades de apoyo para el trabajo clínico y territorial</p>
 </div>
-""", unsafe_allow_html=True)
+""")
         
         col1, col2 = st.columns([1, 1.5])
         with col1:
-            st.markdown("""
+            st.html("""
 <div style="background: white; padding: 15px; border-radius: 10px; border-top: 4px solid #2563eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
     <h3 style="color: #1e293b; margin-top: 0; font-size: 1.1rem;">🧮 Calculadora de Edad Exacta</h3>
 </div>
-""", unsafe_allow_html=True)
+""")
             st.markdown("<br>", unsafe_allow_html=True)
             
             fecha_nac = st.date_input("Ingrese la Fecha de Nacimiento:", min_value=date(1900, 1, 1), max_value=date.today())
@@ -2705,20 +2705,20 @@ def main():
                     anos -= 1
                     meses += 12
                 
-                st.markdown(f"""
+                st.html(f"""
 <div style="background-color: #dcfce7; border-left: 5px solid #22c55e; padding: 16px; border-radius: 8px; margin-top: 15px;">
     <span style="color: #166534; font-weight: bold; font-size: 1.1rem;">✅ Edad calculada:</span><br>
     <span style="color: #15803d; font-size: 1.2rem;">{anos} años, {meses} meses, {dias} días</span>
 </div>
-""", unsafe_allow_html=True)
+""")
                 
         with col2:
-            st.markdown("""
+            st.html("""
 <div style="background: white; padding: 15px; border-radius: 10px; border-top: 4px solid #0f172a; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 20px;">
     <h3 style="color: #1e293b; margin-top: 0; font-size: 1.1rem;">🗺️ Mapas de Sectorización</h3>
     <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 0;">Puede ampliar los mapas haciendo clic en las flechas de la esquina superior derecha.</p>
 </div>
-""", unsafe_allow_html=True)
+""")
             
             with st.expander("📍 Cartografía Salud Cholchol Ampliada", expanded=True):
                 try:
