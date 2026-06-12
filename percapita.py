@@ -5,7 +5,7 @@ import datetime
 import streamlit as st
 import json
 
-PERCAPITA_SHEET_ID = "1Sl2d3hov81oR3eYBHbOEXfsrnnLPobweXD2sjg1uOcc"
+PERCAPITA_SHEET_URL = st.secrets["PERCAPITA_SHEET_URL"]
 WORKSHEET_NAME = "percapita"
 
 def map_month_to_num(month_str):
@@ -29,7 +29,7 @@ def fetch_percapita_data():
         if not client:
             return None, "Error de conexión con Google Sheets."
         
-        spreadsheet = client.open_by_key(PERCAPITA_SHEET_ID)
+        spreadsheet = client.open_by_url(PERCAPITA_SHEET_URL)
         worksheet = spreadsheet.worksheet(WORKSHEET_NAME)
         
         all_data = worksheet.get_all_values()
@@ -40,7 +40,7 @@ def fetch_percapita_data():
         return df, None
     except gspread.exceptions.APIError as e:
         if e.response.status_code in [403, 404]:
-            return None, f"Acceso denegado a la planilla Percapita. Verifique que se ha compartido el libro '{PERCAPITA_SHEET_ID}' con el correo de la Service Account."
+            return None, f"Acceso denegado a la planilla Percapita. Verifique que se ha compartido el libro '{PERCAPITA_SHEET_URL}' con el correo de la Service Account."
         return None, f"Error API de Google: {e}"
     except gspread.exceptions.WorksheetNotFound:
         return None, f"No se encontró la hoja llamada '{WORKSHEET_NAME}'."
