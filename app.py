@@ -2737,10 +2737,15 @@ def main():
             
         u_cargo = str(st.session_state.user_info.get('cargo', '')).lower()
         u_rol = str(st.session_state.user_info.get('rol', '')).lower()
+        u_unidad = str(st.session_state.user_info.get('Programa/Unidad', '')).lower()
         
-        es_programador = 'programador' in u_rol or 'programador' in u_cargo
-        es_jefa_sol = ('jefatura' in u_rol or 'jefatura' in u_cargo) and ('sol' in u_rol or 'sol' in u_cargo)
-        es_jefa_luna = ('jefatura' in u_rol or 'jefatura' in u_cargo) and ('luna' in u_rol or 'luna' in u_cargo)
+        full_context = f"{u_rol} {u_cargo} {u_unidad}"
+        import re
+        
+        es_programador = 'programador' in full_context
+        es_jefatura = 'jefatura' in full_context or 'jefe' in full_context
+        es_jefa_sol = es_jefatura and (re.search(r'\bsol\b', full_context) is not None)
+        es_jefa_luna = es_jefatura and (re.search(r'\bluna\b', full_context) is not None)
         
         if not (es_programador or es_jefa_sol or es_jefa_luna):
             st.stop()
