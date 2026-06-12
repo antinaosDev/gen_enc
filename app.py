@@ -2497,10 +2497,6 @@ def main():
         col_s1, col_s2 = st.columns([1, 4])
         with col_s1:
             if st.button("💾 Guardar Estudio Completo", type="primary", width='stretch'):
-                if not st.session_state.get('tipo_union'):
-                    st.error("⚠️ Debe seleccionar el 'Tipo de Unión (Pareja Principal)' en la sección de Identificación.")
-                    st.stop()
-                
                 _es_registro_existente = True
                 with st.spinner("Persistiendo estudio en el historial..."):
                     # 1. Preparar datos para Hoja 1 (Evaluaciones)
@@ -3003,8 +2999,6 @@ def main():
         tipo_union = st.selectbox(
             "Tipo de Unión (Pareja Principal):",
             TIPO_UNION_OPTIONS,
-            index=None,
-            placeholder="Seleccione el Tipo de Unión",
             key="tipo_union",
             help="Define cómo se dibujará la línea de unión en el genograma (Guía Clínica)"
         )
