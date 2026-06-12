@@ -348,19 +348,19 @@ def export_percapita_dashboard_excel(df_cruzado, periodo_str, user_info):
     pie1.height = 8
     ws_dash.add_chart(pie1, "B12")
     
-    # Gráfico 2: Barras por Centro
-    bar2 = BarChart()
+    # Gráfico 2: Dona por Centro (Reemplazo de Barras para evitar error de renderizado)
+    from openpyxl.chart import DoughnutChart
+    pie2 = DoughnutChart()
+    labels2 = Reference(ws_data, min_col=4, min_row=2, max_row=r_data-1)
     data2 = Reference(ws_data, min_col=5, min_row=1, max_row=r_data-1)
-    cats2 = Reference(ws_data, min_col=4, min_row=2, max_row=r_data-1)
-    bar2.add_data(data2, titles_from_data=True)
-    bar2.set_categories(cats2)
-    bar2.title = "Integrantes Validados por Establecimiento"
-    bar2.x_axis.title = "Establecimiento"
-    bar2.y_axis.title = "Cantidad"
-    bar2.legend = None
-    bar2.width = 16
-    bar2.height = 8
-    ws_dash.add_chart(bar2, "F12")
+    pie2.add_data(data2, titles_from_data=True)
+    pie2.set_categories(labels2)
+    pie2.title = "Integrantes Validados por Establecimiento"
+    pie2.dataLabels = DataLabelList()
+    pie2.dataLabels.showPercent = True
+    pie2.width = 16
+    pie2.height = 8
+    ws_dash.add_chart(pie2, "F12")
 
     # Gráfico 3: Torta de Sector
     pie3 = PieChart()
