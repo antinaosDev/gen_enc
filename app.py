@@ -3551,7 +3551,6 @@ def main():
                                 eco_record = next((r for r in eco_records if str(r.get("ID Evaluación", "")) == id_evaluacion), None)
                                 
                                 if eco_record:
-                                    import json
                                     selected_systems = json.loads(eco_record.get("Sistemas JSON", "[]"))
                                     system_flows = json.loads(eco_record.get("Flujos JSON", "{}"))
                                 else:
