@@ -166,8 +166,8 @@ Para registrar una nueva familia en el sistema:
 | **Programa/Unidad** | Programa clínico al que pertenece (ej: MAIS, Salud Mental, Cardiovascular) | ✅ Sí |
 | **Evaluador** | Nombre del profesional que realiza la evaluación | ✅ Sí |
 | **Parentesco del Evaluador** | Relación del evaluador con la familia | ✅ Sí |
-| **Tipo de Unión Familiar** | Casados, Convivencia, Separados, Divorciados | Opcional |
-| **Pueblo Originario** | Pertenencia étnica según censo INE 2017 | Opcional |
+| **Tipo de Unión Familiar** | Casados, Convivencia, Separados, Divorciados | ✅ Sí |
+| **Pueblo Originario** | Pertenencia étnica según censo INE 2017 | ✅ Sí |
 | **Observaciones** | Notas adicionales relevantes | Opcional |
 
 ### 5.2 Validación del RUT

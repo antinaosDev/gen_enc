@@ -21,7 +21,8 @@ def render_family_fragment():
             "Pueblo Originario": st.column_config.SelectboxColumn(
                 "Etnia",
                 options=PUEBLO_ORIGINARIO_OPTIONS,
-                width="medium"
+                width="medium",
+                required=True
             ),
             "Nacionalidad": st.column_config.TextColumn("Nacionalidad", width="medium"),
             "E. Civil": st.column_config.SelectboxColumn(
