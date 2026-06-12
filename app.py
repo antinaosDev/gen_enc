@@ -2499,9 +2499,10 @@ def main():
             if st.button("💾 Guardar Estudio Completo", type="primary", width='stretch'):
                 if not st.session_state.get('tipo_union'):
                     st.error("⚠️ Debe seleccionar el 'Tipo de Unión (Pareja Principal)' en la sección de Identificación.")
-                else:
-                    _es_registro_existente = True
-                    with st.spinner("Persistiendo estudio en el historial..."):
+                    st.stop()
+                
+                _es_registro_existente = True
+                with st.spinner("Persistiendo estudio en el historial..."):
                     # 1. Preparar datos para Hoja 1 (Evaluaciones)
                     # ---- EXTRAER RUTs DEL GRUPO FAMILIAR ----
                     def normalizar_rut(rut_str):
