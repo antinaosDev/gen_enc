@@ -3495,21 +3495,82 @@ def main():
                     st.error(f"❌ Error al guardar evaluación: {msg1}")
 
     with col_down:
+        st.markdown("##### 📥 Generar Reporte PDF")
+        
+        inc_geno = st.checkbox("Incluir Genograma en PDF (autogenerado)", value=True)
+        id_eval = st.session_state.get('idEvaluacion', '')
+        tiene_id = bool(id_eval)
+        inc_eco = st.checkbox("Incluir Ecomapa en PDF (requiere guardar estudio primero)", value=False, disabled=not tiene_id)
+
         if st.button("📄 Preparar PDF Evaluación", width='stretch'):
             try:
+                import os
+                import tempfile
+                
                 id_evaluacion = st.session_state.get('idEvaluacion', 'sin_id')
                 with st.spinner("Preparando archivo PDF..."):
                     df_fam_pdf = apply_edits_df(st.session_state.family_members, "family_editor")
                     df_plan_pdf = apply_edits_df(st.session_state.intervention_plan, "intervention_editor")
                     df_team_pdf = apply_edits_df(st.session_state.team_members, "team_editor")
                     
+                    # Generación temporal de imágenes (Genograma y Ecomapa)
+                    temp_dir = tempfile.mkdtemp()
+                    genogram_img_path = None
+                    ecomap_img_path = None
+                    
+                    familia_val = st.session_state.get('familia', 'Sin Nombre')
+                    nivel_val = st.session_state.get('nivel', 'SIN RIESGO')
+                    prog_val = st.session_state.get('programa_unidad', 'APS General')
+                    members_list = df_fam_pdf.to_dict('records')
+                    
+                    # 1. Genograma
+                    if inc_geno:
+                        from genogram import generate_genogram_dot
+                        dot_geno = generate_genogram_dot(
+                            members_list, 
+                            familia_val, 
+                            nivel_val, 
+                            tipo_union=st.session_state.get('tipo_union', 'Casados'),
+                            interpersonal_relations=st.session_state.get('interpersonal_relations', [])
+                        )
+                        genogram_img_path = os.path.join(temp_dir, "temp_geno")
+                        # render() automatically appends .png to the path
+                        dot_geno.render(filename=genogram_img_path, format="png", cleanup=True)
+                        genogram_img_path += ".png"
+                        
+                    # 2. Ecomapa
+                    if inc_eco:
+                        from ecomap import generate_ecomap_dot
+                        selected_systems = st.session_state.get('selected_systems', ["CESFAM", "COMUNIDAD"])
+                        system_flows = st.session_state.get('system_flows', {})
+                        active_risks = {k: st.session_state.get(k, False) for k in RISK_LABELS.keys()}
+                        
+                        dot_eco = generate_ecomap_dot(
+                            familia_val, members_list, active_risks, prog_val, nivel_val, 
+                            selected_systems, system_flows
+                        )
+                        ecomap_img_path = os.path.join(temp_dir, "temp_eco")
+                        dot_eco.render(filename=ecomap_img_path, format="png", cleanup=True)
+                        ecomap_img_path += ".png"
+
                     pdf_bytes = generate_pdf_report(
                         dict(st.session_state), 
                         df_fam_pdf, 
                         df_plan_pdf,
-                        df_team_pdf
+                        df_team_pdf,
+                        genogram_img_path=genogram_img_path,
+                        ecomap_img_path=ecomap_img_path
                     )
                     st.session_state['temp_pdf_report'] = pdf_bytes
+                    
+                    # Limpiar imágenes temporales
+                    if genogram_img_path and os.path.exists(genogram_img_path): os.remove(genogram_img_path)
+                    if ecomap_img_path and os.path.exists(ecomap_img_path): os.remove(ecomap_img_path)
+                    try:
+                        os.rmdir(temp_dir)
+                    except:
+                        pass
+                    
                     # Auditoría PDF
                     log_audit_event(st.session_state.user_info, "Generación de PDF", f"PDF preparado para la familia: {st.session_state.get('familia', 'N/A')}", eval_id=id_evaluacion)
                     st.success("✅ PDF listo")

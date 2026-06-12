@@ -45,7 +45,7 @@ def draw_header(pdf, data, title_text="FICHA DE INGRESO", is_blank=False):
     pdf.cell(40, 6, str(data.get('fechaEvaluacion', '')), border=border_val, ln=True)
     pdf.ln(5)
 
-def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
+def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False, genogram_img_path=None, ecomap_img_path=None):
     pdf = PDF()
     pdf.alias_nb_pages()
     pdf.add_page()
@@ -530,12 +530,17 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
     pdf.set_text_color(0, 0, 0)
     pdf.ln(4)
 
-    # Espacio para genograma manual
+    # Espacio para genograma manual / Imagen de Genograma
     pdf.set_font('helvetica', 'B', 9)
-    pdf.cell(0, 6, "ESPACIO PARA DIBUJO DEL GENOGRAMA:", ln=True)
-    y_start_box = pdf.get_y()
-    pdf.rect(pdf.get_x(), y_start_box, 190, 80)
-    pdf.ln(85)
+    if genogram_img_path and os.path.exists(genogram_img_path):
+        pdf.cell(0, 6, "GENOGRAMA FAMILIAR:", ln=True)
+        pdf.image(genogram_img_path, pdf.get_x(), pdf.get_y(), 190)
+        pdf.ln(100)
+    else:
+        pdf.cell(0, 6, "ESPACIO PARA DIBUJO DEL GENOGRAMA:", ln=True)
+        y_start_box = pdf.get_y()
+        pdf.rect(pdf.get_x(), y_start_box, 190, 80)
+        pdf.ln(85)
 
     # =====================================================================
     # INSTRUMENTO 3: ECOMAPA FAMILIAR
@@ -606,12 +611,17 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False):
     pdf.set_text_color(0, 0, 0)
     pdf.ln(4)
 
-    # Espacio para ecomapa manual
+    # Espacio para ecomapa manual / Imagen de Ecomapa
     pdf.set_font('helvetica', 'B', 9)
-    pdf.cell(0, 6, "ESPACIO PARA DIBUJO DEL ECOMAPA:", ln=True)
-    y_start_box2 = pdf.get_y()
-    pdf.rect(pdf.get_x(), y_start_box2, 190, 90)
-    pdf.ln(95)
+    if ecomap_img_path and os.path.exists(ecomap_img_path):
+        pdf.cell(0, 6, "ECOMAPA FAMILIAR:", ln=True)
+        pdf.image(ecomap_img_path, pdf.get_x() + 20, pdf.get_y(), 150)
+        pdf.ln(110)
+    else:
+        pdf.cell(0, 6, "ESPACIO PARA DIBUJO DEL ECOMAPA:", ln=True)
+        y_start_box2 = pdf.get_y()
+        pdf.rect(pdf.get_x(), y_start_box2, 190, 90)
+        pdf.ln(95)
 
 
     def _wrap_row(pdf, widths, texts, font_size=8, line_h=3.5):
