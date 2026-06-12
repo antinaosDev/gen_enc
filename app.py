@@ -3525,7 +3525,6 @@ def main():
                     
                     # 1. Genograma
                     if inc_geno:
-                        from genogram import generate_genogram_dot
                         dot_geno = generate_genogram_dot(
                             members_list, 
                             familia_val, 
@@ -3540,7 +3539,6 @@ def main():
                         
                     # 2. Ecomapa
                     if inc_eco:
-                        from ecomap import generate_ecomap_dot
                         selected_systems = st.session_state.get('selected_systems', ["CESFAM", "COMUNIDAD"])
                         system_flows = st.session_state.get('system_flows', {})
                         active_risks = {k: st.session_state.get(k, False) for k in RISK_LABELS.keys()}
