@@ -239,7 +239,7 @@ def export_percapita_dashboard_excel(df_cruzado, periodo_str, user_info):
     
     instrucciones = [
         "Este documento consolida la información de las familias registradas en el sistema ERBI Analytics,",
-        "cruzada automáticamente con la base de datos oficial de inscritos (Percapita) del CESFAM.",
+        "cruzada automáticamente con la base de datos oficial de inscritos (Percapita) del CESFAM Cholchol.",
         "",
         "CONTENIDO DEL REPORTE:",
         "► Pestaña 'Dashboard': Resumen ejecutivo, KPIs y Gráficos estadísticos de la población evaluada.",
@@ -289,7 +289,7 @@ def export_percapita_dashboard_excel(df_cruzado, periodo_str, user_info):
     # Tabla 2: Distribución por Centro
     ws_data['D1'] = "Centro"
     ws_data['E1'] = "Cantidad"
-    df_centros = df_cruzado['Centro Percapita'].value_counts().reset_index()
+    df_centros = df_cruzado.groupby('Centro Percapita').size().reset_index(name='count')
     r_data = 2
     for _, row in df_centros.iterrows():
         ws_data.cell(row=r_data, column=4, value=str(row['Centro Percapita']))
@@ -299,7 +299,7 @@ def export_percapita_dashboard_excel(df_cruzado, periodo_str, user_info):
     # Tabla 3: Distribución por Sector
     ws_data['G1'] = "Sector"
     ws_data['H1'] = "Cantidad"
-    df_sectores = df_cruzado['Sector'].value_counts().reset_index()
+    df_sectores = df_cruzado.groupby('Sector').size().reset_index(name='count')
     r_sec = 2
     for _, row in df_sectores.iterrows():
         ws_data.cell(row=r_sec, column=7, value=str(row['Sector']))
