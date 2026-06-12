@@ -167,31 +167,44 @@ def cross_reference_families(df_percapita_filtered):
 
 def export_percapita_dashboard_excel(df_cruzado, periodo_str, user_info):
     """
-    Genera el Excel del reporte de Percapita de Familias Registradas
+    Genera el Excel del reporte de Percapita con hojas de Inicio, Dashboard y Base de Datos.
     """
     from openpyxl import Workbook
     from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
     from openpyxl.drawing.image import Image as OpenpyxlImage
+    from openpyxl.utils import get_column_letter
     import os
     import io
     from datetime import datetime
+    from zoneinfo import ZoneInfo
+    
+    # Configurar zona horaria de Chile
+    tz_chile = ZoneInfo('America/Santiago')
+    fecha_generacion = datetime.now(tz_chile).strftime('%d/%m/%Y %H:%M')
     
     wb = Workbook()
-    ws = wb.active
-    ws.title = "Reporte Percapita"
     
-    # Estilos
-    DARK_BLUE   = PatternFill("solid", fgColor="1F3864")
-    CELESTE     = PatternFill("solid", fgColor="BDD7EE")
-    BOLD_WHITE  = Font(bold=True, color="FFFFFF", size=12)
-    BOLD_DARK   = Font(bold=True, color="1F3864", size=10)
-    NORMAL      = Font(size=10)
+    # Estilos globales
+    DARK_BLUE = PatternFill("solid", fgColor="1F3864")
+    CELESTE = PatternFill("solid", fgColor="BDD7EE")
+    GREEN_FILL = PatternFill("solid", fgColor="DCFCE7")
+    RED_FILL = PatternFill("solid", fgColor="FEE2E2")
+    GRAY_FILL = PatternFill("solid", fgColor="F3F4F6")
+    
+    BOLD_WHITE = Font(bold=True, color="FFFFFF", size=12)
+    BOLD_DARK = Font(bold=True, color="1F3864", size=11)
+    BOLD_BLACK = Font(bold=True, color="000000", size=11)
+    TITLE_FONT = Font(bold=True, color="1F3864", size=16)
+    NORMAL = Font(size=10)
+    GREEN_FONT = Font(color="166534", bold=True)
+    RED_FONT = Font(color="991B1B", bold=True)
+    
     THIN = Side(style="thin", color="B8CCE4")
     THIN_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
     CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
     LEFT = Alignment(horizontal="left", vertical="center", wrap_text=True)
 
-    def set_cell(row, col, value, fill=None, font=None, align=None, border=True):
+    def set_cell(ws, row, col, value, fill=None, font=None, align=None, border=True):
         cell = ws.cell(row=row, column=col, value=value)
         if fill: cell.fill = fill
         if font: cell.font = font
@@ -199,11 +212,9 @@ def export_percapita_dashboard_excel(df_cruzado, periodo_str, user_info):
         if border: cell.border = THIN_BORDER
         return cell
 
-    # Cabecera Institucional
-    r = 1
-    ws.row_dimensions[r].height = 50
-    ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=7)
-    set_cell(r, 1, f"REPORTE PERCAPITA - USUARIOS DE FAMILIAS REGISTRADAS", DARK_BLUE, BOLD_WHITE, CENTER, border=False)
+    # --- HOJA 1: INICIO (BLOQUEADA) ---
+    ws_inicio = wb.active
+    ws_inicio.title = "Inicio"
     
     # Insertar Logo
     logo_path = "NUEVO LOGO.png"
@@ -213,26 +224,103 @@ def export_percapita_dashboard_excel(df_cruzado, periodo_str, user_info):
     if os.path.exists(logo_path):
         try:
             img = OpenpyxlImage(logo_path)
-            # Redimensionar la imagen para que encaje bien (aprox 100x50 px)
-            img.width = 100
-            img.height = 50
-            ws.add_image(img, "A1")
+            img.width = 180
+            img.height = 90
+            ws_inicio.add_image(img, "B2")
         except Exception:
             pass
             
-    r += 1
-    ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=7)
-    set_cell(r, 1, f"Periodo de Análisis Percapita: {periodo_str}", CELESTE, BOLD_DARK, CENTER, border=False)
+    # Títulos e Instrucciones
+    ws_inicio.merge_cells("B7:F7")
+    set_cell(ws_inicio, 7, 2, "REPORTE OFICIAL DE GESTIÓN PERCAPITA", None, TITLE_FONT, CENTER, border=False)
     
-    r += 1
-    ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=7)
-    set_cell(r, 1, f"Generado por: {user_info.get('usuario', 'Usuario')} - {user_info.get('cargo', '')} | Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}", None, NORMAL, LEFT, border=False)
+    ws_inicio.merge_cells("B9:F9")
+    set_cell(ws_inicio, 9, 2, "Orientación de la Información", GRAY_FILL, BOLD_DARK, LEFT, border=False)
+    
+    instrucciones = [
+        "Este documento consolida la información de las familias registradas en el sistema ERBI Analytics,",
+        "cruzada automáticamente con la base de datos oficial de inscritos (Percapita) del CESFAM.",
+        "",
+        "CONTENIDO DEL REPORTE:",
+        "► Pestaña 'Dashboard': Resumen ejecutivo y KPIs de la población evaluada.",
+        "► Pestaña 'Base de Datos': Listado detallado de integrantes con su estado de percapitación.",
+        "",
+        "NOTAS DE SEGURIDAD:",
+        f"Generado por: {user_info.get('usuario', 'Usuario')} - {user_info.get('cargo', '')}",
+        f"Fecha y Hora de emisión: {fecha_generacion} (Hora de Chile)",
+        "Esta información es confidencial y para uso exclusivo del equipo clínico y directivo."
+    ]
+    
+    r = 11
+    for linea in instrucciones:
+        ws_inicio.merge_cells(start_row=r, start_column=2, end_row=r, end_column=6)
+        set_cell(ws_inicio, r, 2, linea, None, NORMAL, LEFT, border=False)
+        r += 1
+        
+    # Ajustar anchos y ocultar líneas de cuadrícula
+    ws_inicio.column_dimensions['A'].width = 5
+    ws_inicio.column_dimensions['B'].width = 15
+    ws_inicio.column_dimensions['C'].width = 25
+    ws_inicio.column_dimensions['D'].width = 25
+    ws_inicio.column_dimensions['E'].width = 15
+    ws_inicio.sheet_view.showGridLines = False
+    
+    # Proteger la hoja
+    ws_inicio.protection.sheet = True
+    ws_inicio.protection.password = "erbianalytics2026"
+    
+    # --- HOJA 2: DASHBOARD ---
+    ws_dash = wb.create_sheet(title="Dashboard")
+    ws_dash.sheet_view.showGridLines = False
+    
+    total_eval = len(df_cruzado)
+    percapitados = len(df_cruzado[df_cruzado['Estado Percapita'] == 'Percapitado'])
+    no_percapitados = total_eval - percapitados
+    pct_percap = round((percapitados / total_eval * 100), 1) if total_eval > 0 else 0
+    
+    ws_dash.merge_cells("B2:F3")
+    set_cell(ws_dash, 2, 2, "DASHBOARD PERCAPITA", DARK_BLUE, TITLE_FONT, CENTER, border=False)
+    ws_dash.cell(row=2, column=2).font = Font(bold=True, color="FFFFFF", size=16)
+    
+    ws_dash.merge_cells("B5:F5")
+    set_cell(ws_dash, 5, 2, f"Periodo de Análisis: {periodo_str}", CELESTE, BOLD_DARK, CENTER, border=False)
+    
+    # Tarjetas de KPIs
+    ws_dash.merge_cells("B7:C7")
+    set_cell(ws_dash, 7, 2, "Total Evaluados", GRAY_FILL, BOLD_BLACK, CENTER)
+    ws_dash.merge_cells("B8:C9")
+    set_cell(ws_dash, 8, 2, total_eval, None, TITLE_FONT, CENTER)
+    
+    ws_dash.merge_cells("D7:E7")
+    set_cell(ws_dash, 7, 4, "Validados (Percapitados)", GREEN_FILL, BOLD_BLACK, CENTER)
+    ws_dash.merge_cells("D8:E9")
+    set_cell(ws_dash, 8, 4, f"{percapitados} ({pct_percap}%)", None, GREEN_FONT, CENTER)
+    ws_dash.cell(row=8, column=4).font = Font(color="166534", bold=True, size=14)
+    
+    ws_dash.merge_cells("F7:G7")
+    set_cell(ws_dash, 7, 6, "No Percapitados", RED_FILL, BOLD_BLACK, CENTER)
+    ws_dash.merge_cells("F8:G9")
+    set_cell(ws_dash, 8, 6, f"{no_percapitados} ({round(100-pct_percap, 1)}%)", None, RED_FONT, CENTER)
+    ws_dash.cell(row=8, column=6).font = Font(color="991B1B", bold=True, size=14)
+
+    # Ajustar anchos
+    for col in ['B', 'C', 'D', 'E', 'F', 'G']:
+        ws_dash.column_dimensions[col].width = 15
+
+    # --- HOJA 3: BASE DE DATOS ---
+    ws_db = wb.create_sheet(title="Base de Datos")
+    
+    # Cabecera Institucional BD
+    r = 1
+    ws_db.row_dimensions[r].height = 30
+    ws_db.merge_cells(start_row=r, start_column=1, end_row=r, end_column=7)
+    set_cell(ws_db, r, 1, f"BASE DE DATOS CRUZADA - {periodo_str}", DARK_BLUE, BOLD_WHITE, CENTER, border=False)
     
     r += 2
     # Encabezados de tabla
     headers = list(df_cruzado.columns)
     for i, h in enumerate(headers, 1):
-        set_cell(r, i, h, DARK_BLUE, BOLD_WHITE, CENTER)
+        set_cell(ws_db, r, i, h, DARK_BLUE, BOLD_WHITE, CENTER)
         
     r += 1
     for _, row_data in df_cruzado.iterrows():
@@ -241,18 +329,17 @@ def export_percapita_dashboard_excel(df_cruzado, periodo_str, user_info):
             # Color semántico estado
             if h == 'Estado Percapita':
                 if val == 'Percapitado':
-                    set_cell(r, i, val, PatternFill("solid", fgColor="dcfce7"), Font(color="166534"), CENTER)
+                    set_cell(ws_db, r, i, val, GREEN_FILL, GREEN_FONT, CENTER)
                 else:
-                    set_cell(r, i, val, PatternFill("solid", fgColor="fee2e2"), Font(color="991b1b"), CENTER)
+                    set_cell(ws_db, r, i, val, RED_FILL, RED_FONT, CENTER)
             else:
-                set_cell(r, i, val, None, NORMAL, LEFT if i in [2,4] else CENTER)
+                set_cell(ws_db, r, i, val, None, NORMAL, LEFT if i in [2,4] else CENTER)
         r += 1
 
-    # Ajustar anchos
+    # Ajustar anchos BD
     widths = [15, 25, 12, 35, 15, 15, 20]
-    from openpyxl.utils import get_column_letter
     for i, w in enumerate(widths, 1):
-        ws.column_dimensions[get_column_letter(i)].width = w
+        ws_db.column_dimensions[get_column_letter(i)].width = w
         
     buf = io.BytesIO()
     wb.save(buf)

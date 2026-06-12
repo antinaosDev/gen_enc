@@ -823,6 +823,7 @@ def get_or_create_worksheet(spreadsheet, title, headers=None):
 def log_audit_event(user_info, action, details="", eval_id=None):
     """Registra un evento de auditoría en la hoja 'Auditoría' de Google Sheets."""
     try:
+        from zoneinfo import ZoneInfo
         client = get_google_sheet_client()
         if not client:
             return
@@ -830,8 +831,9 @@ def log_audit_event(user_info, action, details="", eval_id=None):
         headers = ["Timestamp", "Usuario", "Cargo", "Acción", "Detalles", "ID Evaluación"]
         worksheet = get_or_create_worksheet(spreadsheet, "Auditoría", headers)
         
-        # Obtener fecha y hora actual
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # Obtener fecha y hora actual en Chile
+        tz_chile = ZoneInfo('America/Santiago')
+        timestamp = datetime.now(tz_chile).strftime("%Y-%m-%d %H:%M:%S")
         
         row = [
             timestamp,
