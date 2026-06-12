@@ -3548,11 +3548,11 @@ def main():
                                 spreadsheet = client.open_by_url(SHEET_URL)
                                 ws_eco = spreadsheet.worksheet("Ecomapas")
                                 eco_records = ws_eco.get_all_records()
-                                eco_record = next((r for r in eco_records if str(r.get("ID Evaluación", "")) == id_evaluacion), None)
+                                eco_record = next((r for r in eco_records if str(r.get("ID Evaluación", r.get("ID Evaluacion", ""))) == id_evaluacion), None)
                                 
                                 if eco_record:
-                                    selected_systems = json.loads(eco_record.get("Sistemas JSON", "[]"))
-                                    system_flows = json.loads(eco_record.get("Flujos JSON", "{}"))
+                                    selected_systems = json.loads(eco_record.get("Sistemas JSON", eco_record.get("Nodos JSON", "[]")))
+                                    system_flows = json.loads(eco_record.get("Flujos JSON", eco_record.get("Aristas JSON", "{}")))
                                 else:
                                     st.warning("⚠️ El Ecomapa no se ha guardado en la base de datos para este estudio, por lo que no se incluirá en el PDF. Ve a 'Análisis Familiar' y guarda el registro.")
                                     inc_eco = False
