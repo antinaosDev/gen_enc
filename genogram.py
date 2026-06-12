@@ -55,7 +55,7 @@ def _build_node_label(nombre: str, edad: str, parentesco: str, is_deceased: bool
     label_html += f'</TD></TR>'
     label_html += f'<TR>'
     label_html += f'<TD ALIGN="LEFT" VALIGN="BOTTOM"><FONT POINT-SIZE="8" COLOR="#4A5568">{n_text}</FONT></TD>'
-    label_html += f'<TD ALIGN="CENTER" VALIGN="BOTTOM"></TD>'
+    label_html += f'<TD ALIGN="CENTER" VALIGN="BOTTOM"> </TD>'
     label_html += f'<TD ALIGN="RIGHT" VALIGN="BOTTOM"><FONT POINT-SIZE="8" COLOR="#4A5568">{d_text}</FONT></TD>'
     label_html += f'</TR>'
     label_html += f'</TABLE>>'
