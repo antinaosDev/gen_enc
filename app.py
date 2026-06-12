@@ -2782,6 +2782,44 @@ def main():
                         c3.metric("Percapitados Validados", percapitados, f"{pct_percap}%")
                         c4.metric("No Percapitados", no_percapitados, f"{round(100 - pct_percap, 1)}%", delta_color="inverse")
                         
+                        st.markdown("<hr style='margin: 10px 0;'>", unsafe_allow_html=True)
+                        
+                        # --- GRAFICOS PLOTLY ---
+                        import plotly.express as px
+                        
+                        cg1, cg2, cg3 = st.columns(3)
+                        
+                        with cg1:
+                            # Gráfico de Torta: Estado
+                            df_estado = df_final['Estado Percapita'].value_counts().reset_index()
+                            df_estado.columns = ['Estado', 'Cantidad']
+                            fig1 = px.pie(df_estado, values='Cantidad', names='Estado', title="Distribución Percapita",
+                                          color='Estado', color_discrete_map={"Percapitado": "#22c55e", "No Percapitado": "#ef4444"},
+                                          hole=0.4)
+                            fig1.update_traces(textposition='inside', textinfo='percent+label')
+                            fig1.update_layout(showlegend=False, margin=dict(t=40, b=0, l=0, r=0), height=300)
+                            st.plotly_chart(fig1, use_container_width=True)
+                            
+                        with cg2:
+                            # Gráfico de Barras: Centro
+                            df_centro = df_final['Centro Percapita'].value_counts().reset_index()
+                            df_centro.columns = ['Centro', 'Cantidad']
+                            fig2 = px.bar(df_centro, x='Centro', y='Cantidad', title="Distribución por Establecimiento",
+                                          color='Centro', color_discrete_sequence=px.colors.qualitative.Pastel)
+                            fig2.update_layout(showlegend=False, margin=dict(t=40, b=0, l=0, r=0), height=300)
+                            st.plotly_chart(fig2, use_container_width=True)
+                            
+                        with cg3:
+                            # Gráfico de Torta: Sector
+                            df_sector = df_final['Sector'].value_counts().reset_index()
+                            df_sector.columns = ['Sector', 'Cantidad']
+                            fig3 = px.pie(df_sector, values='Cantidad', names='Sector', title="Distribución por Sector",
+                                          color_discrete_sequence=px.colors.sequential.Teal)
+                            fig3.update_traces(textposition='inside', textinfo='percent+label')
+                            fig3.update_layout(showlegend=False, margin=dict(t=40, b=0, l=0, r=0), height=300)
+                            st.plotly_chart(fig3, use_container_width=True)
+                        
+                        st.markdown("<hr style='margin: 10px 0;'>", unsafe_allow_html=True)
                         st.dataframe(df_final, width=1000, use_container_width=True, hide_index=True)
                         
                         if st.button("📥 Exportar a Excel", type="primary"):

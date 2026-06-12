@@ -167,12 +167,15 @@ def cross_reference_families(df_percapita_filtered):
 
 def export_percapita_dashboard_excel(df_cruzado, periodo_str, user_info):
     """
-    Genera el Excel del reporte de Percapita con hojas de Inicio, Dashboard y Base de Datos.
+    Genera el Excel del reporte de Percapita con hojas de Inicio, Dashboard y Base de Datos,
+    incluyendo gráficos interactivos de análisis.
     """
     from openpyxl import Workbook
     from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
     from openpyxl.drawing.image import Image as OpenpyxlImage
     from openpyxl.utils import get_column_letter
+    from openpyxl.chart import PieChart, BarChart, Reference
+    from openpyxl.chart.label import DataLabelList
     import os
     import io
     from datetime import datetime
@@ -216,11 +219,8 @@ def export_percapita_dashboard_excel(df_cruzado, periodo_str, user_info):
     ws_inicio = wb.active
     ws_inicio.title = "Inicio"
     
-    # Insertar Logo
-    logo_path = "NUEVO LOGO.png"
-    if not os.path.exists(logo_path):
-        logo_path = "Logo_enc_fam.png"
-    
+    # Insertar Logo (Fuerza el uso estricto de Logo_enc_fam.png)
+    logo_path = "Logo_enc_fam.png"
     if os.path.exists(logo_path):
         try:
             img = OpenpyxlImage(logo_path)
@@ -242,7 +242,7 @@ def export_percapita_dashboard_excel(df_cruzado, periodo_str, user_info):
         "cruzada automáticamente con la base de datos oficial de inscritos (Percapita) del CESFAM.",
         "",
         "CONTENIDO DEL REPORTE:",
-        "► Pestaña 'Dashboard': Resumen ejecutivo y KPIs de la población evaluada.",
+        "► Pestaña 'Dashboard': Resumen ejecutivo, KPIs y Gráficos estadísticos de la población evaluada.",
         "► Pestaña 'Base de Datos': Listado detallado de integrantes con su estado de percapitación.",
         "",
         "NOTAS DE SEGURIDAD:",
@@ -268,44 +268,116 @@ def export_percapita_dashboard_excel(df_cruzado, periodo_str, user_info):
     # Proteger la hoja
     ws_inicio.protection.sheet = True
     ws_inicio.protection.password = "erbianalytics2026"
-    
-    # --- HOJA 2: DASHBOARD ---
-    ws_dash = wb.create_sheet(title="Dashboard")
-    ws_dash.sheet_view.showGridLines = False
+
+    # --- DATOS PARA GRÁFICOS (HOJA OCULTA) ---
+    ws_data = wb.create_sheet(title="Datos_Graficos")
+    ws_data.sheet_state = 'hidden' # Ocultar para el usuario
     
     total_eval = len(df_cruzado)
     percapitados = len(df_cruzado[df_cruzado['Estado Percapita'] == 'Percapitado'])
     no_percapitados = total_eval - percapitados
     pct_percap = round((percapitados / total_eval * 100), 1) if total_eval > 0 else 0
     
-    ws_dash.merge_cells("B2:F3")
+    # Tabla 1: Estado de Percapitación
+    ws_data['A1'] = "Estado"
+    ws_data['B1'] = "Cantidad"
+    ws_data['A2'] = "Percapitado"
+    ws_data['B2'] = percapitados
+    ws_data['A3'] = "No Percapitado"
+    ws_data['B3'] = no_percapitados
+    
+    # Tabla 2: Distribución por Centro
+    ws_data['D1'] = "Centro"
+    ws_data['E1'] = "Cantidad"
+    df_centros = df_cruzado['Centro Percapita'].value_counts().reset_index()
+    r_data = 2
+    for _, row in df_centros.iterrows():
+        ws_data.cell(row=r_data, column=4, value=str(row['Centro Percapita']))
+        ws_data.cell(row=r_data, column=5, value=row['count'])
+        r_data += 1
+        
+    # Tabla 3: Distribución por Sector
+    ws_data['G1'] = "Sector"
+    ws_data['H1'] = "Cantidad"
+    df_sectores = df_cruzado['Sector'].value_counts().reset_index()
+    r_sec = 2
+    for _, row in df_sectores.iterrows():
+        ws_data.cell(row=r_sec, column=7, value=str(row['Sector']))
+        ws_data.cell(row=r_sec, column=8, value=row['count'])
+        r_sec += 1
+    
+    # --- HOJA 2: DASHBOARD ---
+    ws_dash = wb.create_sheet(title="Dashboard")
+    ws_dash.sheet_view.showGridLines = False
+    
+    ws_dash.merge_cells("B2:K3")
     set_cell(ws_dash, 2, 2, "DASHBOARD PERCAPITA", DARK_BLUE, TITLE_FONT, CENTER, border=False)
     ws_dash.cell(row=2, column=2).font = Font(bold=True, color="FFFFFF", size=16)
     
-    ws_dash.merge_cells("B5:F5")
+    ws_dash.merge_cells("B5:K5")
     set_cell(ws_dash, 5, 2, f"Periodo de Análisis: {periodo_str}", CELESTE, BOLD_DARK, CENTER, border=False)
     
     # Tarjetas de KPIs
-    ws_dash.merge_cells("B7:C7")
-    set_cell(ws_dash, 7, 2, "Total Evaluados", GRAY_FILL, BOLD_BLACK, CENTER)
-    ws_dash.merge_cells("B8:C9")
-    set_cell(ws_dash, 8, 2, total_eval, None, TITLE_FONT, CENTER)
-    
-    ws_dash.merge_cells("D7:E7")
-    set_cell(ws_dash, 7, 4, "Validados (Percapitados)", GREEN_FILL, BOLD_BLACK, CENTER)
-    ws_dash.merge_cells("D8:E9")
-    set_cell(ws_dash, 8, 4, f"{percapitados} ({pct_percap}%)", None, GREEN_FONT, CENTER)
-    ws_dash.cell(row=8, column=4).font = Font(color="166534", bold=True, size=14)
+    ws_dash.merge_cells("C7:D7")
+    set_cell(ws_dash, 7, 3, "Total Evaluados", GRAY_FILL, BOLD_BLACK, CENTER)
+    ws_dash.merge_cells("C8:D9")
+    set_cell(ws_dash, 8, 3, total_eval, None, TITLE_FONT, CENTER)
     
     ws_dash.merge_cells("F7:G7")
-    set_cell(ws_dash, 7, 6, "No Percapitados", RED_FILL, BOLD_BLACK, CENTER)
+    set_cell(ws_dash, 7, 6, "Validados (Percapitados)", GREEN_FILL, BOLD_BLACK, CENTER)
     ws_dash.merge_cells("F8:G9")
-    set_cell(ws_dash, 8, 6, f"{no_percapitados} ({round(100-pct_percap, 1)}%)", None, RED_FONT, CENTER)
-    ws_dash.cell(row=8, column=6).font = Font(color="991B1B", bold=True, size=14)
+    set_cell(ws_dash, 8, 6, f"{percapitados} ({pct_percap}%)", None, GREEN_FONT, CENTER)
+    ws_dash.cell(row=8, column=6).font = Font(color="166534", bold=True, size=14)
+    
+    ws_dash.merge_cells("I7:J7")
+    set_cell(ws_dash, 7, 9, "No Percapitados", RED_FILL, BOLD_BLACK, CENTER)
+    ws_dash.merge_cells("I8:J9")
+    set_cell(ws_dash, 8, 9, f"{no_percapitados} ({round(100-pct_percap, 1)}%)", None, RED_FONT, CENTER)
+    ws_dash.cell(row=8, column=9).font = Font(color="991B1B", bold=True, size=14)
+
+    # Gráfico 1: Torta de Estado de Percapitación
+    pie1 = PieChart()
+    labels1 = Reference(ws_data, min_col=1, min_row=2, max_row=3)
+    data1 = Reference(ws_data, min_col=2, min_row=1, max_row=3)
+    pie1.add_data(data1, titles_from_data=True)
+    pie1.set_categories(labels1)
+    pie1.title = "Distribución Global Percapita"
+    pie1.dataLabels = DataLabelList() 
+    pie1.dataLabels.showPercent = True
+    pie1.width = 12
+    pie1.height = 8
+    ws_dash.add_chart(pie1, "B12")
+    
+    # Gráfico 2: Barras por Centro
+    bar2 = BarChart()
+    data2 = Reference(ws_data, min_col=5, min_row=1, max_row=r_data-1)
+    cats2 = Reference(ws_data, min_col=4, min_row=2, max_row=r_data-1)
+    bar2.add_data(data2, titles_from_data=True)
+    bar2.set_categories(cats2)
+    bar2.title = "Integrantes Validados por Establecimiento"
+    bar2.x_axis.title = "Establecimiento"
+    bar2.y_axis.title = "Cantidad"
+    bar2.legend = None
+    bar2.width = 16
+    bar2.height = 8
+    ws_dash.add_chart(bar2, "F12")
+
+    # Gráfico 3: Torta de Sector
+    pie3 = PieChart()
+    labels3 = Reference(ws_data, min_col=7, min_row=2, max_row=r_sec-1)
+    data3 = Reference(ws_data, min_col=8, min_row=1, max_row=r_sec-1)
+    pie3.add_data(data3, titles_from_data=True)
+    pie3.set_categories(labels3)
+    pie3.title = "Distribución por Sector"
+    pie3.dataLabels = DataLabelList()
+    pie3.dataLabels.showPercent = True
+    pie3.width = 12
+    pie3.height = 8
+    ws_dash.add_chart(pie3, "B28")
 
     # Ajustar anchos
-    for col in ['B', 'C', 'D', 'E', 'F', 'G']:
-        ws_dash.column_dimensions[col].width = 15
+    for col in ['B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K']:
+        ws_dash.column_dimensions[col].width = 12
 
     # --- HOJA 3: BASE DE DATOS ---
     ws_db = wb.create_sheet(title="Base de Datos")
