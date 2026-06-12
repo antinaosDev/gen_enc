@@ -2735,6 +2735,16 @@ def main():
                     st.error(f"No se pudo cargar mapa_dens_pob_salud_cholchol.png: {e}")
             
             
+        u_cargo = str(st.session_state.user_info.get('cargo', '')).lower()
+        u_rol = str(st.session_state.user_info.get('rol', '')).lower()
+        
+        es_programador = 'programador' in u_rol or 'programador' in u_cargo
+        es_jefa_sol = ('jefatura' in u_rol or 'jefatura' in u_cargo) and ('sol' in u_rol or 'sol' in u_cargo)
+        es_jefa_luna = ('jefatura' in u_rol or 'jefatura' in u_cargo) and ('luna' in u_rol or 'luna' in u_cargo)
+        
+        if not (es_programador or es_jefa_sol or es_jefa_luna):
+            st.stop()
+
         st.markdown("---")
         st.html("""
         <div style="background: white; padding: 15px; border-radius: 10px; border-top: 4px solid #10b981; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 20px;">
@@ -2761,14 +2771,11 @@ def main():
                     
                     if not df_cruzado.empty:
                         # Filtrar por RBAC
-                        u_cargo = str(st.session_state.user_info.get('cargo', '')).lower()
-                        u_rol = str(st.session_state.user_info.get('rol', '')).lower()
-                        
                         df_final = df_cruzado.copy()
-                        if 'programador' not in u_rol and 'mais' not in u_cargo:
-                            if 'sol' in u_cargo:
+                        if not es_programador:
+                            if es_jefa_sol:
                                 df_final = df_final[df_final['Sector'].str.lower() == 'sol']
-                            elif 'luna' in u_cargo or 'postas' in u_cargo:
+                            elif es_jefa_luna:
                                 df_final = df_final[df_final['Sector'].str.lower() == 'luna']
                                 
                         total_eval = len(df_final)
