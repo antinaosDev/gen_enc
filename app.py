@@ -6,6 +6,7 @@ from datetime import date, datetime
 import json
 import toml
 import os
+import tempfile
 import uuid
 import io
 from pdf_gen import generate_pdf_report, generate_blank_pdf
@@ -3504,9 +3505,6 @@ def main():
 
         if st.button("📄 Preparar PDF Evaluación", width='stretch'):
             try:
-                import os
-                import tempfile
-                
                 id_evaluacion = st.session_state.get('idEvaluacion', 'sin_id')
                 with st.spinner("Preparando archivo PDF..."):
                     df_fam_pdf = apply_edits_df(st.session_state.family_members, "family_editor")
