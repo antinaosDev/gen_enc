@@ -47,19 +47,22 @@ def _build_node_label(nombre: str, edad: str, parentesco: str, is_deceased: bool
     d_text = f"d. {y_def}" if y_def and is_deceased else ""
     fallecido_tag = '<BR/><FONT POINT-SIZE="9" COLOR="#C53030">[✝ Fallecido/a]</FONT>' if is_deceased else ""
 
-    label_html = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0">'
-    label_html += f'<TR><TD COLSPAN="3" ALIGN="CENTER" VALIGN="BOTTOM">'
-    label_html += f'<B>{nombre_corto}</B><BR/>'
-    label_html += f'<FONT POINT-SIZE="8">{parentesco}</FONT>{fallecido_tag}'
-    label_html += f'<BR/><BR/><FONT POINT-SIZE="14"><B>{display_edad}</B></FONT><BR/>'
-    label_html += f'</TD></TR>'
-    label_html += f'<TR>'
-    label_html += f'<TD ALIGN="LEFT" VALIGN="BOTTOM"><FONT POINT-SIZE="8" COLOR="#4A5568">{n_text}</FONT></TD>'
-    label_html += f'<TD ALIGN="CENTER" VALIGN="BOTTOM"> </TD>'
-    label_html += f'<TD ALIGN="RIGHT" VALIGN="BOTTOM"><FONT POINT-SIZE="8" COLOR="#4A5568">{d_text}</FONT></TD>'
-    label_html += f'</TR>'
-    label_html += f'</TABLE>>'
-    return label_html
+    lines = [f"<B>{nombre_corto}</B>"]
+    if parentesco:
+        lines.append(f'<FONT POINT-SIZE="8">{parentesco}</FONT>')
+    if is_deceased:
+        lines.append('<FONT POINT-SIZE="9" COLOR="#C53030">[✝ Fallecido/a]</FONT>')
+    
+    # Edad grande en el centro
+    lines.append(f'<FONT POINT-SIZE="14"><B>{display_edad}</B></FONT>')
+    
+    # Años abajo
+    if n_text or d_text:
+        bottom_text = f"{n_text}     {d_text}".strip()
+        lines.append(f'<FONT POINT-SIZE="8" COLOR="#4A5568">{bottom_text}</FONT>')
+        
+    rows = "".join(f"<TR><TD>{ln}</TD></TR>" for ln in lines)
+    return f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="1">{rows}</TABLE>>'
 
 def generate_genogram_dot(members: list, family_name: str = "", nivel_riesgo: str = "",
                            tipo_union: str = "Casados", interpersonal_relations: list = None):
