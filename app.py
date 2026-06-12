@@ -3501,7 +3501,12 @@ def main():
         inc_geno = st.checkbox("Incluir Genograma en PDF (autogenerado)", value=True)
         id_eval = st.session_state.get('idEvaluacion', '')
         tiene_id = bool(id_eval)
-        inc_eco = st.checkbox("Incluir Ecomapa en PDF (requiere guardar estudio primero)", value=False, disabled=not tiene_id)
+        
+        if tiene_id:
+            inc_eco = st.checkbox("Incluir Ecomapa en PDF (autogenerado)", value=False)
+        else:
+            inc_eco = False
+            st.caption("🔒 *La opción para incluir Ecomapa aparecerá aquí una vez guardada la ficha.*")
 
         if st.button("📄 Preparar PDF Evaluación", width='stretch'):
             try:
