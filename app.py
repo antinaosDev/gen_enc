@@ -2732,6 +2732,72 @@ def main():
                 except Exception as e:
                     st.error(f"No se pudo cargar mapa_dens_pob_salud_cholchol.png: {e}")
             
+            
+        st.markdown("---")
+        st.html("""
+        <div style="background: white; padding: 15px; border-radius: 10px; border-top: 4px solid #10b981; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 20px;">
+            <h3 style="color: #1e293b; margin-top: 0; font-size: 1.1rem;">📊 Gestión y Auditoría Percapita</h3>
+            <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 0;">Análisis de la población inscrita validada versus las familias registradas en la aplicación.</p>
+        </div>
+        """)
+        
+        try:
+            from percapita import fetch_percapita_data, process_percapita_data, cross_reference_families, export_percapita_dashboard_excel
+            
+            with st.spinner("Cargando y procesando datos percapita..."):
+                df_percapita_raw, error_fetch = fetch_percapita_data()
+                
+            if error_fetch:
+                st.error(f"❌ {error_fetch}")
+            elif df_percapita_raw is not None and not df_percapita_raw.empty:
+                df_percapita_filtered, periodo_str = process_percapita_data(df_percapita_raw)
+                
+                if df_percapita_filtered.empty:
+                    st.warning("⚠️ No se encontraron datos para procesar después de aplicar los filtros de fecha.")
+                else:
+                    df_cruzado = cross_reference_families(df_percapita_filtered)
+                    
+                    if not df_cruzado.empty:
+                        # Filtrar por RBAC
+                        u_cargo = str(st.session_state.user_info.get('cargo', '')).lower()
+                        u_rol = str(st.session_state.user_info.get('rol', '')).lower()
+                        
+                        df_final = df_cruzado.copy()
+                        if 'programador' not in u_rol and 'mais' not in u_cargo:
+                            if 'sol' in u_cargo:
+                                df_final = df_final[df_final['Sector'].str.lower() == 'sol']
+                            elif 'luna' in u_cargo or 'postas' in u_cargo:
+                                df_final = df_final[df_final['Sector'].str.lower() == 'luna']
+                                
+                        total_eval = len(df_final)
+                        percapitados = len(df_final[df_final['Estado Percapita'] == 'Percapitado'])
+                        no_percapitados = total_eval - percapitados
+                        pct_percap = round((percapitados / total_eval * 100), 1) if total_eval > 0 else 0
+                        
+                        c1, c2, c3, c4 = st.columns(4)
+                        c1.metric("Periodo Evaluado", periodo_str)
+                        c2.metric("Total Integrantes Evaluados", total_eval)
+                        c3.metric("Percapitados Validados", percapitados, f"{pct_percap}%")
+                        c4.metric("No Percapitados", no_percapitados, f"{round(100 - pct_percap, 1)}%", delta_color="inverse")
+                        
+                        st.dataframe(df_final, width=1000, use_container_width=True, hide_index=True)
+                        
+                        if st.button("📥 Exportar a Excel", type="primary"):
+                            with st.spinner("Generando reporte Excel..."):
+                                buf = export_percapita_dashboard_excel(df_final, periodo_str, st.session_state.user_info)
+                                log_audit_event(st.session_state.user_info, "Descarga Percapita", f"Descargó reporte Excel de Percapita periodo {periodo_str}")
+                                st.download_button(
+                                    label="💾 Descargar Archivo Excel",
+                                    data=buf,
+                                    file_name=f"Reporte_Percapita_{periodo_str.replace(' ', '_').replace('|', '')}.xlsx",
+                                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                )
+                                st.success("✅ Archivo generado. Haga clic en 'Descargar Archivo Excel'.")
+                    else:
+                        st.info("No hay integrantes de familias para cruzar.")
+        except Exception as e:
+            st.error(f"Error procesando dashboard percapita: {e}")
+
         st.stop()
 
     st.markdown("<br>", unsafe_allow_html=True)
