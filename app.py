@@ -3542,8 +3542,26 @@ def main():
                         
                     # 2. Ecomapa
                     if inc_eco:
-                        selected_systems = st.session_state.get('selected_systems', ["CESFAM", "COMUNIDAD"])
-                        system_flows = st.session_state.get('system_flows', {})
+                        try:
+                            client = get_google_sheet_client()
+                            if client:
+                                spreadsheet = client.open_by_url(SHEET_URL)
+                                ws_eco = spreadsheet.worksheet("Ecomapas")
+                                eco_records = ws_eco.get_all_records()
+                                eco_record = next((r for r in eco_records if str(r.get("ID Evaluación", "")) == id_evaluacion), None)
+                                
+                                if eco_record:
+                                    import json
+                                    selected_systems = json.loads(eco_record.get("Sistemas JSON", "[]"))
+                                    system_flows = json.loads(eco_record.get("Flujos JSON", "{}"))
+                                else:
+                                    st.warning("⚠️ El Ecomapa no se ha guardado en la base de datos para este estudio, por lo que no se incluirá en el PDF. Ve a 'Análisis Familiar' y guarda el registro.")
+                                    inc_eco = False
+                        except Exception as e:
+                            st.warning(f"⚠️ Error al verificar Ecomapa en base de datos: {e}")
+                            inc_eco = False
+
+                    if inc_eco:
                         active_risks = {k: st.session_state.get(k, False) for k in RISK_LABELS.keys()}
                         
                         dot_eco = generate_ecomap_dot(

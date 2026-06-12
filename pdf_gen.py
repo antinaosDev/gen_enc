@@ -534,7 +534,7 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False, 
     pdf.set_font('helvetica', 'B', 9)
     if genogram_img_path and os.path.exists(genogram_img_path):
         pdf.cell(0, 6, "GENOGRAMA FAMILIAR:", ln=True)
-        pdf.image(genogram_img_path, pdf.get_x(), pdf.get_y(), 190)
+        pdf.image(genogram_img_path, pdf.get_x() + 10, pdf.get_y(), w=0, h=85)
         pdf.ln(100)
     else:
         pdf.cell(0, 6, "ESPACIO PARA DIBUJO DEL GENOGRAMA:", ln=True)
@@ -615,7 +615,7 @@ def generate_pdf_report(data, family_df, plan_df, team_df=None, is_blank=False, 
     pdf.set_font('helvetica', 'B', 9)
     if ecomap_img_path and os.path.exists(ecomap_img_path):
         pdf.cell(0, 6, "ECOMAPA FAMILIAR:", ln=True)
-        pdf.image(ecomap_img_path, pdf.get_x() + 20, pdf.get_y(), 150)
+        pdf.image(ecomap_img_path, pdf.get_x() + 20, pdf.get_y(), w=0, h=90)
         pdf.ln(110)
     else:
         pdf.cell(0, 6, "ESPACIO PARA DIBUJO DEL ECOMAPA:", ln=True)
